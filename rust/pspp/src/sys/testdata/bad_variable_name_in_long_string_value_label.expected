@@ -2,14 +2,12 @@ Ignoring long string value label for unknown variable STR9.
 
 Ignoring long string value label for numeric variable NUM1.
 
-╭──────────────────────┬────────────────────────╮
-│       Created        │    01-JAN-2011 20:53:52│
-├──────────────────────┼────────────────────────┤
-│Writer Product        │PSPP synthetic test file│
-├──────────────────────┼────────────────────────┤
-│       Compression    │SAV                     │
-│       Number of Cases│Unknown                 │
-╰──────────────────────┴────────────────────────╯
+╭────────────────┬────────────────────────╮
+│Created         │    01-JAN-2011 20:53:52│
+│Writer  Product │PSPP synthetic test file│
+│Compression     │SAV                     │
+│Number of Cases │Unknown                 │
+╰────────────────┴────────────────────────╯
 
 ╭─────────┬─╮
 │Variables│2│
@@ -23,10 +21,10 @@ Ignoring long string value label for numeric variable NUM1.
 │str14│       2│     │Nominal          │Input│   14│Left     │A14         │A14         │              │
 ╰─────┴────────┴─────┴─────────────────┴─────┴─────┴─────────┴────────────┴────────────┴──────────────╯
 
-                              Value Labels
-╭─────────────────────────────┬────────────────────────────────────────╮
-│Variable Value               │                                        │
-├─────────────────────────────┼────────────────────────────────────────┤
-│str14          RSTUVWXYZ     │value label for `RSTUVWXYZ'             │
-│               abcdefghijklmn│another value label for `abcdefghijklmn'│
-╰─────────────────────────────┴────────────────────────────────────────╯
+                          Value Labels
+╭────────────────────┬────────────────────────────────────────╮
+│Variable Value      │                                        │
+├────────────────────┼────────────────────────────────────────┤
+│str14 RSTUVWXYZ     │value label for `RSTUVWXYZ'             │
+│      abcdefghijklmn│another value label for `abcdefghijklmn'│
+╰────────────────────┴────────────────────────────────────────╯

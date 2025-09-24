@@ -2,15 +2,13 @@ Variable set "Variable Set 1" includes unknown variable xyzzy.
 
 Variable set "vs2" includes unknown variable foo.
 
-╭──────────────────────┬────────────────────────╮
-│       Created        │    01-JAN-2011 20:53:52│
-├──────────────────────┼────────────────────────┤
-│Writer Product        │PSPP synthetic test file│
-│       Version        │1.2.3                   │
-├──────────────────────┼────────────────────────┤
-│       Compression    │None                    │
-│       Number of Cases│                       0│
-╰──────────────────────┴────────────────────────╯
+╭────────────────┬────────────────────────╮
+│Created         │    01-JAN-2011 20:53:52│
+│Writer  Product │PSPP synthetic test file│
+│        Version │1.2.3                   │
+│Compression     │None                    │
+│Number of Cases │                       0│
+╰────────────────┴────────────────────────╯
 
 ╭─────────┬────────────────────────╮
 │Label    │PSPP synthetic test file│
@@ -33,16 +31,15 @@ Variable set "vs2" includes unknown variable foo.
 │j │      10│     │Nominal          │Input│    4│Left     │A4          │A4          │              │
 ╰──┴────────┴─────┴─────────────────┴─────┴─────┴─────────┴────────────┴────────────┴──────────────╯
 
-             Variable Sets
-╭───────────────────────────┬────────╮
-│Variable Set and Position  │Variable│
-├───────────────────────────┼────────┤
-│Variable Set 1            1│あ      │
-│                          2│b       │
-│                          3│c       │
-├───────────────────────────┼────────┤
-│vs2                       1│d       │
-│                          2│e       │
-│                          3│f       │
-│                          4│g       │
-╰───────────────────────────┴────────╯
+            Variable Sets
+╭──────────────────────────┬────────╮
+│Variable Set and Position │Variable│
+├──────────────────────────┼────────┤
+│Variable Set 1     1      │あ      │
+│                   2      │b       │
+│                   3      │c       │
+│vs2                1      │d       │
+│                   2      │e       │
+│                   3      │f       │
+│                   4      │g       │
+╰──────────────────────────┴────────╯

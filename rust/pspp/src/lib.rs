@@ -121,6 +121,7 @@ pub mod pc;
 pub mod por;
 pub mod prompt;
 pub mod settings;
+pub mod spv;
 pub mod sys;
 pub mod util;
 pub mod variable;
@@ -175,5 +176,46 @@ pub(crate) fn subslice_range<T>(slice: &[T], subslice: &[T]) -> Option<Range<usi
         Some(start..end)
     } else {
         None
+    }
+}
+
+/// This is [slice::range] copied out from the standard library so that we can
+/// use it while it is still experimental.
+#[allow(dead_code)]
+pub(crate) fn range<R>(range: R, bounds: std::ops::RangeTo<usize>) -> std::ops::Range<usize>
+where
+    R: std::ops::RangeBounds<usize>,
+{
+    try_range(range, bounds).unwrap()
+}
+
+/// This is [slice::try_range] copied out from the standard library so that we
+/// can use it while it is still experimental.
+#[allow(dead_code)]
+pub(crate) fn try_range<R>(
+    range: R,
+    bounds: std::ops::RangeTo<usize>,
+) -> Option<std::ops::Range<usize>>
+where
+    R: std::ops::RangeBounds<usize>,
+{
+    let len = bounds.end;
+
+    let start = match range.start_bound() {
+        std::ops::Bound::Included(&start) => start,
+        std::ops::Bound::Excluded(start) => start.checked_add(1)?,
+        std::ops::Bound::Unbounded => 0,
+    };
+
+    let end = match range.end_bound() {
+        std::ops::Bound::Included(end) => end.checked_add(1)?,
+        std::ops::Bound::Excluded(&end) => end,
+        std::ops::Bound::Unbounded => len,
+    };
+
+    if start > end || end > len {
+        None
+    } else {
+        Some(std::ops::Range { start, end })
     }
 }

@@ -9,6 +9,7 @@ use std::{
     io::{Cursor, ErrorKind, Read, Seek, SeekFrom},
     ops::Range,
     str::from_utf8,
+    sync::Arc,
 };
 
 use crate::{
@@ -32,21 +33,20 @@ use crate::{
 };
 
 use binrw::{BinRead, BinWrite, Endian, Error as BinError, binrw};
-use clap::ValueEnum;
 use encoding_rs::Encoding;
 use itertools::Itertools;
-use serde::{Serialize, Serializer, ser::SerializeTuple};
+use serde::{Deserialize, Serialize, Serializer, ser::SerializeTuple};
 use thiserror::Error as ThisError;
 
 /// Type of compression in a system file.
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Serialize, ValueEnum)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum Compression {
     /// Simple bytecode-based compression.
     Simple,
     /// [ZLIB] compression.
     ///
     /// [ZLIB]: https://www.zlib.net/
-    #[value(name = "zlib", help = "ZLIB space-efficient compression")]
     ZLib,
 }
 
@@ -2521,11 +2521,11 @@ impl ZHeader {
 }
 
 /// Error reading a [ZHeader].
-#[derive(ThisError, Debug)]
+#[derive(Clone, ThisError, Debug)]
 pub enum ZHeaderError {
     /// I/O error via [mod@binrw].
     #[error("{}", DisplayBinError(.0, "ZLIB header"))]
-    BinError(#[from] BinError),
+    BinError(Arc<BinError>),
 
     /// Impossible ztrailer_offset {0:#x}.
     #[error("Impossible ztrailer_offset {0:#x}.")]
@@ -2549,6 +2549,12 @@ pub enum ZHeaderError {
         /// ZLIB trailer length.
         u64,
     ),
+}
+
+impl From<BinError> for ZHeaderError {
+    fn from(value: BinError) -> Self {
+        ZHeaderError::BinError(Arc::new(value))
+    }
 }
 
 /// A ZLIB trailer in a system file.
@@ -2669,11 +2675,11 @@ impl<'a> Display for DisplayBinError<'a> {
 }
 
 /// Error reading a [ZTrailer].
-#[derive(ThisError, Debug)]
+#[derive(Clone, ThisError, Debug)]
 pub enum ZTrailerError {
     /// I/O error via [mod@binrw].
     #[error("{}", DisplayBinError(.0, "ZLIB trailer"))]
-    BinError(#[from] BinError),
+    BinError(Arc<BinError>),
 
     /// ZLIB trailer bias {actual} is not {} as expected from file header bias.
     #[
@@ -2768,6 +2774,12 @@ pub enum ZTrailerError {
         /// Actual offset.
         actual: u64,
     },
+}
+
+impl From<BinError> for ZTrailerError {
+    fn from(value: BinError) -> Self {
+        ZTrailerError::BinError(Arc::new(value))
+    }
 }
 
 impl ZTrailer {

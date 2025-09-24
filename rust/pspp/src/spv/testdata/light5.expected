@@ -1,0 +1,7 @@
+                                                                                     Hypothesis Test Summary
+                                      Null Hypothesis                                    │                              Test                              │Sig.[a,b]│          Decision
+─────────────────────────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────────┼─────────┼───────────────────────────
+1 The distributions of Variable0000001, Variable0000002 and Variable0000003 are the same.│Related-Samples Friedman's Two-Way Analysis of Variance by Ranks│     .164│Retain the null hypothesis.
+─────────────────────────────────────────────────────────────────────────────────────────┴────────────────────────────────────────────────────────────────┴─────────┴───────────────────────────
+a. The significance level is .050.
+b. Asymptotic significance is displayed.

@@ -2,14 +2,12 @@ Warning at file offsets 0x1c8 to 0x1e8: In extension record: variable attributes
 
 This system file does not indicate its own character encoding.  For best results, specify an encoding explicitly.  Use SYSFILE INFO with ENCODING="DETECT" to analyze the possible encodings.
 
-╭──────────────────────┬────────────────────────────────────╮
-│       Created        │                30-JAN-2013 14:34:58│
-├──────────────────────┼────────────────────────────────────┤
-│Writer Product        │MS Windows Release 12.0 spssio32.dll│
-├──────────────────────┼────────────────────────────────────┤
-│       Compression    │SAV                                 │
-│       Number of Cases│                                  10│
-╰──────────────────────┴────────────────────────────────────╯
+╭────────────────┬────────────────────────────────────╮
+│Created         │                30-JAN-2013 14:34:58│
+│Writer  Product │MS Windows Release 12.0 spssio32.dll│
+│Compression     │SAV                                 │
+│Number of Cases │                                  10│
+╰────────────────┴────────────────────────────────────╯
 
 ╭─────────┬─╮
 │Variables│4│
@@ -25,17 +23,16 @@ This system file does not indicate its own character encoding.  For best results
 │VAR00004│       4│     │Nominal          │Input│    8│Left     │A1          │A1          │              │
 ╰────────┴────────┴─────┴─────────────────┴─────┴─────┴─────────┴────────────┴────────────┴──────────────╯
 
-          Value Labels
-╭───────────────────┬──────────╮
-│Variable Value     │          │
-├───────────────────┼──────────┤
-│VAR00002       1.00│Male      │
-│               2.00│Female    │
-├───────────────────┼──────────┤
-│VAR00003       2.00│Student   │
-│               3.00│Employed  │
-│               4.00│Unemployed│
-╰───────────────────┴──────────╯
+        Value Labels
+╭───────────────┬──────────╮
+│Variable Value │          │
+├───────────────┼──────────┤
+│VAR00002 1.00  │Male      │
+│         2.00  │Female    │
+│VAR00003 2.00  │Student   │
+│         3.00  │Employed  │
+│         4.00  │Unemployed│
+╰───────────────┴──────────╯
 
 ╭────┬────────┬────────┬────────┬────────╮
 │Case│VAR00001│VAR00002│VAR00003│VAR00004│

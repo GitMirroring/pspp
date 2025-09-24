@@ -42,7 +42,7 @@ use crate::{
     identifier::{IdentifierChar, id_match, id_match_n},
     prompt::PromptStyle,
 };
-use bitflags::bitflags;
+use enumset::{EnumSet, EnumSetType};
 
 use super::command_name::{COMMAND_NAMES, command_match};
 
@@ -184,12 +184,10 @@ pub enum Segment {
     UnexpectedChar,
 }
 
-bitflags! {
-    #[derive(Copy, Clone, Debug)]
-    struct Substate: u8 {
-        const START_OF_LINE = 1;
-        const START_OF_COMMAND = 2;
-    }
+#[derive(Debug, EnumSetType)]
+enum Substate {
+    StartOfLine,
+    StartOfCommand,
 }
 
 /// Used by [Segmenter] to indicate that more input is needed.
@@ -199,7 +197,7 @@ pub struct Incomplete;
 /// Labels syntax input with [Segment]s.
 #[derive(Copy, Clone)]
 pub struct Segmenter {
-    state: (State, Substate),
+    state: (State, EnumSet<Substate>),
     nest: u8,
     syntax: Syntax,
 }
@@ -219,9 +217,9 @@ impl Segmenter {
     pub fn new(syntax: Syntax, is_snippet: bool) -> Self {
         Self {
             state: if is_snippet {
-                (State::General, Substate::empty())
+                (State::General, EnumSet::empty())
             } else {
-                (State::Shbang, Substate::empty())
+                (State::Shbang, EnumSet::empty())
             },
             syntax,
             nest: 0,
@@ -234,11 +232,11 @@ impl Segmenter {
     }
 
     fn start_of_line(&self) -> bool {
-        self.state.1.contains(Substate::START_OF_LINE)
+        self.state.1.contains(Substate::StartOfLine)
     }
 
     fn start_of_command(&self) -> bool {
-        self.state.1.contains(Substate::START_OF_COMMAND)
+        self.state.1.contains(Substate::StartOfCommand)
     }
 
     /// Returns the style of command prompt to display to an interactive user
@@ -557,14 +555,14 @@ impl Segmenter {
         if let (Some('#'), rest) = take(input, eof)? {
             if let (Some('!'), rest) = take(rest, eof)? {
                 let rest = self.parse_full_line(rest, eof)?;
-                self.state = (State::General, Substate::START_OF_COMMAND);
+                self.state = (State::General, EnumSet::only(Substate::StartOfCommand));
                 return Ok(Some((rest, Segment::Shbang)));
             }
         }
 
         self.state = (
             State::General,
-            Substate::START_OF_COMMAND | Substate::START_OF_LINE,
+            EnumSet::only(Substate::StartOfCommand) | EnumSet::only(Substate::StartOfLine),
         );
         self.push_rest(input, eof)
     }
@@ -590,29 +588,29 @@ impl Segmenter {
         match c {
             '+' if is_start_of_string(skip_spaces_and_comments(rest, eof)?, eof)? => {
                 // This  `+` is punctuation that may separate pieces of a string.
-                self.state = (State::General, Substate::empty());
+                self.state = (State::General, EnumSet::empty());
                 return Ok(Some((rest, Segment::Punct)));
             }
             '+' | '-' | '.' => {
-                self.state = (State::General, Substate::START_OF_COMMAND);
+                self.state = (State::General, EnumSet::only(Substate::StartOfCommand));
                 return Ok(Some((rest, Segment::StartCommand)));
             }
             _ if c.is_whitespace() => {
                 if at_end_of_line(input, eof)? {
-                    self.state = (State::General, Substate::START_OF_COMMAND);
+                    self.state = (State::General, EnumSet::only(Substate::StartOfCommand));
                     return Ok(Some((input, Segment::SeparateCommands)));
                 }
             }
             _ => {
                 if self.at_command_start(input, eof)?
-                    && !self.state.1.contains(Substate::START_OF_COMMAND)
+                    && !self.state.1.contains(Substate::StartOfCommand)
                 {
-                    self.state = (State::General, Substate::START_OF_COMMAND);
+                    self.state = (State::General, EnumSet::only(Substate::StartOfCommand));
                     return Ok(Some((input, Segment::StartCommand)));
                 }
             }
         }
-        self.state.1 = Substate::START_OF_COMMAND;
+        self.state.1 = EnumSet::only(Substate::StartOfCommand);
         self.parse_mid_line(input, eof)
     }
     fn parse_mid_line<'a>(
@@ -621,13 +619,13 @@ impl Segmenter {
         eof: bool,
     ) -> Result<Option<(&'a str, Segment)>, Incomplete> {
         debug_assert!(self.state.0 == State::General);
-        debug_assert!(!self.state.1.contains(Substate::START_OF_LINE));
+        debug_assert!(!self.state.1.contains(Substate::StartOfLine));
         let (Some(c), rest) = take(input, eof)? else {
             unreachable!()
         };
         match c {
             '\r' | '\n' if is_end_of_line(input, eof)? => {
-                self.state.1 |= Substate::START_OF_LINE;
+                self.state.1 |= EnumSet::only(Substate::StartOfLine);
                 Ok(Some((
                     self.parse_newline(input, eof).unwrap().unwrap(),
                     Segment::Newline,
@@ -638,7 +636,7 @@ impl Segmenter {
                     let rest = skip_comment(rest, eof)?;
                     Ok(Some((rest, Segment::Comment)))
                 } else {
-                    self.state.1 = Substate::empty();
+                    self.state.1 = EnumSet::empty();
                     Ok(Some((rest, Segment::Punct)))
                 }
             }
@@ -657,16 +655,16 @@ impl Segmenter {
                     }
                     None | Some(_) => (),
                 }
-                self.state.1 = Substate::empty();
+                self.state.1 = EnumSet::empty();
                 Ok(Some((rest, Segment::Punct)))
             }
             '(' | ')' | '[' | ']' | '{' | '}' | ',' | '=' | ';' | ':' | '&' | '|' | '+' => {
-                self.state.1 = Substate::empty();
+                self.state.1 = EnumSet::empty();
                 Ok(Some((rest, Segment::Punct)))
             }
             '*' => {
-                if self.state.1.contains(Substate::START_OF_COMMAND) {
-                    self.state = (State::Comment1, Substate::empty());
+                if self.state.1.contains(Substate::StartOfCommand) {
+                    self.state = (State::Comment1, EnumSet::empty());
                     self.parse_comment_1(input, eof)
                 } else {
                     self.parse_digraph(&['*'], rest, eof)
@@ -676,7 +674,7 @@ impl Segmenter {
             '>' => self.parse_digraph(&['='], rest, eof),
             '~' => self.parse_digraph(&['='], rest, eof),
             '.' if at_end_of_line(rest, eof)? => {
-                self.state.1 = Substate::START_OF_COMMAND;
+                self.state.1 = EnumSet::only(Substate::StartOfCommand);
                 Ok(Some((rest, Segment::EndCommand)))
             }
             '.' => match take(rest, eof)? {
@@ -698,11 +696,11 @@ impl Segmenter {
             c if c.is_whitespace() => Ok(Some((skip_spaces(rest, eof)?, Segment::Spaces))),
             c if c.may_start_id() => self.parse_id(input, eof),
             '#'..='~' if c != '\\' && c != '^' => {
-                self.state.1 = Substate::empty();
+                self.state.1 = EnumSet::empty();
                 Ok(Some((rest, Segment::Punct)))
             }
             _ => {
-                self.state.1 = Substate::empty();
+                self.state.1 = EnumSet::empty();
                 Ok(Some((rest, Segment::UnexpectedChar)))
             }
         }
@@ -719,7 +717,7 @@ impl Segmenter {
                 _ if c == quote => {
                     let (c, rest2) = take(rest, eof)?;
                     if c != Some(quote) {
-                        self.state.1 = Substate::empty();
+                        self.state.1 = EnumSet::empty();
                         return Ok(Some((rest, segment)));
                     }
                     input = rest2;
@@ -728,7 +726,7 @@ impl Segmenter {
                 _ => input = rest,
             }
         }
-        self.state.1 = Substate::empty();
+        self.state.1 = EnumSet::empty();
         Ok(Some((input, Segment::ExpectedQuote)))
     }
     fn maybe_parse_string<'a>(
@@ -803,23 +801,23 @@ impl Segmenter {
         };
         let rest = &input[identifier.len()..];
 
-        if self.state.1.contains(Substate::START_OF_COMMAND) {
+        if self.state.1.contains(Substate::StartOfCommand) {
             if id_match_n("COMMENT", identifier, 4) {
-                self.state = (State::Comment1, Substate::empty());
+                self.state = (State::Comment1, EnumSet::empty());
                 return self.parse_comment_1(input, eof);
             } else if id_match("DOCUMENT", identifier) {
-                self.state = (State::Document1, Substate::empty());
+                self.state = (State::Document1, EnumSet::empty());
                 return Ok(Some((input, Segment::StartDocument)));
             } else if id_match_n("DEFINE", identifier, 6) {
-                self.state = (State::Define1, Substate::empty());
+                self.state = (State::Define1, EnumSet::empty());
             } else if id_match("FILE", identifier) {
                 if id_match("LABEL", self.next_id_in_command(rest, eof)?.0) {
-                    self.state = (State::FileLabel1, Substate::empty());
+                    self.state = (State::FileLabel1, EnumSet::empty());
                     return Ok(Some((rest, Segment::Identifier)));
                 }
             } else if id_match("DO", identifier) {
                 if id_match("REPEAT", self.next_id_in_command(rest, eof)?.0) {
-                    self.state = (State::DoRepeat1, Substate::empty());
+                    self.state = (State::DoRepeat1, EnumSet::empty());
                     return Ok(Some((rest, Segment::Identifier)));
                 }
             } else if id_match("BEGIN", identifier) {
@@ -839,7 +837,7 @@ impl Segmenter {
                             } else {
                                 State::BeginData2
                             },
-                            Substate::empty(),
+                            EnumSet::empty(),
                         );
                         return Ok(Some((rest, Segment::Identifier)));
                     }
@@ -847,7 +845,7 @@ impl Segmenter {
             }
         }
 
-        self.state.1 = Substate::empty();
+        self.state.1 = EnumSet::empty();
         Ok(Some((
             rest,
             if identifier != "!" {
@@ -864,7 +862,7 @@ impl Segmenter {
         eof: bool,
     ) -> Result<Option<(&'a str, Segment)>, Incomplete> {
         let (c, rest) = take(input, eof)?;
-        self.state.1 = Substate::empty();
+        self.state.1 = EnumSet::empty();
         Ok(Some((
             match c {
                 Some(c) if seconds.contains(&c) => rest,
@@ -889,12 +887,12 @@ impl Segmenter {
             let rest = match_char(|c| c == '+' || c == '-', rest, eof)?.unwrap_or(rest);
             let rest2 = skip_digits(rest, eof)?;
             if rest2.len() == rest.len() {
-                self.state.1 = Substate::empty();
+                self.state.1 = EnumSet::empty();
                 return Ok(Some((rest, Segment::ExpectedExponent)));
             }
             input = rest2;
         }
-        self.state.1 = Substate::empty();
+        self.state.1 = EnumSet::empty();
         Ok(Some((input, Segment::Number)))
     }
     fn parse_comment_1<'a>(
@@ -911,7 +909,7 @@ impl Segmenter {
         loop {
             let (Some(c), rest) = take(input, eof)? else {
                 // End of file.
-                self.state = (State::General, Substate::START_OF_COMMAND);
+                self.state = (State::General, EnumSet::only(Substate::StartOfCommand));
                 return Ok(Some((input, Segment::SeparateCommands)));
             };
             match c {
@@ -920,17 +918,17 @@ impl Segmenter {
                     match state {
                         CommentState::Blank => {
                             // Blank line ends comment command.
-                            self.state = (State::General, Substate::START_OF_COMMAND);
+                            self.state = (State::General, EnumSet::only(Substate::StartOfCommand));
                             return Ok(Some((input, Segment::SeparateCommands)));
                         }
                         CommentState::Period(period) => {
                             // '.' at end of line ends comment command.
-                            self.state = (State::General, Substate::empty());
+                            self.state = (State::General, EnumSet::empty());
                             return Ok(Some((period, Segment::CommentCommand)));
                         }
                         CommentState::NotBlank => {
                             // Comment continues onto next line.
-                            self.state = (State::Comment2, Substate::empty());
+                            self.state = (State::Comment2, EnumSet::empty());
                             return Ok(Some((input, Segment::CommentCommand)));
                         }
                     }
@@ -956,10 +954,10 @@ impl Segmenter {
         if new_command {
             self.state = (
                 State::General,
-                Substate::START_OF_LINE | Substate::START_OF_COMMAND,
+                EnumSet::only(Substate::StartOfLine) | EnumSet::only(Substate::StartOfCommand),
             );
         } else {
-            self.state = (State::Comment1, Substate::empty());
+            self.state = (State::Comment1, EnumSet::empty());
         }
         Ok(Some((rest, Segment::Newline)))
     }
@@ -971,7 +969,7 @@ impl Segmenter {
         let mut end_cmd = false;
         loop {
             let (Some(c), rest) = take(input, eof)? else {
-                self.state = (State::Document3, Substate::empty());
+                self.state = (State::Document3, EnumSet::empty());
                 return Ok(Some((input, Segment::Document)));
             };
             match c {
@@ -996,7 +994,7 @@ impl Segmenter {
         eof: bool,
     ) -> Result<Option<(&'a str, Segment)>, Incomplete> {
         let rest = self.parse_newline(input, eof)?.unwrap();
-        self.state = (State::Document1, Substate::empty());
+        self.state = (State::Document1, EnumSet::empty());
         Ok(Some((rest, Segment::Newline)))
     }
     fn parse_document_3<'a>(
@@ -1006,7 +1004,7 @@ impl Segmenter {
     ) -> Result<Option<(&'a str, Segment)>, Incomplete> {
         self.state = (
             State::General,
-            Substate::START_OF_COMMAND | Substate::START_OF_LINE,
+            EnumSet::only(Substate::StartOfCommand) | EnumSet::only(Substate::StartOfLine),
         );
         Ok(Some((input, Segment::EndCommand)))
     }
@@ -1046,7 +1044,7 @@ impl Segmenter {
         eof: bool,
     ) -> Result<Option<(&'a str, Segment)>, Incomplete> {
         let input = skip_spaces(input, eof)?;
-        self.state = (State::FileLabel3, Substate::empty());
+        self.state = (State::FileLabel3, EnumSet::empty());
         Ok(Some((input, Segment::Spaces)))
     }
     fn parse_file_label_3<'a>(
@@ -1059,7 +1057,7 @@ impl Segmenter {
             let (c, rest) = take(input, eof)?;
             match c {
                 None | Some('\n') | Some('\r') if is_end_of_line(input, eof)? => {
-                    self.state = (State::General, Substate::empty());
+                    self.state = (State::General, EnumSet::empty());
                     return Ok(Some((end_cmd.unwrap_or(input), Segment::UnquotedString)));
                 }
                 None => unreachable!(),
@@ -1194,7 +1192,8 @@ impl Segmenter {
                     // REPEAT` body.
                     self.state = (
                         State::General,
-                        Substate::START_OF_COMMAND | Substate::START_OF_LINE,
+                        EnumSet::only(Substate::StartOfCommand)
+                            | EnumSet::only(Substate::StartOfLine),
                     );
                     return self.push_rest(input, eof);
                 }
@@ -1271,7 +1270,7 @@ impl Segmenter {
             Segment::Punct if input.starts_with(')') => {
                 self.nest -= 1;
                 if self.nest == 0 {
-                    self.state = (State::Define4, Substate::empty());
+                    self.state = (State::Define4, EnumSet::empty());
                 }
             }
             _ => (),
@@ -1312,7 +1311,7 @@ impl Segmenter {
         let line = &input[..input.len() - rest.len()];
         if let Some(end) = Self::find_enddefine(line) {
             // Macro ends at the !ENDDEFINE on this line.
-            self.state = (State::General, Substate::empty());
+            self.state = (State::General, EnumSet::empty());
             let (prefix, rest) = input.split_at(line.len() - end.len());
             if prefix.is_empty() {
                 // Line starts with `!ENDDEFINE`.
@@ -1411,7 +1410,7 @@ impl Segmenter {
         if Self::is_end_data(line) {
             self.state = (
                 State::General,
-                Substate::START_OF_COMMAND | Substate::START_OF_LINE,
+                EnumSet::only(Substate::StartOfCommand) | EnumSet::only(Substate::StartOfLine),
             );
             self.push_rest(input, eof)
         } else {

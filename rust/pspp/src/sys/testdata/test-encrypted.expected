@@ -1,12 +1,10 @@
-╭──────────────────────┬────────────────────────────────────────────╮
-│       Created        │                        04-OCT-2013 19:13:09│
-├──────────────────────┼────────────────────────────────────────────┤
-│Writer Product        │@(#) IBM SPSS STATISTICS MS Windows 22.0.0.0│
-│       Version        │22.0.0                                      │
-├──────────────────────┼────────────────────────────────────────────┤
-│       Compression    │SAV                                         │
-│       Number of Cases│                                          17│
-╰──────────────────────┴────────────────────────────────────────────╯
+╭────────────────┬────────────────────────────────────────────╮
+│Created         │                        04-OCT-2013 19:13:09│
+│Writer  Product │@(#) IBM SPSS STATISTICS MS Windows 22.0.0.0│
+│        Version │22.0.0                                      │
+│Compression     │SAV                                         │
+│Number of Cases │                                          17│
+╰────────────────┴────────────────────────────────────────────╯
 
 ╭─────────┬─╮
 │Variables│5│
@@ -32,25 +30,21 @@
 │                                                     3│No Opinion       │
 │                                                     4│Agree            │
 │                                                     5│Strongly Agree   │
-├──────────────────────────────────────────────────────┼─────────────────┤
 │The value for money was good                         1│Strongly Disagree│
 │                                                     2│Disagree         │
 │                                                     3│No Opinion       │
 │                                                     4│Agree            │
 │                                                     5│Strongly Agree   │
-├──────────────────────────────────────────────────────┼─────────────────┤
 │The staff were slow in responding                    1│Strongly Disagree│
 │                                                     2│Disagree         │
 │                                                     3│No Opinion       │
 │                                                     4│Agree            │
 │                                                     5│Strongly Agree   │
-├──────────────────────────────────────────────────────┼─────────────────┤
 │My concerns were dealt with in an efficient manner   1│Strongly Disagree│
 │                                                     2│Disagree         │
 │                                                     3│No Opinion       │
 │                                                     4│Agree            │
 │                                                     5│Strongly Agree   │
-├──────────────────────────────────────────────────────┼─────────────────┤
 │There was too much noise in the rooms                1│Strongly Disagree│
 │                                                     2│Disagree         │
 │                                                     3│No Opinion       │
@@ -63,13 +57,9 @@
 │Variable and Name                                          │Value│
 ├───────────────────────────────────────────────────────────┼─────┤
 │I am satisfied with the level of service             $@Role│0    │
-├───────────────────────────────────────────────────────────┼─────┤
 │The value for money was good                         $@Role│0    │
-├───────────────────────────────────────────────────────────┼─────┤
 │The staff were slow in responding                    $@Role│0    │
-├───────────────────────────────────────────────────────────┼─────┤
 │My concerns were dealt with in an efficient manner   $@Role│0    │
-├───────────────────────────────────────────────────────────┼─────┤
 │There was too much noise in the rooms                $@Role│0    │
 ╰───────────────────────────────────────────────────────────┴─────╯
 

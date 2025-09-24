@@ -37,7 +37,6 @@ use crate::{
     dictionary::{CategoryLabels, Dictionary, MultipleResponseType},
     format::{DisplayPlain, Format},
     identifier::Identifier,
-    output::spv::Zeros,
     sys::{
         ProductVersion,
         encoding::codepage_from_encoding,
@@ -1212,6 +1211,24 @@ where
 {
     fn seek(&mut self, _pos: std::io::SeekFrom) -> Result<u64, IoError> {
         Err(IoError::from(ErrorKind::NotSeekable))
+    }
+}
+
+pub struct Zeros(pub usize);
+
+impl BinWrite for Zeros {
+    type Args<'a> = ();
+
+    fn write_options<W: Write + Seek>(
+        &self,
+        writer: &mut W,
+        _endian: Endian,
+        _args: Self::Args<'_>,
+    ) -> binrw::BinResult<()> {
+        for _ in 0..self.0 {
+            writer.write_all(&[0u8])?;
+        }
+        Ok(())
     }
 }
 

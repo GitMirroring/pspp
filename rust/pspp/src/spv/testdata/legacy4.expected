@@ -1,0 +1,9 @@
+                    Chi-Square Tests
+╭──────────────────┬─────────┬──┬─────────────────────╮
+│                  │  Value  │df│Asymp. Sig. (2-sided)│
+├──────────────────┼─────────┼──┼─────────────────────┤
+│Pearson Chi-Square│17,182[a]│ 4│                 ,002│
+│Likelihood Ratio  │   16,820│ 4│                 ,002│
+│N of Valid Cases  │       27│  │                     │
+╰──────────────────┴─────────┴──┴─────────────────────╯
+a.  7 cells (77,8%) have expected count less than 5. The minimum expected count is ,04.

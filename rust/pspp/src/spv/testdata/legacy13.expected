@@ -1,0 +1,13 @@
+                                             Chi-Square Tests
+╭────────────────────────────┬────────┬──┬─────────────────────┬────────────────────┬────────────────────╮
+│                            │  Value │df│Asymp. Sig. (2-sided)│Exact Sig. (2-sided)│Exact Sig. (1-sided)│
+├────────────────────────────┼────────┼──┼─────────────────────┼────────────────────┼────────────────────┤
+│Pearson Chi-Square          │9.479[a]│ 1│                 .002│                    │                    │
+│Continuity Correction[b]    │   7.898│ 1│                 .005│                    │                    │
+│Likelihood Ratio            │   9.731│ 1│                 .002│                    │                    │
+│Fisher's Exact Test         │        │  │                     │                .003│                .002│
+│Linear-by-Linear Association│   9.321│ 1│                 .002│                    │                    │
+│N of Valid Cases[b]         │      60│  │                     │                    │                    │
+╰────────────────────────────┴────────┴──┴─────────────────────┴────────────────────┴────────────────────╯
+a. 0 cells (.0%) have expected count less than 5. The minimum expected count is 10.27.
+b. Computed only for a 2x2 table

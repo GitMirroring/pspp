@@ -14,14 +14,12 @@ Substituting A4 for invalid print format on variable STR2.  String variable with
 
 Substituting A4 for invalid write format on variable STR2.  String variable with width 4 is not compatible with format AHEX4.  Use format AHEX8 instead.
 
-╭──────────────────────┬────────────────────────╮
-│       Created        │    01-JAN-2011 20:53:52│
-├──────────────────────┼────────────────────────┤
-│Writer Product        │PSPP synthetic test file│
-├──────────────────────┼────────────────────────┤
-│       Compression    │SAV                     │
-│       Number of Cases│Unknown                 │
-╰──────────────────────┴────────────────────────╯
+╭────────────────┬────────────────────────╮
+│Created         │    01-JAN-2011 20:53:52│
+│Writer  Product │PSPP synthetic test file│
+│Compression     │SAV                     │
+│Number of Cases │Unknown                 │
+╰────────────────┴────────────────────────╯
 
 ╭─────────┬─╮
 │Variables│4│

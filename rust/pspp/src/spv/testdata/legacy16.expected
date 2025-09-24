@@ -1,0 +1,17 @@
+                                                 Table 1
+╭────────────────────────┬─────────────────────────────────────────────────────────────────────────────╮
+│                        │                                    GENDER                                   │
+│                        ├──────────────────────────┬──────────────────────────┬───────────────────────┤
+│                        │           Male           │          Female          │         Total         │
+│                        ├───────┬──────────────────┼───────┬──────────────────┼────┬──────────────────┤
+│                        │  Mean │Standard Deviation│  Mean │Standard Deviation│Mean│Standard Deviation│
+├────────────────────────┼───────┼──────────────────┼───────┼──────────────────┼────┼──────────────────┤
+│STATUS Examined      AGE│ 52.3_a│               9.2│ 51.8_a│              10.7│52.0│              10.1│
+│       Not Available AGE│ 50.8_a│               7.4│ 49.4_a│               8.2│50.6│               7.4│
+│       Refused       AGE│59.0[1]│.                 │50.0[1]│.                 │54.5│               6.4│
+│       Total         AGE│   52.1│               9.1│   51.8│              10.7│51.9│              10.0│
+╰────────────────────────┴───────┴──────────────────┴───────┴──────────────────┴────┴──────────────────╯
+Note: Values in the same row and subtable not sharing the same subscript are significantly different at p< 0.05 in the two-sided test of equality for column means. Cells with no subscript are not included in the test. Tests assume equal variances.[2,3]
+1.  This category is not used in comparisons because the sum of case weights is less than two.
+2.  Tests are adjusted for all pairwise comparisons within a row of each innermost subtable using the Bonferroni correction.
+3.  Pairwise comparisons are not performed for some subtables because of numerical problems.

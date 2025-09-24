@@ -45,7 +45,7 @@ use crate::{
     dictionary::Dictionary,
     format::{Error as FormatError, Format, UncheckedFormat},
     identifier::{Error as IdError, Identifier},
-    output::pivot::{MetadataEntry, MetadataValue, PivotTable, Value},
+    output::pivot::{MetadataEntry, MetadataValue, PivotTable, value::Value},
     sys::raw::{self, CaseDetails, CaseVar, CompressionAction, records::RawFormat},
     variable::{MissingValues, MissingValuesError, VarWidth, Variable},
 };
@@ -137,7 +137,7 @@ impl From<&Metadata> for PivotTable {
             value: MetadataValue::Group(vec![
                 MetadataEntry {
                     name: Value::new_user_text("Created"),
-                    value: MetadataValue::new_leaf(Value::new_date_time(value.creation)),
+                    value: MetadataValue::new_leaf(Value::new_date(value.creation)),
                 },
                 maybe_string("Product", &value.product),
                 maybe_string("File Name", &value.filename),
@@ -211,8 +211,8 @@ impl<R> Cases<R> {
         match result {
             Ok(Some(mut raw_case)) => {
                 for datum in &mut raw_case.0 {
-                    if let Datum::Number(Some(number)) = datum
-                        && *number == self.sysmis
+                    if let Some(Some(number)) = datum.as_number()
+                        && number == self.sysmis
                     {
                         *datum = Datum::Number(None);
                     }

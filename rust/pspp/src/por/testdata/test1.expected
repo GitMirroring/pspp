@@ -31,11 +31,9 @@
 │SATISFACTION WITH HOUSING 1│VERY      │
 │                          2│FAIRLY    │
 │                          3│NOT VERY  │
-├───────────────────────────┼──────────┤
 │SATISFACTION NEIGHBORHOOD 1│VERY      │
 │                          2│FAIRLY    │
 │                          3│NOT VERY  │
-├───────────────────────────┼──────────┤
 │RESPOND. EDUCATION        1│NONE      │
 │                          2│< 8 YRS   │
 │                          3│C GRD SC  │
@@ -45,24 +43,20 @@
 │                          7│COLL DEG  │
 │                          8│MASTERS   │
 │                          9│PHD-M.D.  │
-├───────────────────────────┼──────────┤
 │STANDARD OF LIVING        1│PROSP     │
 │                          2│VERY COMF │
 │                          3│REAS COMF │
 │                          4│GET BY    │
 │                          5│NEAR POOR │
 │                          6│POOR      │
-├───────────────────────────┼──────────┤
 │RESPONDENT RACE           1│BLACK     │
 │                          2│HISPANIC  │
 │                          3│WHITE     │
 │                          4│ASIAN     │
 │                          5│AM IND    │
 │                          8│OTHER     │
-├───────────────────────────┼──────────┤
 │RESPONDENT SEX            1│MALE      │
 │                          2│FEMALE    │
-├───────────────────────────┼──────────┤
 │R MARITAL STATUS          1│MARRIED   │
 │                          2│DIVORCED  │
 │                          3│SEPARATD  │

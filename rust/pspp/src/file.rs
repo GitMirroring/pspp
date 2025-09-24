@@ -42,7 +42,7 @@ pub enum FileType {
     /// An SPSS PC+ data file.
     Pc,
 
-    /// An [SPSS Viewer file](crate::output::spv).
+    /// An [SPSS Viewer file](crate::output::drivers::spv).
     Viewer {
         /// Whether the file is encrypted.
         encrypted: bool,
@@ -152,7 +152,7 @@ impl FileType {
         }
 
         let mut string = String::new();
-        if buf.get(..7) == Some(&[0x50, 0x4b, 0x03, 0x04, 0x14, 0x00, 0x08])
+        if buf.get(..2) == Some(b"PK")
             && let Ok(mut archive) = ZipArchive::new(reader)
             && let Ok(mut file) = archive.by_name("META-INF/MANIFEST.MF")
             && let Ok(_) = file.read_to_string(&mut string)
@@ -169,6 +169,21 @@ impl FileType {
         }
 
         Ok(None)
+    }
+
+    /// Returns a string for the typical extension associated with this kind of
+    /// file, without the leading `.`.
+    ///
+    /// Returns `pc+` for [FileType::Pc] files, even though that is not typical,
+    /// since these files are so unusual.
+    pub fn as_extension(&self) -> &'static str {
+        match self {
+            FileType::System { .. } => "sav",
+            FileType::Portable => "por",
+            FileType::Pc => "pc+",
+            FileType::Viewer { .. } => "spv",
+            FileType::Syntax { .. } => "sps",
+        }
     }
 }
 

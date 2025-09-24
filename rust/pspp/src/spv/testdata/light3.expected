@@ -1,0 +1,8 @@
+Levene's Test of Equality of Error Variances[a]
+Dependent Variable: Variable Name
+  F  │df1│df2│Sig.
+─────┼───┼───┼────
+1.186│ 19│136│.278
+─────┴───┴───┴────
+Tests the null hypothesis that the error variance of the dependent variable is equal across groups.
+a. Design: Intercept + A + B + C + C + D + D * E

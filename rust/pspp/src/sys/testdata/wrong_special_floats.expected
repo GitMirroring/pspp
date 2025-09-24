@@ -4,14 +4,12 @@ System file specifies value 1.0 (0x1.0p0) as HIGHEST but 1.7976931348623157e308 
 
 System file specifies value 2.0 (0x1.0p1) as LOWEST but -1.7976931348623157e308 (-0x1.fffffffffffffp1023) was expected.
 
-╭──────────────────────┬────────────────────────╮
-│       Created        │    01-JAN-2011 20:53:52│
-├──────────────────────┼────────────────────────┤
-│Writer Product        │PSPP synthetic test file│
-├──────────────────────┼────────────────────────┤
-│       Compression    │SAV                     │
-│       Number of Cases│Unknown                 │
-╰──────────────────────┴────────────────────────╯
+╭────────────────┬────────────────────────╮
+│Created         │    01-JAN-2011 20:53:52│
+│Writer  Product │PSPP synthetic test file│
+│Compression     │SAV                     │
+│Number of Cases │Unknown                 │
+╰────────────────┴────────────────────────╯
 
 ╭─────────┬─╮
 │Variables│1│

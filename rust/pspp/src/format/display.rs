@@ -43,14 +43,46 @@ pub struct DisplayDatum<'b, B> {
     endian: EndianSettings,
     datum: Datum<B>,
 
-    /// If true, the output will remove leading and trailing spaces from numeric
-    /// values, and trailing spaces from string values.  (This might make the
-    /// output narrower than the requested width.)
-    trim_spaces: bool,
+    /// If false, the output will omit leading spaces in output, except for
+    /// string values.
+    ///
+    /// Omitting trailing spaces also causes the overflow indication to be
+    /// output as just `*` instead of enough to fill the output width.
+    ///
+    /// Omitting leading spaces can make the output narrower than the requested
+    /// width.
+    leading_spaces: bool,
+
+    /// If false, the output will omit trailing spaces in output.  For numeric
+    /// values, in practice this only affects output of missing values.
+    ///
+    /// Omitting trailing spaces also causes the overflow indication to be
+    /// output as just `*` instead of enough to fill the output width.
+    ///
+    /// Omitting trailing spaces can make the output narrower than the requested
+    /// width.
+    trailing_spaces: bool,
 
     /// If true, the output will include a double quote before and after string
     /// values.
     quote_strings: bool,
+}
+
+impl<'b, B> DisplayDatum<'b, B> {
+    /// For basic numeric formats, displays the datum wide enough to fully
+    /// display the selected number of decimal places, and trims off spaces in
+    /// the output.
+    pub fn with_stretch(self) -> Self {
+        match self.format.type_.category() {
+            Category::Basic | Category::Custom => Self {
+                format: self.format.with_max_width(),
+                leading_spaces: false,
+                trailing_spaces: false,
+                ..self
+            },
+            _ => self,
+        }
+    }
 }
 
 #[cfg(test)]
@@ -149,7 +181,7 @@ where
                 } else {
                     let quote = if self.quote_strings { "\"" } else { "" };
                     let s = string.as_str();
-                    let s = if self.trim_spaces {
+                    let s = if !self.trailing_spaces {
                         s.trim_end_matches(' ')
                     } else {
                         &s
@@ -210,7 +242,8 @@ where
             datum,
             settings: &settings.formats,
             endian: settings.endian,
-            trim_spaces: false,
+            leading_spaces: true,
+            trailing_spaces: true,
             quote_strings: false,
         }
     }
@@ -220,9 +253,22 @@ where
     pub fn with_endian(self, endian: EndianSettings) -> Self {
         Self { endian, ..self }
     }
-    pub fn with_trimming(self) -> Self {
+    pub fn without_spaces(self) -> Self {
         Self {
-            trim_spaces: true,
+            leading_spaces: false,
+            trailing_spaces: false,
+            ..self
+        }
+    }
+    pub fn without_leading_spaces(self) -> Self {
+        Self {
+            leading_spaces: false,
+            ..self
+        }
+    }
+    pub fn without_trailing_spaces(self) -> Self {
+        Self {
+            trailing_spaces: false,
             ..self
         }
     }
@@ -231,6 +277,10 @@ where
             quote_strings: true,
             ..self
         }
+    }
+
+    pub fn decimal(&self) -> Decimal {
+        self.settings.number_style(self.format.type_).decimal
     }
     fn fmt_binary(&self, f: &mut Formatter) -> FmtResult {
         let output = self.to_binary().unwrap();
@@ -244,15 +294,15 @@ where
             let style = self.settings.number_style(self.format.type_);
             if self.format.type_ != Type::E && number.abs() < 1.5 * power10(self.format.w()) {
                 let rounder = Rounder::new(style, number, self.format.d);
-                if self.decimal(f, &rounder, style, true)?
-                    || self.scientific(f, number, style, true)?
-                    || self.decimal(f, &rounder, style, false)?
+                if self.number_decimal(f, &rounder, style, true)?
+                    || self.number_scientific(f, number, style, true)?
+                    || self.number_decimal(f, &rounder, style, false)?
                 {
                     return Ok(());
                 }
             }
 
-            if !self.scientific(f, number, style, false)? {
+            if !self.number_scientific(f, number, style, false)? {
                 self.overflow(f)?;
             }
             Ok(())
@@ -274,7 +324,12 @@ where
             } else {
                 "Unknown"
             };
-            let w = if self.trim_spaces { 0 } else { self.format.w() };
+            // XXX does this width trick really work?
+            let w = if self.leading_spaces {
+                self.format.w()
+            } else {
+                0
+            };
             write!(f, "{s:>w$.w$}")
         } else {
             self.overflow(f)
@@ -288,10 +343,6 @@ where
             _ => (),
         }
 
-        if self.trim_spaces {
-            return write!(f, ".");
-        }
-
         let w = self.format.w() as isize;
         let d = self.format.d() as isize;
         let dot_position = match self.format.type_ {
@@ -302,28 +353,32 @@ where
         };
         let dot_position = dot_position.max(0) as u16;
 
-        for i in 0..self.format.w {
-            if i == dot_position {
-                write!(f, ".")?;
-            } else {
-                write!(f, " ")?;
+        if self.leading_spaces {
+            for _ in 0..dot_position {
+                f.write_char(' ')?;
+            }
+        }
+        f.write_char('.')?;
+        if self.trailing_spaces {
+            for _ in dot_position + 1..self.format.w {
+                f.write_char(' ')?;
             }
         }
         Ok(())
     }
 
     fn overflow(&self, f: &mut Formatter<'_>) -> FmtResult {
-        if self.trim_spaces {
-            write!(f, "*")?;
+        if !self.leading_spaces || !self.trailing_spaces {
+            f.write_char('*')?;
         } else {
             for _ in 0..self.format.w {
-                write!(f, "*")?;
+                f.write_char('*')?;
             }
         }
         Ok(())
     }
 
-    fn decimal(
+    fn number_decimal(
         &self,
         f: &mut Formatter<'_>,
         rounder: &Rounder,
@@ -367,7 +422,7 @@ where
             // Assemble number.
             let magnitude = rounder.format(decimals as usize);
             let mut output = SmallString::<[u8; 40]>::new();
-            if !self.trim_spaces {
+            if self.leading_spaces {
                 for _ in width..self.format.w() {
                     output.push(' ');
                 }
@@ -404,7 +459,7 @@ where
                 }
             }
 
-            debug_assert!(self.trim_spaces || output.len() >= self.format.w());
+            debug_assert!(!self.leading_spaces || output.len() >= self.format.w());
             debug_assert!(output.len() <= self.format.w() + style.extra_bytes);
             f.write_str(&output)?;
             return Ok(true);
@@ -412,7 +467,7 @@ where
         Ok(false)
     }
 
-    fn scientific(
+    fn number_scientific(
         &self,
         f: &mut Formatter<'_>,
         number: f64,
@@ -444,7 +499,7 @@ where
         width += fraction_width;
 
         let mut output = SmallString::<[u8; 40]>::new();
-        if !self.trim_spaces {
+        if self.leading_spaces {
             for _ in width..self.format.w() {
                 output.push(' ');
             }
@@ -494,12 +549,6 @@ where
             }
         }
 
-        println!(
-            "{} for {number} width={width} fraction_width={fraction_width}: {output:?}",
-            self.format
-        );
-        debug_assert!(self.trim_spaces || output.len() >= self.format.w());
-        debug_assert!(output.len() <= self.format.w() + style.extra_bytes);
         f.write_str(&output)?;
         Ok(true)
     }
@@ -656,7 +705,7 @@ where
                 _ => unreachable!(),
             }
         }
-        if !self.trim_spaces {
+        if self.leading_spaces {
             write!(f, "{:>1$}", &output, self.format.w())
         } else {
             f.write_str(&output)
@@ -665,7 +714,7 @@ where
 
     fn month(&self, f: &mut Formatter<'_>, number: f64) -> FmtResult {
         if let Some(month) = month_name(number as u32) {
-            if !self.trim_spaces {
+            if self.leading_spaces {
                 write!(f, "{month:.*}", self.format.w())
             } else {
                 f.write_str(month)

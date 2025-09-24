@@ -1,0 +1,12 @@
+    Crosstabulation
+Variable A More
+Total
+╭──────────────┬──────╮
+│Statistics    │      │
+├──────────────┼──────┤
+│Count         │    38│
+│Expected Count│  38.0│
+│% within A    │100.0%│
+│% within B    │ 63.3%│
+│% of Total    │ 63.3%│
+╰──────────────┴──────╯

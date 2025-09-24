@@ -122,15 +122,25 @@ More details of basic numeric output formatting are given below:
   preferred to ordinary decimal notation without it.
 
 - Except in scientific notation, a decimal point is included only when
-  it is followed by a digit.  If the integer part of the number being
-  output is 0, and a decimal point is included, then PSPP ordinarily
-  drops the zero before the decimal point.  However, in `F`, `COMMA`,
-  or `DOT` formats, PSPP keeps the zero if [`SET
-  LEADZERO`](../../../commands/set.md#leadzero) is set to
-  `ON`.
+  it is followed by a digit.  In scientific notation, the number
+  always includes a decimal point, even if it is not followed by a
+  digit.
 
-  In scientific notation, the number always includes a decimal point,
-  even if it is not followed by a digit.
+- If the integer part of the number being output is 0, and a decimal
+  point is included, whether PSPP displays the zero before the decimal
+  point depends on the following factors:
+
+  - For `F`, `COMMA`, or `DOT` formats, PSPP keeps the leading zero if
+    [`SET LEADZERO`](../../../commands/set.md#leadzero) is set to
+    `ON`.
+
+  - For `PCT` and `DOLLAR`, PSPP drops the leading zero unless the
+    number is being output within a pivot table in PSPP output[^0].
+
+    [^0]: There is a further exception: PSPP drops the leading zero if
+    the number is being output within a pivot table as part of a
+    templated longer text string rather than as a number on its own.
+    These currently only appear in SPV files written by SPSS.
 
 - A negative number includes a minus sign only in the presence of a
   nonzero digit: -0.01 is output as `-.01` in `F4.2` format but as

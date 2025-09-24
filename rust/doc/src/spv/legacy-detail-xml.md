@@ -31,6 +31,20 @@ Instead, write tables in the light binary format.
 
 <!-- toc -->
 
+## Overview
+
+The legacy table format represents the pivot table as a collection of
+1-dimensional data series with equal length, forming a 2-dimensional
+table.  The data series include:
+
+* `cell`, which contains a data element in the table.
+
+* `dimension#categories`, one per dimension, which contain integer
+  indexes into the categories in the dimension, counting up from 0.
+
+* `dimension#group#`, one for each level of grouping within a
+  dimension, ...
+
 ## The `visualization` Element
 
 ```
@@ -48,9 +62,7 @@ visualization
    (sourceVariable | derivedVariable)+
    categoricalDomain?
    graph
-   labelFrame[lf1]*
-   container?
-   labelFrame[lf2]*
+   (labelFrame | container)*
    style+
    layerController?
 
@@ -67,7 +79,9 @@ categoricalDomain => variableReference simpleSort
 
 simpleSort :method[sort_method]=(custom) => categoryOrder
 
-container :style=ref style => container_extension? location+ labelFrame*
+categoryOrder => TEXT
+
+container :style=ref style => container_extension? location* labelFrame*
 
 extension[container_extension] :combinedFootnotes=(true) => EMPTY
 
@@ -93,7 +107,12 @@ the following attributes:
 * `lang`  
   The locale used for output, in Windows format, which is similar to
   the format used in Unix with the underscore replaced by a hyphen,
-  e.g. `en-US`, `en-GB`, `el-GR`, `sr-Cryl-RS`.
+  e.g. `en-US`, `en-GB`, `el-GR`.  This locale must be used to
+  determine the default decimal point (used for formats other than
+  `COMMA`).  PSPP uses decimal point information from the [Unicode
+  CLDR database].
+
+  [Unicode CLDR database]: https://github.com/unicode-org/cldr/
 
 * `name`  
   The title of the pivot table, localized to the output language.
@@ -110,6 +129,10 @@ the following attributes:
   is one of 2.4, 2.5, 2.7, and 2.8.
 
 The `userSource` element has no visible effect.
+
+The `labelFrame` elements that are direct children of `visualization`
+seem to have the same effect as those that are children of the
+`container` element.
 
 The `extension` element as a child of `visualization` has the
 following attributes.
@@ -248,8 +271,7 @@ This element has the following attributes.
   Always set to `true`.
 
 * `source`  
-  Always set to `tableData`, the `source-name` in the corresponding
-  `tableData.bin` member (see
+  A `source-name` in the corresponding `tableData.bin` member (see
   [Metadata](legacy-detail-binary.md#metadata)).
 
 * `sourceName`  
@@ -296,7 +318,7 @@ expression.
 * `value`  
   An expression that defines the variable's value.  In theory this
   could be an arbitrary expression in terms of constants, functions,
-  and other variables, e.g. (VAR1 + VAR2) / 2.  In practice, the
+  and other variables, e.g. `(VAR1 + VAR2) / 2`.  In practice, the
   corpus contains only the following forms of expressions:
 
   - `constant(0)`  
@@ -357,41 +379,50 @@ attributes.
 ### `sourceVariable` and `derivedVariable` Parent Element
 
 ```
-extension[variable_extension] :from :helpId => EMPTY
+extension[variable_extension] :from? :helpId? :layerValue? => EMPTY
 ```
 
 With `sourceVariable` or `derivedVariable` as its parent element,
-`extension` has the following attributes.  A given parent element
-often contains several `extension` elements that specify the meaning
-of the source data's variables or sources, e.g.
+`extension` has a few combinations of attributes, described below.
 
-```
-<extension from="0" helpId="corrected_model"/>
-<extension from="3" helpId="error"/>
-<extension from="4" helpId="total_9"/>
-<extension from="5" helpId="corrected_total"/>
-```
+* `from` and `helpId`  
+  These specify identifiers for variable values.  A given parent
+  element often contains several `extension` elements that specify the
+  meaning of the source data's variables or sources, e.g.
 
-More commonly they are less helpful, e.g.
+  ```
+  <extension from="0" helpId="corrected_model"/>
+  <extension from="3" helpId="error"/>
+  <extension from="4" helpId="total_9"/>
+  <extension from="5" helpId="corrected_total"/>
+  ```
 
-```
-<extension from="0" helpId="notes"/>
-<extension from="1" helpId="notes"/>
-<extension from="2" helpId="notes"/>
-<extension from="5" helpId="notes"/>
-<extension from="6" helpId="notes"/>
-<extension from="7" helpId="notes"/>
-<extension from="8" helpId="notes"/>
-<extension from="12" helpId="notes"/>
-<extension from="13" helpId="no_help"/>
-<extension from="14" helpId="notes"/>
-```
+  More commonly they are less helpful, e.g.
 
-* `from`  
-  An integer or a name like "dimension0".
+  ```
+  <extension from="0" helpId="notes"/>
+  <extension from="1" helpId="notes"/>
+  <extension from="2" helpId="notes"/>
+  <extension from="5" helpId="notes"/>
+  <extension from="6" helpId="notes"/>
+  <extension from="7" helpId="notes"/>
+  <extension from="8" helpId="notes"/>
+  <extension from="12" helpId="notes"/>
+  <extension from="13" helpId="no_help"/>
+  <extension from="14" helpId="notes"/>
+  ```
 
-* `helpId`  
-  An identifier.
+  * `from`  
+    An integer or a name like "dimension0".
+
+  * `helpId`  
+    An identifier.
+
+* `layerValue`  
+  For layer variables, this specifies the value selected to be
+  displayed.  It duplicates [the `layer` element's `value`
+  attribute](#layer-value), but unlike that attribute, it isn't always
+  present.
 
 ## The `graph` Element
 
@@ -503,6 +534,8 @@ table's columns and the second the table's rows.  Each child is a `nest`
 element if the table has any dimensions along the axis in question,
 otherwise a `unity` element.
 
+### The `nest` element
+
 A `nest` element contains of one or more dimensions listed from
 innermost to outermost, each represented by `variableReference` child
 elements.  Each variable in a dimension is listed in order.  See
@@ -539,7 +572,9 @@ This is equivalent to using a `unity` element in place of `nest`.
 A `variableReference` element refers to a variable through its `ref`
 attribute.
 
-Each `layer` element represents a dimension, e.g.:
+### The `layer` element
+
+A sequence of `layer` elements represents a dimension, e.g.:
 
 ```
 <layer value="0" variable="dimension0categories" visible="true"/>
@@ -551,14 +586,25 @@ Each `layer` element represents a dimension, e.g.:
 * `variable`  
   Refers to a `sourceVariable` or `derivedVariable` element.
 
-* `value`  
-  The value to select.  For a category variable, this is always `0`;
-  for a data variable, it is the same as the `variable` attribute.
+* <a name="layer-value">`value`</a>  
+  The value to select.  For a `category` variable, this is the value
+  of the category variable to use as the layer value; for a `group`
+  variable, this is the value of the group variable (this is redundant
+  since the category implies all of its enclosing groups); for a
+  `dimension` variable, it is the same as the `variable` attribute.
 
 * `visible`  
-  Whether the layer is visible.  Generally, category layers are
-  visible and data layers are not, but sometimes this attribute is
-  omitted.
+  For `category` layers, this controls whether the layer name and its
+  value are shown in the output.  If it is set to `false`, they are
+  hidden.
+
+  > The "light" form of tables does not have a way to hide layer names
+  and values.  PSPP ignores this attribute.
+
+  This has no effect on other layers, which aren't ever shown.
+
+* `titleVisible`  
+  This has no noticeable effect.
 
 * `method`  
   When present, this is always `nest`.
@@ -566,8 +612,7 @@ Each `layer` element represents a dimension, e.g.:
 ## The `facetLayout` Element
 
 ```
-facetLayout => tableLayout setCellProperties[scp1]*
-               facetLevel+ setCellProperties[scp2]*
+facetLayout => tableLayout (setCellProperties | facetLevel)+
 
 tableLayout
    :verticalTitlesInCorner=bool
@@ -669,7 +714,7 @@ text
    :usesReference=int?
    :definesReference=int?
    :position=(subscript | superscript)?
-   :style=ref style
+   :style=ref style?
 => TEXT
 ```
 
@@ -1472,3 +1517,14 @@ printingProperties
 The `name` attribute appears only in [standalone `.stt`
 files](../tablelook.md#the-tlo-format).
 
+## Cell Data
+
+A variable named `cell` always exists.  This variable holds the data
+displayed in the table.
+
+`cell` is taken along with the `categories` variables from [`nest` and
+`layer`], which specify the values of the dimensions.
+
+XXX example
+
+[`nest` and `layer`]: #the-faceting-element

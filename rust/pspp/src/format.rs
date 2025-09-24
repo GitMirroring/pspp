@@ -16,9 +16,9 @@
 
 use std::{
     fmt::{Debug, Display, Formatter, Result as FmtResult, Write},
-    ops::{Not, RangeInclusive},
+    ops::{Index, Not, RangeInclusive},
     str::{Chars, FromStr},
-    sync::LazyLock,
+    sync::{Arc, LazyLock},
 };
 
 use chrono::{Datelike, Local};
@@ -30,11 +30,13 @@ use unicode_width::UnicodeWidthStr;
 
 use crate::{
     data::{ByteString, Datum},
+    format::decimals::LANG_TO_DECIMAL,
     sys::raw,
     util::ToSmallString,
     variable::{VarType, VarWidth},
 };
 
+mod decimals;
 mod display;
 mod parse;
 pub use display::{DisplayDatum, DisplayPlain, DisplayPlainF64};
@@ -88,19 +90,34 @@ pub enum Error {
     },
 }
 
+/// Format [Type] categories.
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Category {
-    // Numeric formats.
+    /// F, COMMA, DOT, DOLLAR, PCT, and E.
     Basic,
+
+    /// CCx.
     Custom,
+
+    /// N and Z.
     Legacy,
+
+    /// P, PK, IB, PIB, and RB.
     Binary,
+
+    /// PIBHEX and RBHEX.
     Hex,
+
+    /// DATE, ADATE, EDATE, JDATE, SDATE, QYR, MOYR, WKYR, DATETIME, and YMDHMS.
     Date,
+
+    /// MTIME, TIME, and DTIME.
     Time,
+
+    /// WKDAY and MONTH.
     DateComponent,
 
-    // String formats.
+    // A and AHEX.
     String,
 }
 
@@ -503,49 +520,67 @@ impl Serialize for Format {
     }
 }
 
+pub const F40: Format = Format {
+    type_: Type::F,
+    w: 40,
+    d: 0,
+};
+
+pub const F40_1: Format = Format {
+    type_: Type::F,
+    w: 40,
+    d: 1,
+};
+
+pub const F40_2: Format = Format {
+    type_: Type::F,
+    w: 40,
+    d: 2,
+};
+
+pub const F40_3: Format = Format {
+    type_: Type::F,
+    w: 40,
+    d: 3,
+};
+
+pub const PCT40_1: Format = Format {
+    type_: Type::Pct,
+    w: 40,
+    d: 1,
+};
+
+pub const DOLLAR40_2: Format = Format {
+    type_: Type::Dollar,
+    w: 40,
+    d: 2,
+};
+
+pub const F8_0: Format = Format {
+    type_: Type::F,
+    w: 8,
+    d: 0,
+};
+
+pub const F8_2: Format = Format {
+    type_: Type::F,
+    w: 8,
+    d: 2,
+};
+
+pub const DATETIME40_0: Format = Format {
+    type_: Type::DateTime,
+    w: 40,
+    d: 0,
+};
+
+pub const TIME40_0: Format = Format {
+    type_: Type::Time,
+    w: 40,
+    d: 0,
+};
+
 impl Format {
-    pub const F40: Format = Format {
-        type_: Type::F,
-        w: 40,
-        d: 0,
-    };
-
-    pub const F40_1: Format = Format {
-        type_: Type::F,
-        w: 40,
-        d: 1,
-    };
-
-    pub const F40_2: Format = Format {
-        type_: Type::F,
-        w: 40,
-        d: 2,
-    };
-
-    pub const F40_3: Format = Format {
-        type_: Type::F,
-        w: 40,
-        d: 3,
-    };
-
-    pub const PCT40_1: Format = Format {
-        type_: Type::Pct,
-        w: 40,
-        d: 1,
-    };
-
-    pub const F8_2: Format = Format {
-        type_: Type::F,
-        w: 8,
-        d: 2,
-    };
-
-    pub const DATETIME40_0: Format = Format {
-        type_: Type::DateTime,
-        w: 40,
-        d: 0,
-    };
-
     pub fn type_(self) -> Type {
         self.type_
     }
@@ -572,6 +607,14 @@ impl Format {
                 w,
                 d: 0,
             },
+        }
+    }
+
+    pub fn with_max_width(self) -> Self {
+        if self.var_type().is_numeric() {
+            Self { w: 40, ..self }
+        } else {
+            self
         }
     }
 
@@ -870,6 +913,21 @@ impl Decimal {
             Decimal::Comma => ",",
         }
     }
+
+    /// Returns the decimal point to use for the given `lang`, which should be a
+    /// language identifier like `en`, `de-DE`, `fr-FR`, etc.
+    pub fn for_lang(mut lang: &str) -> Self {
+        // Repeatedly strip a hyphenated suffix until we find something.
+        loop {
+            if let Some(decimal) = LANG_TO_DECIMAL.get(lang) {
+                return *decimal;
+            }
+            let Some((prefix, _suffix)) = lang.rsplit_once('-') else {
+                return Self::default();
+            };
+            lang = prefix;
+        }
+    }
 }
 
 impl From<Decimal> for char {
@@ -950,30 +1008,70 @@ impl Display for Epoch {
 }
 
 #[derive(Clone, Debug, Default, Serialize)]
+pub struct CustomCurrencies {
+    map: Option<Arc<EnumMap<CC, Option<Box<NumberStyle>>>>>,
+}
+
+impl CustomCurrencies {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn set(&mut self, cc: CC, number_style: NumberStyle) {
+        if &number_style != &self[cc] {
+            Arc::make_mut(&mut self.map.get_or_insert_default())[cc] = Some(Box::new(number_style));
+        }
+    }
+}
+
+impl Index<CC> for CustomCurrencies {
+    type Output = NumberStyle;
+
+    fn index(&self, index: CC) -> &Self::Output {
+        if let Some(map) = &self.map
+            && let Some(number_style) = &map[index]
+        {
+            &**number_style
+        } else {
+            static DEFAULT: LazyLock<NumberStyle> =
+                LazyLock::new(|| NumberStyle::new(Decimal::Dot, false));
+            &DEFAULT
+        }
+    }
+}
+
+#[derive(Clone, Debug, Default, Serialize)]
 pub struct Settings {
+    /// Epoch for 2-digit years.
     pub epoch: Epoch,
 
-    /// Either `'.'` or `','`.
+    /// Decimal point character.
     pub decimal: Decimal,
 
     /// Format `F`, `E`, `COMMA`, and `DOT` with leading zero (e.g. `0.5`
     /// instead of `.5`)?
     pub leading_zero: bool,
 
+    /// Format `PCT` and `DOLLAR` with leading zero (e.g. `$0.5` instead of
+    /// `$.5`)?
+    pub leading_zero_pct: bool,
+
     /// Custom currency styles.
-    pub ccs: EnumMap<CC, Option<Box<NumberStyle>>>,
+    pub ccs: CustomCurrencies,
 }
 
 #[derive(Copy, Clone, Enum)]
 struct StyleParams {
     decimal: Decimal,
     leading_zero: bool,
+    leading_zero_pct: bool,
 }
 impl From<&Settings> for StyleParams {
     fn from(value: &Settings) -> Self {
         Self {
             decimal: value.decimal,
             leading_zero: value.leading_zero,
+            leading_zero_pct: value.leading_zero_pct,
         }
     }
 }
@@ -989,9 +1087,51 @@ impl StyleSet {
     }
 }
 
+struct NumberStyles {
+    f: StyleSet,
+    comma: StyleSet,
+    dot: StyleSet,
+    dollar: StyleSet,
+    pct: StyleSet,
+    default: NumberStyle,
+}
+impl NumberStyles {
+    fn new() -> Self {
+        Self {
+            f: StyleSet::new(|p| NumberStyle::new(p.decimal, p.leading_zero)),
+            comma: StyleSet::new(|p| {
+                NumberStyle::new(p.decimal, p.leading_zero).with_grouping(true)
+            }),
+            dot: StyleSet::new(|p| {
+                NumberStyle::new(!p.decimal, p.leading_zero).with_grouping(true)
+            }),
+            dollar: StyleSet::new(|p| {
+                NumberStyle::new(p.decimal, p.leading_zero_pct)
+                    .with_grouping(true)
+                    .with_prefix("$")
+            }),
+            pct: StyleSet::new(|p| {
+                NumberStyle::new(p.decimal, p.leading_zero_pct).with_suffix("%")
+            }),
+            default: NumberStyle::new(Decimal::Dot, false),
+        }
+    }
+    fn get<'a>(&'a self, settings: &'a Settings, type_: Type) -> &'a NumberStyle {
+        match type_ {
+            Type::F | Type::E => self.f.get(settings),
+            Type::Comma => self.comma.get(settings),
+            Type::Dot => self.dot.get(settings),
+            Type::Dollar => self.dollar.get(settings),
+            Type::Pct => self.pct.get(settings),
+            Type::CC(cc) => &settings.ccs[cc],
+            _ => &self.default,
+        }
+    }
+}
+
 impl Settings {
     pub fn with_cc(mut self, cc: CC, style: NumberStyle) -> Self {
-        self.ccs[cc] = Some(Box::new(style));
+        self.ccs.set(cc, style);
         self
     }
     pub fn with_leading_zero(self, leading_zero: bool) -> Self {
@@ -1000,82 +1140,24 @@ impl Settings {
             ..self
         }
     }
+    pub fn with_leading_zero_pct(self, leading_zero_pct: bool) -> Self {
+        Self {
+            leading_zero_pct,
+            ..self
+        }
+    }
     pub fn with_epoch(self, epoch: Epoch) -> Self {
         Self { epoch, ..self }
     }
     pub fn number_style(&self, type_: Type) -> &NumberStyle {
-        static DEFAULT: LazyLock<NumberStyle> =
-            LazyLock::new(|| NumberStyle::new("", "", Decimal::Dot, None, false));
-
-        match type_ {
-            Type::F | Type::E => {
-                static F: LazyLock<StyleSet> = LazyLock::new(|| {
-                    StyleSet::new(|p| NumberStyle::new("", "", p.decimal, None, p.leading_zero))
-                });
-                F.get(self)
-            }
-            Type::Comma => {
-                static COMMA: LazyLock<StyleSet> = LazyLock::new(|| {
-                    StyleSet::new(|p| {
-                        NumberStyle::new("", "", p.decimal, Some(!p.decimal), p.leading_zero)
-                    })
-                });
-                COMMA.get(self)
-            }
-            Type::Dot => {
-                static DOT: LazyLock<StyleSet> = LazyLock::new(|| {
-                    StyleSet::new(|p| {
-                        NumberStyle::new("", "", !p.decimal, Some(p.decimal), p.leading_zero)
-                    })
-                });
-                DOT.get(self)
-            }
-            Type::Dollar => {
-                static DOLLAR: LazyLock<StyleSet> = LazyLock::new(|| {
-                    StyleSet::new(|p| NumberStyle::new("$", "", p.decimal, Some(!p.decimal), false))
-                });
-                DOLLAR.get(self)
-            }
-            Type::Pct => {
-                static PCT: LazyLock<StyleSet> = LazyLock::new(|| {
-                    StyleSet::new(|p| NumberStyle::new("", "%", p.decimal, None, false))
-                });
-                PCT.get(self)
-            }
-            Type::CC(cc) => self.ccs[cc].as_deref().unwrap_or(&DEFAULT),
-            Type::N
-            | Type::Z
-            | Type::P
-            | Type::PK
-            | Type::IB
-            | Type::PIB
-            | Type::PIBHex
-            | Type::RB
-            | Type::RBHex
-            | Type::Date
-            | Type::ADate
-            | Type::EDate
-            | Type::JDate
-            | Type::SDate
-            | Type::QYr
-            | Type::MoYr
-            | Type::WkYr
-            | Type::DateTime
-            | Type::YmdHms
-            | Type::MTime
-            | Type::Time
-            | Type::DTime
-            | Type::WkDay
-            | Type::Month
-            | Type::A
-            | Type::AHex => &DEFAULT,
-        }
+        static NUMBER_STYLES: LazyLock<NumberStyles> = LazyLock::new(|| NumberStyles::new());
+        NUMBER_STYLES.get(self, type_)
     }
 }
 
 /// A numeric output style.  This can express numeric formats in
 /// [Category::Basic] and [Category::Custom].
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, Eq)]
 pub struct NumberStyle {
     pub neg_prefix: Affix,
     pub prefix: Affix,
@@ -1102,6 +1184,18 @@ pub struct NumberStyle {
     pub extra_bytes: usize,
 }
 
+impl PartialEq for NumberStyle {
+    fn eq(&self, other: &Self) -> bool {
+        self.neg_prefix == other.neg_prefix
+            && self.prefix == other.prefix
+            && self.suffix == other.suffix
+            && self.neg_suffix == other.neg_suffix
+            && self.decimal == other.decimal
+            && self.grouping == other.grouping
+            && self.leading_zero == other.leading_zero
+    }
+}
+
 impl Display for NumberStyle {
     /// Display this number style in the format used for custom currency.
     ///
@@ -1125,26 +1219,61 @@ impl Display for NumberStyle {
 }
 
 impl NumberStyle {
-    fn new(
-        prefix: &str,
-        suffix: &str,
-        decimal: Decimal,
-        grouping: Option<Decimal>,
-        leading_zero: bool,
-    ) -> Self {
-        // These assertions ensure that zero is correct for `extra_bytes`.
-        debug_assert!(prefix.is_ascii());
-        debug_assert!(suffix.is_ascii());
-
+    fn new(decimal: Decimal, leading_zero: bool) -> Self {
         Self {
-            neg_prefix: Affix::new("-"),
-            prefix: Affix::new(prefix),
-            suffix: Affix::new(suffix),
-            neg_suffix: Affix::new(""),
+            neg_prefix: Affix::from("-"),
+            prefix: Affix::new(),
+            suffix: Affix::new(),
+            neg_suffix: Affix::new(),
             decimal,
-            grouping,
+            grouping: None,
             leading_zero,
             extra_bytes: 0,
+        }
+    }
+
+    fn with_grouping(self, grouping: bool) -> Self {
+        Self {
+            grouping: grouping.then_some(!self.decimal),
+            ..self
+        }
+    }
+
+    fn with_prefix(self, prefix: impl Into<String>) -> Self {
+        let prefix = Affix::from(prefix);
+        Self {
+            extra_bytes: self.extra_bytes - self.prefix.extra_bytes() + prefix.extra_bytes(),
+            prefix,
+            ..self
+        }
+    }
+
+    fn with_neg_prefix(self, neg_prefix: impl Into<String>) -> Self {
+        let neg_prefix = Affix::from(neg_prefix);
+        Self {
+            extra_bytes: self.extra_bytes - self.neg_prefix.extra_bytes()
+                + neg_prefix.extra_bytes(),
+            neg_prefix,
+            ..self
+        }
+    }
+
+    fn with_neg_suffix(self, neg_suffix: impl Into<String>) -> Self {
+        let neg_suffix = Affix::from(neg_suffix);
+        Self {
+            extra_bytes: self.extra_bytes - self.neg_suffix.extra_bytes()
+                + neg_suffix.extra_bytes(),
+            neg_suffix,
+            ..self
+        }
+    }
+
+    fn with_suffix(self, suffix: impl Into<String>) -> Self {
+        let suffix = Affix::from(suffix);
+        Self {
+            extra_bytes: self.extra_bytes - self.suffix.extra_bytes() + suffix.extra_bytes(),
+            suffix,
+            ..self
         }
     }
 
@@ -1153,7 +1282,7 @@ impl NumberStyle {
     }
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, Eq)]
 pub struct Affix {
     /// String contents of affix.
     pub s: String,
@@ -1163,20 +1292,35 @@ pub struct Affix {
     pub width: usize,
 }
 
-impl Affix {
-    fn new(s: impl Into<String>) -> Self {
-        let s = s.into();
+impl PartialEq for Affix {
+    fn eq(&self, other: &Self) -> bool {
+        self.s == other.s
+    }
+}
+
+impl<T> From<T> for Affix
+where
+    T: Into<String>,
+{
+    fn from(value: T) -> Self {
+        let s = value.into();
         Self {
             width: s.width(),
             s,
         }
+    }
+}
+
+impl Affix {
+    fn new() -> Self {
+        Self::from("")
     }
 
     fn extra_bytes(&self) -> usize {
         self.s.len().checked_sub(self.width).unwrap()
     }
 
-    fn display(&self, escape: char) -> DisplayAffix<'_> {
+    fn display(&self, escape: char) -> impl Display {
         DisplayAffix {
             affix: self.s.as_str(),
             escape,
@@ -1230,7 +1374,7 @@ impl FromStr for NumberStyle {
             }
         }
 
-        fn take_cc_token(iter: &mut Chars<'_>, grouping: char) -> Affix {
+        fn take_cc_token(iter: &mut Chars<'_>, grouping: char) -> String {
             let mut s = String::new();
             let mut quote = false;
             for c in iter {
@@ -1243,7 +1387,7 @@ impl FromStr for NumberStyle {
                     quote = false;
                 }
             }
-            Affix::new(s)
+            s
         }
 
         let Some(grouping) = find_separator(s) else {
@@ -1256,20 +1400,12 @@ impl FromStr for NumberStyle {
         let neg_suffix = take_cc_token(&mut iter, grouping);
         let grouping: Decimal = grouping.try_into().unwrap();
         let decimal = !grouping;
-        let extra_bytes = neg_prefix.extra_bytes()
-            + prefix.extra_bytes()
-            + suffix.extra_bytes()
-            + neg_suffix.extra_bytes();
-        Ok(Self {
-            neg_prefix,
-            prefix,
-            suffix,
-            neg_suffix,
-            decimal,
-            grouping: Some(grouping),
-            leading_zero: false,
-            extra_bytes,
-        })
+        Ok(Self::new(decimal, false)
+            .with_grouping(true)
+            .with_prefix(prefix)
+            .with_neg_prefix(neg_prefix)
+            .with_neg_suffix(neg_suffix)
+            .with_suffix(suffix))
     }
 }
 
@@ -1366,7 +1502,7 @@ impl Iterator for DateTemplate {
 
 #[cfg(test)]
 mod tests {
-    use crate::format::{Format, Type, Width};
+    use crate::format::{Decimal, Format, Type, Width};
 
     #[test]
     fn codepage_to_unicode() {
@@ -1390,5 +1526,15 @@ mod tests {
         check_format(Format::new(Type::AHex, 30000, 0).unwrap(), 65534);
 
         check_format(Format::new(Type::F, 40, 0).unwrap(), 40);
+    }
+
+    #[test]
+    fn decimal() {
+        assert_eq!(Decimal::for_lang("en"), Decimal::Dot);
+        assert_eq!(Decimal::for_lang("en-US"), Decimal::Dot);
+        assert_eq!(Decimal::for_lang("en-ES"), Decimal::Comma);
+        assert_eq!(Decimal::for_lang("fr-FR"), Decimal::Comma);
+        assert_eq!(Decimal::for_lang("ar"), Decimal::Dot);
+        assert_eq!(Decimal::for_lang("ar-LY"), Decimal::Comma);
     }
 }

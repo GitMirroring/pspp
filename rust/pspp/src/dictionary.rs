@@ -38,7 +38,7 @@ use crate::{
     data::{ByteString, Datum, RawString},
     identifier::{ByIdentifier, HasIdentifier, Identifier},
     output::pivot::{
-        Axis3, Dimension, Display26Adic, Footnote, Footnotes, Group, PivotTable, Value,
+        Axis3, Dimension, Display26Adic, Footnote, Footnotes, Group, PivotTable, value::Value,
     },
     settings::Show,
     variable::{Attributes, VarWidth, Variable},
@@ -495,7 +495,7 @@ impl Dictionary {
         group.push("Weight");
         match self.weight_var() {
             Some(variable) => values.push(Value::new_variable(variable)),
-            None => values.push(Value::empty()),
+            None => values.push(Value::new_empty()),
         }
 
         group.push("Documents");
@@ -798,7 +798,7 @@ impl<'a> OutputValueLabels<'a> {
             let mut sorted_value_labels = variable.value_labels.0.iter().collect::<Vec<_>>();
             sorted_value_labels.sort();
             for (datum, label) in sorted_value_labels {
-                let mut value = Value::new_variable_value(variable, datum)
+                let mut value = Value::new_datum_from_variable(datum, &variable)
                     .with_show_value_label(Some(Show::Value));
                 if variable
                     .missing_values()
@@ -809,7 +809,7 @@ impl<'a> OutputValueLabels<'a> {
                 group.push(value);
 
                 data.push(
-                    Value::new_variable_value(variable, datum)
+                    Value::new_datum_from_variable(datum, &variable)
                         .with_show_value_label(Some(Show::Label))
                         .with_value_label(Some(escape_value_label(label.as_str()).into())),
                 );

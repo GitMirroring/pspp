@@ -29,6 +29,10 @@ or `container` elements (or a mix), forming a tree.  In turn,
 `container` holds a `label` and one more child, usually `text` or
 `table`.
 
+<!-- toc -->
+
+## Grammar
+
 The following sections document the elements found in structure
 members in a context-free grammar-like fashion.  Consider the following
 example, which specifies the attributes and content for the `container`
@@ -36,7 +40,7 @@ element:
 
 ```
 container
-   :visibility=(visible | hidden)
+   :visibility=(visible | hidden)?
    :page-break-before=(always)?
    :text-align=(left | center)?
    :width=dimension
@@ -58,18 +62,21 @@ value specifications are defined:
   Either `true` or `false`.
 
 * `dimension`  
-  A floating-point number followed by a unit, e.g. `10pt`.  Units in
-  the corpus include `in` (inch), `pt` (points, 72/inch), `px`
-  ("device-independent pixels", 96/inch), and `cm`.  If the unit is
-  omitted then points should be assumed.  The number and unit may be
-  separated by white space.
+  A floating-point number followed by a unit, e.g. `10pt`.  If the
+  unit is omitted then points should be assumed.  The number and unit
+  may be separated by white space.  The number might use `,` as the
+  decimal point.
 
-  The corpus also includes localized names for units.  A reader must
-  understand these to properly interpret the dimension:
+  The corpus includes the following units, which includes localized
+  names for units.  A reader must understand these to properly
+  interpret the dimensions:
 
-  * inch: `인치`, `pol.`, `cala`, `cali`
-  * point: `пт`
-  * centimeter: `см`
+  | Unit                     | Units per Inch | Names                                                                       |
+  |:-------------------------|---------------:|:----------------------------------------------------------------------------|
+  | Inch                     |              1 | `in`<BR>`인치`<BR>`pol.`<BR>`pulg.`<BR>`cala`<BR>`cali`<BR>`英吋`<BR>`英寸` |
+  | Centimeter               |           2.54 | `cm`<BR>`см`                                                                |
+  | Point                    |             72 | `pt`<BR>`пт`<BR>(empty string)                                              |
+  | Device-independent pixel |             96 | `px`                                                                        |
 
 * `real`  
   A floating-point number.
@@ -173,8 +180,6 @@ information, and the CSS from the embedded HTML:
   </heading>
 </heading>
 ```
-
-<!-- toc -->
 
 ## The `heading` Element
 
@@ -303,8 +308,8 @@ anyway.  The user cannot edit it.
 
 ```
 container
-   :visibility=(visible | hidden)
-   :page-break-before=(always)?
+   :visibility=(visible | hidden)?
+   :page-break-before=(always | auto | avoid | left | right | inherit)?
    :text-align=(left | center)?
    :width=dimension
 => label (table | container_text | graph | model | object | image | tree)
@@ -317,7 +322,13 @@ This element has the following attributes.
 
 * `visibility`  
   Whether the container's content is displayed.  "Notes" tables are
-  often hidden; other data is usually visible.
+  often hidden; other data is usually visible.  The default is
+  `visible`.
+
+* `page-break-before`  
+  Whether to start the element at the beginning of a new page.  This
+  attribute is usually not present.  The only value seen in the corpus
+  is `always`.
 
 * `text-align`  
   Alignment of text within the container.  Observed with nested
@@ -341,9 +352,11 @@ text[container_text]
   :commandName?
   :creator-version?
 => html
+
+html :lang=(en) => TEXT
 ```
 This `text` element is nested inside a `container`.  There is a
-different `text` element that is nested inside a `pageParagraph`.
+[different `text` element that is nested inside a `pageParagraph`](#the-text-element-inside-pageparagraph).
 
 This element has the following attributes.
 
@@ -354,66 +367,61 @@ This element has the following attributes.
 * `type`  
   The semantics of the text.
 
+  Text with types `title`, `log`, and `text` appears directly in the
+  output.  Text with type `page-title` sets the title that appears in
+  page headers or footers when [`&[PageTitle]`](#pagetitle) is used.
+
 * `creator-version`  
   As on the `heading` element.
 
-## The `html` Element
+### The `html` element
 
-```
-html :lang=(en) => TEXT
-```
+The `html` element inside `text` contains an HTML document as text
+(or, in practice, as CDATA).  In some cases, the document starts with
+`<html>` and ends with `</html>`, and in others the `html` element is
+implied.  Generally the HTML includes a `head` element with a CSS
+stylesheet.  The HTML body often begins with `<BR>`.  See [Embedded
+HTML](#embedded-html) for details.
 
-The element contains an HTML document as text (or, in practice, as
-CDATA). In some cases, the document starts with `<html>` and ends with
-`</html>`; in others the `html` element is implied.  Generally the HTML
-includes a `head` element with a CSS stylesheet.  The HTML body often
-begins with `<BR>`.
-
-The HTML document uses only the following elements:
-
-* `html`  
-  Sometimes, the document is enclosed with `<html>`...`</html>`.
-
-* `br`  
-  The HTML body often begins with `<BR>` and may contain it as well.
-
-* `b`  
-  `i`  
-  `u`  
-  Styling.
-
-* `font`  
-  The attributes `face`, `color`, and `size` are observed.  The value
-  of `color` takes one of the forms `#RRGGBB` or `rgb (R, G, B)`.
-  The value of `size` is a number between 1 and 7, inclusive.
-
-The CSS in the corpus is simple.  To understand it, a parser only
-needs to be able to skip white space, `<!--`, and `-->`, and parse style
-only for `p` elements.  Only the following properties matter:
-
-* `color`  
-  In the form `RRGGBB`, e.g.  `000000`, with no leading `#`.
-
-* `font-weight`  
-  Either `bold` or `normal`.
-
-* `font-style`  
-  Either `italic` or `normal`.
-
-* `text-decoration`  
-  Either `underline` or `normal`.
-
-* `font-family`  
-  A font name, commonly `Monospaced` or `SansSerif`.
-
-* `font-size`  
-  Values claim to be in points, e.g. `14pt`, but the values are
-  actually in "device-independent pixels" (px), at 96/inch.
-
-This element has the following attributes.
+The `html` element has the following attributes:
 
 * `lang`  
   This always contains `en` in the corpus.
+
+> A few examples of typical text in the corpus:
+>
+> ```
+> <html xmlns="http://www.w3.org/1999/xhtml" lang="en">&lt;head>&lt;style type="text/css">p{color:0;font-family:Monospaced;font-size:14pt;font-style:normal;font-weight:normal;text-decoration:none}&lt;/style>&lt;/head>&lt;BR>REGRESSION
+>   /MISSING LISTWISE
+>   /STATISTICS COEFF OUTS R ANOVA
+>   /CRITERIA=PIN(.05) POUT(.10)
+>   /NOORIGIN
+>   /DEPENDENT Pvalues
+>   /METHOD=ENTER MMN.</html>
+> ```
+>
+> ```
+> <html xmlns="http://www.w3.org/1999/xhtml" lang="en">&lt;head>&lt;style type="text/css">p{color:0;font-family:Monospaced;font-size:13pt;font-style:normal;font-weight:normal;text-decoration:none}&lt;/style>&lt;/head>&lt;BR>CROSSTABS&lt;BR>&amp;nbsp;&amp;nbsp;/TABLES=facrec&amp;nbsp;BY&amp;nbsp;nq1e&lt;BR>&amp;nbsp;&amp;nbsp;/FORMAT=AVALUE&amp;nbsp;TABLES&lt;BR>&amp;nbsp;&amp;nbsp;/CELLS=COUNT&amp;nbsp;ROW&lt;BR>&amp;nbsp;&amp;nbsp;/COUNT&amp;nbsp;ROUND&amp;nbsp;CELL.</html>
+> ```
+>
+> ```
+> <html xmlns="http://www.w3.org/1999/xhtml" lang="en">&lt;html>
+>   &lt;head>
+>     &lt;style type="text/css">
+>       &lt;!--
+>         p { font-style: normal; text-decoration: none; font-weight: bold; color: 000000; font-size: 14pt; font-family: Trebuchet MS }
+>       -->
+>     &lt;/style>
+>
+>   &lt;/head>
+>   &lt;body>
+>     &lt;b>&lt;font size="5" face="Times New Roman">                                                                     &lt;u>H&lt;/u>&lt;/font>&lt;u>&lt;font size="5" color="#000000" face="Times New Roman">ousehold
+>     Income (In Thousands)&lt;/font>&lt;/u>&lt;font size="5" color="#000000" face="Times New Roman">
+>     &lt;/font>&lt;/b>
+>   &lt;/body>
+> &lt;/html>
+> </html>
+> ```
 
 ## The `table` Element
 
@@ -429,7 +437,7 @@ table
    :orphanTolerance=int?
    :rowBreakNumber=int?
    :subType
-   :tableId
+   :tableId?
    :tableLookId?
    :type[table_type]=(table | note | warning)
 => tableProperties? tableStructure
@@ -455,13 +463,31 @@ This element has the following attributes.
 * `tableId`  
   A number that uniquely identifies the table within the SPV file,
   typically a large negative number such as `-4147135649387905023`.
+  It is usually present.  For light binary members, this is the same
+  as `table-id` in the [light detail member
+  header](light-detail.md#header).
 
 * `creator-version`  
   As on the `heading` element.  In the corpus, this is only present
   for version 21 and up and always includes all 8 digits.
 
-See [Legacy Properties](legacy-detail-xml.md#legacy-properties), for
-details on the `tableProperties` element.
+This element contains the following:
+
+* `tableProperties`  
+  See [Legacy Properties](legacy-detail-xml.md#legacy-properties), for
+  details.
+
+* `tableStructure`  
+  This element in turn contains:
+
+  - Both `path` and `dataPath` for legacy members.
+
+  - `dataPath` but not `path` for light detail binary members.
+
+  - The usage of `csvPath` is rare and not yet understood.
+
+  See [SPSS Viewer File Format](index.md) for more information on how
+  structure members refer to tables.
 
 ## The `graph` Element
 
@@ -625,46 +651,58 @@ pageParagraph => pageParagraph_text
 The `pageSetup` element has the following attributes.
 
 * `initial-page-number`  
-     The page number to put on the first page of printed output.
-     Usually `1`.
+  The page number to put on the first page of printed output.
+  Usually `1`.
 
 * `chart-size`  
-     One of the listed, self-explanatory chart sizes, `quarter-height`,
-     or a localization (!)  of one of these (e.g. `dimensione attuale`,
-     `Wie vorgegeben`).
+  One of the listed chart sizes, or some localization of `as-is`.
+
+  > No localizations of other sizes have been observed, so PSPP
+  > interprets any unknown value like `as-is`.
 
 * `margin-left`  
-* `margin-right`  
-* `margin-top`  
-* `margin-bottom`  
-     Margin sizes, e.g. `0.25in`.
+  `margin-right`  
+  `margin-top`  
+  `margin-bottom`  
+  Margin sizes, e.g. `0.25in`.
 
 * `paper-height`  
-* `paper-width`  
-     Paper sizes.
+  `paper-width`  
+  Paper sizes.
 
 * `reference-orientation`  
-     Indicates the orientation of the output page.  Either `0deg`
-     (portrait) or `90deg` (landscape),
+  Indicates the orientation of the output page.  This is most commonly
+  `0deg` (portrait) or `90deg` (landscape).  Various localized
+  versions also exist, such as `0grau` and `90 度`.
+
+  > PSPP just looks at whether the value starts with `0` or `90`
+  > because all of the localized versions begin that way.
 
 * `space-after`  
-     The amount of space between printed objects, typically `12pt`.
+  The amount of space between printed objects, typically `12pt`.
 
-## The `text` Element (Inside `pageParagraph`)
+### The `text` Element (Inside `pageParagraph`)
 
 ```
 text[pageParagraph_text] :type=(title | text) => TEXT
 ```
 
 This `text` element is nested inside a `pageParagraph`.  There is a
-different `text` element that is nested inside a `container`.
+[different `text` element that is nested inside a
+`container`](#the-text-element-inside-container).
 
-The element is either empty, or contains CDATA that holds almost-XHTML
-text: in the corpus, either an `html` or `p` element.  It is
-_almost_-XHTML because the `html` element designates the default
-namespace as `http://xml.spss.com/spss/viewer/viewer-tree` instead of
-an XHTML namespace, and because the CDATA can contain substitution
-variables.  The following variables are supported:
+This element has the following attributes:
+
+* `type`  
+  Always `text`.
+
+The element is either empty, or contains CDATA that holds XHTML text
+with a root element of either `html` or `p`.  Text in the XHTML can
+contain substitution variables. The following variables are
+supported:[^1]
+
+[^1]: The `&` characters are escaped as `&amp;`, that is, these are
+    not XML entities, since XML entity names can't begin with `[`.
 
 * `&[Date]`  
   `&[Time]`  
@@ -674,30 +712,277 @@ variables.  The following variables are supported:
   `&[Head2]`  
   `&[Head3]`  
   `&[Head4]`  
-  First-, second-, third-, or fourth-level heading.
+  First-, second-, third-, or fourth-level heading, respectively.
 
-* `&[PageTitle]`  
+* <a name="pagetitle">`&[PageTitle]`</a>  
+  `&[Заголовок страницы]`  
+  `&[頁面標題]`  
   The page title.
 
 * `&[Filename]`  
   Name of the output file.
 
 * `&[Page]`  
+  `&[Страница]`  
+  `&[頁]`  
   The page number.
 
-Typical contents (indented for clarity):
+See [Embedded HTML](#embedded-html) for more information.
+
+> The 23,000 SPV files in the corpus have only 17 unique instances of
+`text` inside `pageParagraph`.  Most of them look similar to this for
+page headers:
+>
+> ```
+> &lt;html xmlns="http://xml.spss.com/spss/viewer/viewer-tree">
+>   &lt;head>
+>
+>   &lt;/head>
+>   &lt;body>
+>     &lt;p style="text-align:center; margin-top: 0">
+>       &amp;[PageTitle]
+>     &lt;/p>
+>   &lt;/body>
+> &lt;/html>
+> ```
+>
+> and footers:
+>
+> ```
+> &lt;html xmlns="http://xml.spss.com/spss/viewer/viewer-tree">
+>   &lt;head>
+>
+>   &lt;/head>
+>   &lt;body>
+>     &lt;p style="text-align:right; margin-top: 0">
+>       Page &amp;[Page]
+>     &lt;/p>
+>   &lt;/body>
+> &lt;/html>
+> ```
+>
+> Sometimes CSS is present (the original was indented much deeper), with
+> header:
+>
+> ```
+> &lt;html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+>   &lt;head>
+>           &lt;style type="text/css">
+>                   p { font-family: sans-serif;
+>                        font-size: 10pt; text-align: center;
+>                        font-weight: normal;
+>                        color: #000000;
+>                        }
+>           &lt;/style>
+>   &lt;/head>
+>   &lt;body>
+>           &lt;p>&amp;amp;[PageTitle]&lt;/p>
+>   &lt;/body>
+> &lt;/html>
+> ```
+>
+> and footer:
+>
+> ```
+> &lt;html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+>   &lt;head>
+>           &lt;style type="text/css">
+>                   p { font-family: sans-serif;
+>                        font-size: 10pt; text-align: right;
+>                        font-weight: normal;
+>                        color: #000000;
+>                        }
+>           &lt;/style>
+>   &lt;/head>
+>   &lt;body>
+>           &lt;p>Page &amp;amp;[Page]&lt;/p>
+>   &lt;/body>
+> &lt;/html>
+> ```
+>
+> No files in the corpus show any more sophisticated use of features
+> than these examples.
+
+## Embedded HTML
+
+Structure XML contains embedded HTML in two contexts:
+
+- The [`text` element inside `container`](#the-text-element-inside-container).
+
+- The [`text` element inside
+  `pageParagraph`](#the-text-element-inside-pageparagraph).
+
+The use of HTML in both cases is similar.  These HTML documents use
+only the following elements:
+
+* `html`  
+  Sometimes, the document is enclosed with `<html>`...`</html>`.
+
+* `head`  
+  The document often contains a `head` element.  It can be
+  empty or it can contain a `style` element, in turn enclosing CSS
+  within `<!--` and `-->`.  See [embedded CSS](#embedded-ccs), below,
+  for details.
+
+* `body`  
+  The document often contains a `body` element that contains the
+  content.
+
+* `p`  
+  The document often contains a `p` element that contains the content.
+  [Inside `pageParagraph`](#the-text-element-inside-pageparagraph),
+  the document can contain multiple paragraphs.  On the other hand,
+  [inside `container`](#the-text-element-inside-container), if there
+  are multiple paragraphs, which is rare, `<p>` after the first are
+  simply treated as line breaks, as with `<br>`.
+
+  The following attributes are observed:
+
+  - `align`  
+    With value `left`, `center`, or `right`.
+
+  - `style`  
+    With value `text-align:<align>; margin-top: 0`, where `<align>` is
+    one of `left`, `center`, or `right`, or simply `margin-top: 0`.
+
+* `br`  
+  The HTML body often begins with a "break" tag and may contain them
+  as well.
+
+  Embedded HTML writes most tag names in lowercase but this one is
+  usually in uppercase, as `<BR>`.
+
+  > At the beginning of an HTML body, a single `<BR>` element should
+  > be ignored, but only if capitalized; that is, `<br>` is not
+  > ignored, and neither is `<BR>` following any text or any other
+  > element.
+
+* `b`  
+  `i`  
+  `u`  
+  `strike`  
+  Styling.
+
+* `font`  
+  The following attributes are observed:
+
+  - `face`  
+    A typeface, most often `Monospaced` or `SansSerif`.
+
+  - `color`  
+    One of the forms `#RRGGBB` or `rgb (R, G, B)`.
+
+  - `size`  
+    A number between 1 and 7 with the following meanings:
+
+    | `size` |    Size |
+    |-------:|--------:|
+    |  1[^2] |    6 pt |
+    |      2 |  7.5 pt |
+    |      3 |    9 pt |
+    |      4 | 10.5 pt |
+    |      5 | 13.5 pt |
+    |      6 |   18 pt |
+    |      7 |   27 pt |
+
+    [^2]: This `size` doesn't appear in the corpus.  The size listed
+    is an extrapolation based on what browsers usually do.
+
+> It appears that pasting HTML into the SPSS viewer can cause more
+> general HTML to be included.  The following elements in the corpus,
+> each of these is observed in only a few files, appear to be added by
+> pasting HTML from another application:
+>
+> * `strong`  
+>   `em`  
+>   Styling.
+>
+> * `span`  
+>   The `style` attribute is used a bit, but not for CSS properties
+>   that PSPP supports.
+>
+> * `li`  
+>   `ul`  
+>   Seen in only one file in the corpus.
+>
+> * `a`  
+>   Seen in only two files in the corpus.  SPSS doesn't allow the link
+>   to be seen or visited.
+>
+> * `table`  
+>   `td`  
+>   `tr`  
+>   Seen in only one file in the corpus.  SPSS doesn't render the
+>   table properly.
+>
+> * `img`  
+>   Seen in only one file in the corpus.  In this file, the `src`
+>   attribute was an invalid `jar:` URL.
+
+Text in embedded HTML often uses non-breaking spaces (U+00A0
+NON-BREAKING SPACE), often written as `&#160;` or `&nbsp;`.  In
+embedded HTML, newlines must be treated as line breaks.
+
+### Embedded CSS
+
+The CSS in the corpus is simple.  To understand it, a parser only
+needs to be able to skip white space, `<!--`, and `-->`, and parse style
+only for `p` elements.  Only the following properties matter:
+
+* `color`  
+  In the form `RRGGBB`, e.g.  `000000`, with no leading `#`.
+
+* `font-weight`  
+  Either `bold` or `normal`.
+
+* `font-style`  
+  Either `italic` or `normal`.
+
+* `text-decoration`  
+  Either `underline` or `normal`.
+
+* `font-family`  
+  A font name, commonly `Monospaced` or `SansSerif`.
+
+* `font-size`  
+  Values claim to be in points, e.g. `14pt`, but the values are
+  actually in "device-independent pixels" (px), at 96/inch.
+
+### Examples
+
+Text that looks like "plain **bold** *italic* ~~strikeout~~", for use
+[inside `pageParagraph`]:
 
 ```
-<html xmlns="http://xml.spss.com/spss/viewer/viewer-tree">
-    <head></head>
-    <body>
-        <p style="text-align:right; margin-top: 0">Page &[Page]</p>
-    </body>
-</html>
+&lt;html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  &lt;head>
+
+  &lt;/head>
+  &lt;body>
+    &lt;p>
+      plain&amp;#160;&lt;font color="#000000" size="3" face="Monospaced">&lt;b>bold&lt;/b>&lt;/font>&amp;#160;&lt;font color="#000000" size="3" face="Monospaced">&lt;i>italic&lt;/i>&amp;#160;&lt;strike>strikeout&lt;/strike>&lt;/font>
+    &lt;/p>
+  &lt;/body>
+&lt;/html>
 ```
 
-This element has the following attributes.
+Another example, also for use [inside `pageParagraph`], of three
+paragraphs, the first left justified, the second center justified with
+a large font, and the third right justified:
 
-* `type`  
-  Always `text`.
+```
+&lt;html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  &lt;head>
+
+  &lt;/head>
+  &lt;body>
+    &lt;p>left&lt;/p>
+    &lt;p align="center">&lt;font color="#000000" size="5" face="Monospaced">center&amp;#160;large&lt;/font>&lt;/p>
+    &lt;p align="right">&lt;font color="#000000" size="3" face="Monospaced">&lt;b>&lt;i>right&lt;/i>&lt;/b>&lt;/font>&lt;/p>
+  &lt;/body>
+&lt;/html>
+```
+
+[inside `pageParagraph`]: #the-text-element-inside-pageparagraph
+[inside `container`]: #the-text-element-inside-container
 

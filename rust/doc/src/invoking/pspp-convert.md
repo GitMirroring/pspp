@@ -1,40 +1,54 @@
-# Converting data files with `pspp convert`
+# Converting Files with `pspp convert`
 
-The `pspp convert` command reads data from one file and writes it to
-another.  The basic syntax is:
+The `pspp convert` command reads a file and writes it to another,
+usually in a different format.  The basic syntax is:
 
 ```
 pspp convert <INPUT> [OUTPUT]
 ```
 
-which reads an SPSS system file or portable file or SPSS/PC+ system
-file from `<INPUT>` and writes a copy of it to `[OUTPUT]`.  If
-`[OUTPUT]` is omitted, output is written to the terminal.
+which reads `<INPUT>` and writes a copy of it to `[OUTPUT]`, or to the
+terminal if `[OUTPUT]` is omitted.
 
-If `[OUTPUT]` is specified, then `pspp convert` tries to guess the
-output format based on its extension:
+`pspp convert` can convert following kinds of files:
 
-* `csv`  
-  `txt`  
-  Comma-separated value.  Each value is formatted according to its
-  variable's print format.  The first line in the file contains
-  variable names.
+* Data files:
 
-* `sav`  
-  `sys`  
-  SPSS system file.
+  When `<INPUT>` is an SPSS system file or portable file or an SPSS/PC+
+  system file, then `[OUTPUT]` can be a data file format.  The
+  currently supported data file formats are:
 
-Without an output file name, the default output format is CSV.  Use
-`-O <output_format>` to override the default or to specify the format
-for unrecognized extensions.
+  - [Comma-separated value (CSV) files]
+  - [SPSS system files]
+  - [SPSS portable files]
+
+  If `[OUTPUT]` is omitted, the default is to write the data to stdout
+  in CSV format.
+
+* Viewer files:
+
+  When `<INPUT>` is an SPSS viewer (SPV) file, then `[OUTPUT]` may be
+  any [PSPP output format], including:
+
+  - [plain text]
+  - [PDF]
+  - [HTML]
+
+  If `[OUTPUT]` is omitted, the default is to write the viewer file to
+  stdout in plain text format.
+
+[Converting SPSS Viewer Files]: pspp-convert-spv.md
+[Comma-separated value (CSV) files]: output.md#comma-separated-value-output-csv
+[SPSS system files]: output.md#system-file-output-sav
+[SPSS portable files]: output.md#portable-file-output-por
+[PSPP output format]: output.md
+[plain text]: output.md#text-output-txt-and-text
+[PDF]: output.md#pdf-output-pdf
+[HTML]: output.md#html-output-htm-and-html
 
 ## Options
 
-`pspp convert` accepts the following general options:
-
-* `-O csv`  
-  `-O sys`  
-  Sets the output format.
+`pspp convert` accepts the following options:
 
 * `-e <ENCODING>`  
   `--encoding=<ENCODING>`  
@@ -52,6 +66,12 @@ for unrecognized extensions.
 
   [Encoding Standard]: https://encoding.spec.whatwg.org/#names-and-labels
 
+* `--unicode`  
+  For input from a system file, converts from the file's encoding to
+  Unicode (UTF-8) encoding before writing the output.  If the input
+  was not already in Unicode, then this causes string variables to be
+  tripled in width.
+
 * `-c <MAX_CASES>`  
   `--cases=<MAX_CASES>`  
   By default, all cases in the input are copied to the output.
@@ -61,64 +81,23 @@ for unrecognized extensions.
   `--password=<PASSWORD>`  
   Specifies the password for reading an encrypted SPSS system file.
 
+  In addition to file encryption, SPSS supports a feature called
+  "password encryption".  The password specified can be specified with
+  or without "password encryption".
+
   `pspp convert` reads, but does not write, encrypted system files.
 
   > ⚠️ The password (and other command-line options) may be visible to
-  other users on multiuser systems.
+  > other users on multiuser systems.
 
-## System File Output Options
+* `-o <OUTPUT_OPTIONS>`  
+  Adds `<OUTPUT_OPTIONS>` to the output engine configuration.  See
+  [Output Drivers](output.md) for information on how to configure
+  output.
 
-These options only affect output to SPSS system files.
+  If no output driver is specified, the default output format is
+  chosen based on `[OUTPUT]`'s extension.  If `[OUTPUT]` is omitted,
+  output is written to stdout, either in [CSV] format if `<INPUT>` is
+  a data file, or in [plain text] format if `<INPUT>` is an SPV file.
 
-* `--unicode`  
-  Writes system file output with Unicode (UTF-8) encoding.  If the
-  input was not already in Unicode, then this causes string variables
-  to be tripled in width.
-
-* `--compression <COMPRESSION>`  
-  Writes data in the system file with the specified format of
-  compression:
-
-  - `simple`: A simple form of compression that saves space writing
-    small integer values and string segments that are all spaces.  All
-    versions of SPSS support simple compression.
-
-  - `zlib`: More advanced compression that saves space in more general
-    cases.  Only SPSS 21 and later can read files written with `zlib`
-    compression.
-
-## CSV Output Options
-
-These options only affect output to CSV files.
-
-* `--no-var-names`  
-  By default, `pspp convert` writes the variable names as the first
-  line of output.  With this option, `pspp convert` omits this line.
-
-* `--recode`  
-  By default, `pspp convert` writes user-missing values to CSV output
-  files as their regular values.  With this option, `pspp convert`
-  recodes them to system-missing values (which are written as a
-  single space).
-
-* `--labels`  
-  By default, `pspp convert` writes variables' values to CSV output
-  files.  With this option, `pspp convert` writes value labels.
-
-* `--print-formats`  
-  By default, `pspp convert` writes numeric variables as plain
-  numbers.  This option makes `pspp convert` honor variables' print
-  formats.
-
-* `--decimal=DECIMAL`  
-  This option sets the character used as a decimal point in output.
-  The default is `.`.  Only ASCII characters may be used.
-
-* `--delimiter=DELIMITER`  
-  This option sets the character used to separate fields in output.
-  The default is `,`, unless the decimal point is `,`, in which case
-  `;` is used.  Only ASCII characters may be used.
-
-* `--qualifier=QUALIFIER`  
-  The option sets the character used to quote fields that contain the
-  delimiter.  The default is `"`.  Only ASCII characters may be used.
+[CSV]: output.md#comma-separated-value-output-csv

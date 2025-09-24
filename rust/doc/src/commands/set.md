@@ -24,7 +24,7 @@ SET
         /SCALEMIN=COUNT
 
 (data output)
-        /CC{A,B,C,D,E}={'NPRE,PRE,SUF,NSUF','NPRE.PRE.SUF.NSUF'}
+        /CC{A,B,C,D,E}='STRING'
         /DECIMAL={DOT,COMMA}
         /FORMAT=FMT_SPEC
         /LEADZERO={ON,OFF}
@@ -46,13 +46,13 @@ SET
         /TVARS={NAMES,LABELS,BOTH}
         /TLOOK={NONE,FILE}
 
-(logging)
+(journal)
         /JOURNAL={ON,OFF} ['FILE_NAME']
 
 (system files)
         /SCOMPRESSION={ON,OFF}
 
-(miscellaneous)
+(security)
         /SAFER=ON
         /LOCALE='STRING'
 
@@ -62,7 +62,7 @@ SET
         /MITERATE=NUMBER
         /MNEST=NUMBER
 
-(settings not yet implemented, but accepted and ignored)
+(not yet implemented)
         /BASETEXTDIRECTION={AUTOMATIC,RIGHTTOLEFT,LEFTTORIGHT}
         /BLOCK='C'
         /BOX={'XXX','XXXXXXXXXXX'}
@@ -80,8 +80,21 @@ subcommands are examined in groups.
 For subcommands that take boolean values, `ON` and `YES` are
 synonymous, as are `OFF` and `NO`, when used as subcommand values.
 
+<!-- toc -->
+
+# Data Input
+
+```
+SET
+        /BLANKS={SYSMIS,'.',number}
+        /DECIMAL={DOT,COMMA}
+        /FORMAT=FMT_SPEC
+        /EPOCH={AUTOMATIC,YEAR}
+        /RIB={NATIVE,MSBFIRST,LSBFIRST}
+```
+
 The data input subcommands affect the way that data is read from data
-files.  The data input subcommands are
+files.  The data input subcommands are:
 
 * `BLANKS`  
   This is the value assigned to an item data item that is empty or
@@ -122,6 +135,15 @@ files.  The data input subcommands are
   default, is equivalent to `MSBFIRST` or `LSBFIRST` depending on the
   native format of the machine running PSPP.
 
+# Interaction
+
+```
+SET
+        /MXERRS=MAX_ERRS
+        /MXWARNS=MAX_WARNINGS
+        /WORKSPACE=WORKSPACE_SIZE
+```
+
 Interaction subcommands affect the way that PSPP interacts with an
 online user.  The interaction subcommands are
 
@@ -135,6 +157,18 @@ online user.  The interaction subcommands are
   means that all warning situations should be ignored.  No warnings
   are issued, except a single initial warning advising you that
   warnings will not be given.  The default value is 100.
+
+# Syntax Execution
+
+```
+SET
+        /LOCALE='LOCALE'
+        /MXLOOPS=MAX_LOOPS
+        /SEED={RANDOM,SEED_VALUE}
+        /UNDEFINED={WARN,NOWARN}
+        /FUZZBITS=FUZZBITS
+        /SCALEMIN=COUNT
+```
 
 Syntax execution subcommands control the way that PSPP commands
 execute.  The syntax execution subcommands are
@@ -184,6 +218,19 @@ execute.  The syntax execution subcommands are
   virtual memory management, setting a very large workspace may cause
   PSPP to abort.
 
+# Data Output
+
+```
+SET
+        /CC{A,B,C,D,E}='STRING'
+        /DECIMAL={DOT,COMMA}
+        /FORMAT=FMT_SPEC
+        /LEADZERO={ON,OFF}
+        /MDISPLAY={TEXT,TABLES}
+        /SMALL=NUMBER
+        /WIB={NATIVE,MSBFIRST,LSBFIRST}
+```
+
 Data output subcommands affect the format of output data.  These
 subcommands are
 
@@ -208,8 +255,8 @@ subcommands are
 * <a name="leadzero">`LEADZERO`</a>  
   Controls whether numbers with magnitude less than one are displayed
   with a zero before the decimal point.  For example, with `SET
-  LEADZERO=OFF`, which is the default, one-half is shown as 0.5, and
-  with `SET LEADZERO=ON`, it is shown as .5.  This setting affects
+  LEADZERO=OFF`, which is the default, one-half is shown as `0.5`, and
+  with `SET LEADZERO=ON`, it is shown as `.5`.  This setting affects
   only the `F`, `COMMA`, and `DOT` formats.
 
 * <a name="mdisplay">`MDISPLAY`</a>  
@@ -235,6 +282,16 @@ subcommands are
   least-significant byte appears at the left end.  `NATIVE`, the
   default, is equivalent to `MSBFIRST` or `LSBFIRST` depending on the
   native format of the machine running PSPP.
+
+# Output Routing
+
+```
+SET
+        /ERRORS={ON,OFF,TERMINAL,LISTING,BOTH,NONE}
+        /MESSAGES={ON,OFF,TERMINAL,LISTING,BOTH,NONE}
+        /PRINTBACK={ON,OFF,TERMINAL,LISTING,BOTH,NONE}
+        /RESULTS={ON,OFF,TERMINAL,LISTING,BOTH,NONE}
+```
 
 In the PSPP text-based interface, the output routing subcommands
 affect where output is sent.  The following values are allowed for each
@@ -275,6 +332,18 @@ These output routing subcommands are:
 These subcommands have no effect on output in the PSPP GUI
 environment.
 
+# Output Driver
+
+```
+SET
+        /HEADERS={NO,YES,BLANK}
+        /LENGTH={NONE,N_LINES}
+        /WIDTH={NARROW,WIDTH,N_CHARACTERS}
+        /TNUMBERS={VALUES,LABELS,BOTH}
+        /TVARS={NAMES,LABELS,BOTH}
+        /TLOOK={NONE,FILE}
+```
+
 Output driver option subcommands affect output drivers' settings.
 These subcommands are:
 
@@ -313,7 +382,14 @@ These subcommands are:
   `.tlo` file in the same way as specifying `--table-look=FILE` the
   PSPP command line (*note Main Options::).
 
-Logging subcommands affect logging of commands executed to external
+# Journal
+
+```
+SET
+        /JOURNAL={ON,OFF} ['FILE_NAME']
+```
+
+Journal subcommands affect logging of commands executed to external
 files.  These subcommands are
 
 * `JOURNAL`  
@@ -328,12 +404,27 @@ files.  These subcommands are
   The journal is named `pspp.jnl` by default.  A different name may
   be specified.
 
+# System Files
+
+```
+SET
+        /SCOMPRESSION={ON,OFF}
+```
+
 System file subcommands affect the default format of system files
 produced by PSPP.  These subcommands are
 
 * <a name="scompression">`SCOMPRESSION</a>`  
   Whether system files created by `SAVE` or `XSAVE` are compressed by
   default.  The default is `ON`.
+
+# Security
+
+```
+SET
+        /SAFER=ON
+        /LOCALE='STRING'
+```
 
 Security subcommands affect the operations that commands are allowed
 to perform.  The security subcommands are
@@ -377,6 +468,16 @@ to perform.  The security subcommands are
   Contrary to intuition, this command does not affect any aspect of
   the system's locale.
 
+# Macros
+
+```
+SET
+        /MEXPAND={ON,OFF}
+        /MPRINT={ON,OFF}
+        /MITERATE=NUMBER
+        /MNEST=NUMBER
+```
+
 The following subcommands affect the interpretation of macros.  For
 more information, see [Macro Settings](define.md#macro-settings).
 
@@ -398,6 +499,20 @@ more information, see [Macro Settings](define.md#macro-settings).
 * <a name="mnest">`MNEST`</a>  
   Limits the number of levels of nested macro expansions.  This must
   be set to a positive integer.  The default is 50.
+
+# Not Yet Implemented
+
+```
+SET
+        /BASETEXTDIRECTION={AUTOMATIC,RIGHTTOLEFT,LEFTTORIGHT}
+        /BLOCK='C'
+        /BOX={'XXX','XXXXXXXXXXX'}
+        /CACHE={ON,OFF}
+        /CELLSBREAK=NUMBER
+        /COMPRESSION={ON,OFF}
+        /CMPTRANS={ON,OFF}
+        /HEADER={NO,YES,BLANK}
+```
 
 The following subcommands are not yet implemented, but PSPP accepts
 them and ignores the settings:

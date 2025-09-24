@@ -1,13 +1,11 @@
 Warning at file offsets 0x110 to 0x114: In value label record: One or more variable indexes were not in the valid range [1,2] or referred to string continuations: [2]
 
-╭──────────────────────┬────────────────────────╮
-│       Created        │    01-JAN-2011 20:53:52│
-├──────────────────────┼────────────────────────┤
-│Writer Product        │PSPP synthetic test file│
-├──────────────────────┼────────────────────────┤
-│       Compression    │SAV                     │
-│       Number of Cases│Unknown                 │
-╰──────────────────────┴────────────────────────╯
+╭────────────────┬────────────────────────╮
+│Created         │    01-JAN-2011 20:53:52│
+│Writer  Product │PSPP synthetic test file│
+│Compression     │SAV                     │
+│Number of Cases │Unknown                 │
+╰────────────────┴────────────────────────╯
 
 ╭─────────┬─╮
 │Variables│1│

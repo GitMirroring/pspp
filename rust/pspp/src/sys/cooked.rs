@@ -24,7 +24,7 @@ use std::{
 };
 
 use crate::{
-    crypto::EncryptedFile,
+    crypto::EncryptedReader,
     data::{ByteString, Case, Datum, MutRawString, RawString},
     dictionary::{
         DictIndexMultipleResponseSet, DictIndexVariableSet, Dictionary, MrSetError,
@@ -33,7 +33,7 @@ use crate::{
     format::{Error as FormatError, Format, UncheckedFormat},
     hexfloat::HexFloat,
     identifier::{Error as IdError, Identifier},
-    output::pivot::{Axis3, Dimension, Group, PivotTable, Value},
+    output::pivot::{Axis3, Dimension, Group, PivotTable, value::Value},
     sys::{
         raw::{
             self, CaseDetails, DecodedRecord, RawCases, RawDatum, RawWidth, Reader, infer_encoding,
@@ -50,7 +50,7 @@ use crate::{
     },
     variable::{InvalidRole, MissingValues, MissingValuesError, VarType, VarWidth, Variable},
 };
-use anyhow::{Error as AnyError, anyhow};
+use anyhow::Error as AnyError;
 use binrw::{BinRead, BinWrite, Endian};
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use encoding_rs::{Encoding, UTF_8};
@@ -515,7 +515,7 @@ impl<F> ReadOptions<F> {
     }
 
     /// Causes the file to be read by decrypting it with the given `password` or
-    /// without decrypting if `encoding` is None.
+    /// without decrypting if `password` is None.
     pub fn with_password(self, password: Option<String>) -> Self {
         Self { password, ..self }
     }
@@ -542,9 +542,7 @@ impl<F> ReadOptions<F> {
         F: FnMut(AnyError),
     {
         Self::open_reader_inner(
-            EncryptedFile::new(reader)?
-                .unlock(password.as_bytes())
-                .map_err(|_| anyhow!("Incorrect password."))?,
+            EncryptedReader::open(reader, password)?,
             self.encoding,
             self.warn,
         )
@@ -1046,7 +1044,7 @@ impl Records {
                                     .decode(variable.width)
                                     .as_encoded(variable.encoding())
                                     .display(variable.print_format)
-                                    .with_trimming()
+                                    .without_spaces()
                                     .with_quoted_string()
                                     .to_string()
                             })
@@ -1440,7 +1438,7 @@ impl Metadata {
         let mut values = Vec::new();
 
         group.push("Created");
-        values.push(Value::new_date_time(self.creation));
+        values.push(Value::new_date(self.creation));
 
         let mut product = Group::new("Writer");
         product.push("Product");

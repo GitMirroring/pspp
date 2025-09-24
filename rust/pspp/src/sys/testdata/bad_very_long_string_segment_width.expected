@@ -2,14 +2,12 @@ File header claims 1 variable positions but 34 were read from file.
 
 Variable with short name STR1 listed in very long string record with width 256 has segment 1 of width 9 (expected 4).
 
-╭──────────────────────┬────────────────────────╮
-│       Created        │    01-JAN-2011 20:53:52│
-├──────────────────────┼────────────────────────┤
-│Writer Product        │PSPP synthetic test file│
-├──────────────────────┼────────────────────────┤
-│       Compression    │SAV                     │
-│       Number of Cases│Unknown                 │
-╰──────────────────────┴────────────────────────╯
+╭────────────────┬────────────────────────╮
+│Created         │    01-JAN-2011 20:53:52│
+│Writer  Product │PSPP synthetic test file│
+│Compression     │SAV                     │
+│Number of Cases │Unknown                 │
+╰────────────────┴────────────────────────╯
 
 ╭─────────┬─╮
 │Variables│2│

@@ -1,0 +1,44 @@
+                                         Ranks
+╭───────────────────────────────────────────────────────┬─────┬─────────┬────────────╮
+│                                                       │  N  │Mean Rank│Sum of Ranks│
+├───────────────────────────────────────────────────────┼─────┼─────────┼────────────┤
+│xxxxxxxxxx - yyyyyyyyyyyyy               Negative Ranks│25[a]│    13,00│      325,00│
+│                                         Positive Ranks│ 0[b]│      ,00│         ,00│
+│                                         Ties          │ 0[c]│         │            │
+│                                         Total         │   25│         │            │
+├───────────────────────────────────────────────────────┼─────┼─────────┼────────────┤
+│xxxxxxxxxxxxx - yyyyyyyyyyyyyy           Negative Ranks│25[d]│    13,00│      325,00│
+│                                         Positive Ranks│ 0[e]│      ,00│         ,00│
+│                                         Ties          │ 0[f]│         │            │
+│                                         Total         │   25│         │            │
+├───────────────────────────────────────────────────────┼─────┼─────────┼────────────┤
+│xxxxxxxxxxxxxx - yyyyyyyyyyyyyyy         Negative Ranks│25[g]│    13,00│      325,00│
+│                                         Positive Ranks│ 0[h]│      ,00│         ,00│
+│                                         Ties          │ 0[i]│         │            │
+│                                         Total         │   25│         │            │
+├───────────────────────────────────────────────────────┼─────┼─────────┼────────────┤
+│xxxxxxxxxxxxxxxx - yyyyyyyyyyyyyyyyy     Negative Ranks│ 5[j]│     3,00│       15,00│
+│                                         Positive Ranks│ 0[k]│      ,00│         ,00│
+│                                         Ties          │20[l]│         │            │
+│                                         Total         │   25│         │            │
+├───────────────────────────────────────────────────────┼─────┼─────────┼────────────┤
+│xxxxxxxxxxxxxxxxxxx - yyyyyyyyyyyyyyyyyy Negative Ranks│ 0[m]│      ,00│         ,00│
+│                                         Positive Ranks│ 5[n]│     3,00│       15,00│
+│                                         Ties          │20[o]│         │            │
+│                                         Total         │   25│         │            │
+╰───────────────────────────────────────────────────────┴─────┴─────────┴────────────╯
+a. Footnote A
+b. Footnote B
+c. Footnote C
+d. Footnote D
+e. Footnote E
+f. Footnote F
+g. Footnote G
+h. Footnote H
+i. Footnote I
+j. Footnote J
+k. Footnote K
+l. Footnote L
+m. Footnote M
+n. Footnote N
+o. Footnote O

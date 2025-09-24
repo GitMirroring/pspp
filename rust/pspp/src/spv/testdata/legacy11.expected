@@ -1,0 +1,12 @@
+                              Ranks
+╭───────────────────────────────────┬────┬─────────┬────────────╮
+│                                   │  N │Mean Rank│Sum of Ranks│
+├───────────────────────────────────┼────┼─────────┼────────────┤
+│Post_Test - Pre_Test Negative Ranks│5[a]│     3.00│       15.00│
+│                     Positive Ranks│0[b]│      .00│         .00│
+│                     Ties          │0[c]│         │            │
+│                     Total         │   5│         │            │
+╰───────────────────────────────────┴────┴─────────┴────────────╯
+a. Post_Test < Pre_Test
+b. Post_Test > Pre_Test
+c. Post_Test = Pre_Test

@@ -178,13 +178,13 @@ pub enum Category {
     Data,
 }
 
-#[derive(Serialize)]
+#[derive(Clone, Serialize)]
 pub struct Stack {
     location: Location,
     description: String,
 }
 
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct Diagnostics(pub Vec<Diagnostic>);
 
 impl From<Diagnostic> for Diagnostics {
@@ -193,7 +193,7 @@ impl From<Diagnostic> for Diagnostics {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Clone, Serialize)]
 pub struct Diagnostic {
     pub severity: Severity,
     pub category: Category,

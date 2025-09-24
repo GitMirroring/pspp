@@ -70,7 +70,7 @@ void spv_data_variable_dump (const struct spv_data_variable *, FILE *);
 struct spv_data_value
   {
     double index;
-    int width;
+    int width;                  /* -1 for number, otherwise s's length. */
     union
       {
         double d;

@@ -54,6 +54,16 @@ pub enum VarType {
     String,
 }
 
+impl VarType {
+    pub fn is_numeric(&self) -> bool {
+        *self == Self::Numeric
+    }
+
+    pub fn is_string(&self) -> bool {
+        *self == Self::String
+    }
+}
+
 impl Not for VarType {
     type Output = Self;
 
@@ -733,7 +743,7 @@ impl<'a> MissingValuesMut<'a> {
             Err(MissingValuesError::TooMany)
         } else if value.var_type() != VarType::from(self.width) {
             Err(MissingValuesError::MixedTypes)
-        } else if value == Datum::Number(None) {
+        } else if value.is_sysmis() {
             Err(MissingValuesError::SystemMissing)
         } else if value.resize(self.width.min(VarWidth::String(8))).is_err() {
             Err(MissingValuesError::TooWide)

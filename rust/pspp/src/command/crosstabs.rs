@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License along with
 // this program.  If not, see <http://www.gnu.org/licenses/>.
 
-use flagset::FlagSet;
+use enumset::EnumSet;
 
 use super::{By, Comma, Command, Equals, Integer, Number, Punctuated, Subcommands, VarList};
 use crate::command::{
@@ -24,7 +24,7 @@ use crate::command::{
 
 pub(super) fn crosstabs_command() -> Command {
     Command {
-        allowed_states: FlagSet::full(),
+        allowed_states: EnumSet::all(),
         enhanced_only: false,
         testing_only: false,
         no_abbrev: false,

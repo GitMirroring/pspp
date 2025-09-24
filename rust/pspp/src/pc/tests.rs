@@ -5,7 +5,7 @@ use itertools::Itertools;
 use crate::{
     data::cases_to_output,
     output::{
-        Details, Item, Text,
+        Item, Text,
         pivot::{PivotTable, tests::assert_lines_eq},
     },
     pc::PcFile,
@@ -30,9 +30,9 @@ fn test_pcfile(name: &str) {
             output.push(PivotTable::from(&metadata).into());
             output.extend(dictionary.all_pivot_tables().into_iter().map_into());
             output.extend(cases_to_output(&dictionary, cases));
-            Item::new(Details::Group(output.into_iter().map_into().collect()))
+            output.into_iter().collect()
         }
-        Err(error) => Item::new(Details::Text(Box::new(Text::new_log(error.to_string())))),
+        Err(error) => Text::new_log(error.to_string()).into_item(),
     };
 
     let actual = output.to_string();

@@ -16,37 +16,35 @@ use aes::{
     cipher::{BlockDecrypt, KeyInit, generic_array::GenericArray},
 };
 use cmac::{Cmac, Mac};
+use displaydoc::Display;
 use smallvec::SmallVec;
 use std::{
     fmt::Debug,
     io::{BufRead, Error as IoError, ErrorKind, Read, Seek, SeekFrom},
 };
-use thiserror::Error as ThisError;
 
 use binrw::{BinRead, io::NoSeek};
 
 /// Error reading an encrypted file.
-#[derive(Clone, Debug, ThisError)]
+#[derive(Clone, Debug, thiserror::Error, Display)]
 pub enum Error {
-    /// I/O error.
-    #[error("I/O error reading encrypted file wrapper ({0})")]
+    /// I/O error reading encrypted file wrapper ({0}).
     IoError(ErrorKind),
 
     /// Invalid padding in final encrypted data block.
-    #[error("Invalid padding in final encrypted data block")]
     InvalidPadding,
 
     /// Not an encrypted file.
-    #[error("Not an encrypted file")]
     NotEncrypted,
 
-    /// Encrypted file has invalid length.
-    #[error("Encrypted file has invalid length {0} (expected 4 more than a multiple of 16).")]
+    /// Encrypted file has invalid length {0} (expected 4 more than a multiple of 16).
     InvalidLength(u64),
 
-    /// Unknown file type.
-    #[error("Unknown file type {0:?}.")]
+    /// Unknown file type {0:?}.
     UnknownFileType(String),
+
+    /// Incorrect password.
+    WrongPassword,
 }
 
 impl From<std::io::Error> for Error {
@@ -69,6 +67,7 @@ struct EncryptedHeader {
 }
 
 /// An encrypted file.
+#[derive(Clone)]
 pub struct EncryptedFile<R> {
     reader: R,
     file_type: FileType,
@@ -155,7 +154,11 @@ where
     /// `password` decoded with [EncodedPassword::decode].  If successful,
     /// returns an [EncryptedReader] for the file; on failure, returns the
     /// [EncryptedFile] again for another try.
-    pub fn unlock(self, password: &[u8]) -> Result<EncryptedReader<R>, Self> {
+    pub fn unlock<P>(self, password: P) -> Result<EncryptedReader<R>, Self>
+    where
+        P: AsRef<[u8]>,
+    {
+        let password = password.as_ref();
         self.unlock_literal(password).or_else(|this| {
             match EncodedPassword::from_encoded(password) {
                 Some(encoded) => this.unlock_literal(&encoded.decode()),
@@ -170,7 +173,10 @@ where
     ///
     /// If the password itself might be encoded ("encrypted"), instead use
     /// [Self::unlock] to try it both ways.
-    pub fn unlock_literal(self, password: &[u8]) -> Result<EncryptedReader<R>, Self> {
+    pub fn unlock_literal<P>(self, password: P) -> Result<EncryptedReader<R>, Self>
+    where
+        P: AsRef<[u8]>,
+    {
         // NIST SP 800-108 fixed data.
         #[rustfmt::skip]
         static  FIXED: &[u8] = &[
@@ -197,6 +203,7 @@ where
         ];
 
         // Truncate password to at most 10 bytes.
+        let password = password.as_ref();
         let password = password.get(..10).unwrap_or(password);
         let n = password.len();
 
@@ -265,10 +272,7 @@ fn parse_padding(block: &[u8; 16]) -> Option<usize> {
     }
 }
 
-impl<R> Debug for EncryptedFile<R>
-where
-    R: Read,
-{
+impl<R> Debug for EncryptedFile<R> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "EncryptedFile({:?})", &self.file_type)
     }
@@ -276,8 +280,7 @@ where
 
 /// Encrypted file reader.
 ///
-/// This implements [Read] and [Seek] for SPSS encrypted files.  To construct an
-/// [EncryptedReader], call [EncryptedFile::new], then [EncryptedFile::unlock].
+/// This implements [Read] and [Seek] for SPSS encrypted files.
 pub struct EncryptedReader<R> {
     /// Underlying reader.
     reader: R,
@@ -305,7 +308,26 @@ pub struct EncryptedReader<R> {
     tail: usize,
 }
 
+/// The [Read] and [Seek] traits together, for use as `dyn ReadSeek`.
+pub trait ReadSeek: Read + Seek {}
+impl<T> ReadSeek for T where T: Read + Seek {}
+
 impl<R> EncryptedReader<R> {
+    /// Opens `reader` and unlocks it with the given password in one step.
+    ///
+    /// This fails if the password is wrong.  To allow for multiple password
+    /// tries, use [EncryptedFile::new] followed by [EncryptedFile::unlock]
+    /// instead.
+    pub fn open<P>(reader: R, password: P) -> Result<Self, Error>
+    where
+        R: Read + Seek,
+        P: AsRef<[u8]>,
+    {
+        EncryptedFile::new(reader)?
+            .unlock(password)
+            .map_err(|_| Error::WrongPassword)
+    }
+
     fn new(reader: R, aes: Aes256Dec, file_type: FileType, length: u64) -> Self {
         Self {
             reader,
@@ -515,7 +537,11 @@ pub struct EncodedPassword(Vec<Vec<char>>);
 impl EncodedPassword {
     /// Creates an [EncodedPassword] from an already-encoded password `encoded`.
     /// Returns `None` if `encoded` is not a valid encoded password.
-    pub fn from_encoded(encoded: &[u8]) -> Option<Self> {
+    pub fn from_encoded<P>(encoded: P) -> Option<Self>
+    where
+        P: AsRef<[u8]>,
+    {
+        let encoded = encoded.as_ref();
         if encoded.len() > 20
             || encoded.len() % 2 != 0
             || !encoded.iter().all(|byte| (32..=127).contains(byte))
@@ -531,7 +557,8 @@ impl EncodedPassword {
     /// Returns an [EncodedPassword] as an encoded version of the given
     /// `plaintext` password.  Only the first 10 bytes, at most, of the
     /// plaintext password is used.
-    pub fn from_plaintext(plaintext: &[u8]) -> EncodedPassword {
+    pub fn from_plaintext<P: AsRef<[u8]>>(plaintext: P) -> EncodedPassword {
+        let plaintext = plaintext.as_ref();
         let input = plaintext.get(..10).unwrap_or(plaintext);
         EncodedPassword(
             input
@@ -592,7 +619,7 @@ mod tests {
         let mut cursor = Cursor::new(&input);
         let file = EncryptedFile::new(&mut cursor).unwrap();
         assert_eq!(file.file_type(), file_type);
-        let mut reader = file.unlock_literal(password.as_bytes()).unwrap();
+        let mut reader = file.unlock_literal(password).unwrap();
         assert_eq!(reader.file_type(), file_type);
         let mut actual = Vec::new();
         std::io::copy(&mut reader, &mut actual).unwrap();
@@ -658,7 +685,7 @@ mod tests {
             let encoded = EncodedPassword::from_plaintext(&[plaintext]);
             for variant in 0..encoded.n_variants() {
                 let encoded_variant = encoded.variant(variant);
-                let decoded = EncodedPassword::from_encoded(encoded_variant.as_bytes())
+                let decoded = EncodedPassword::from_encoded(encoded_variant)
                     .unwrap()
                     .decode();
                 assert_eq!(&[plaintext], decoded.as_slice());

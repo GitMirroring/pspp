@@ -26,20 +26,137 @@
 //! Some drivers use tables as an implementation detail of rendering pivot
 //! tables.
 
-use std::{ops::Range, sync::Arc};
+use std::{
+    borrow::Cow,
+    ops::{Index, IndexMut, Range},
+    sync::Arc,
+};
 
 use enum_map::{EnumMap, enum_map};
 use ndarray::{Array, Array2};
 
-use crate::output::pivot::{Coord2, DisplayValue, Footnote, HorzAlign, ValueInner};
-
-use super::pivot::{
-    Area, AreaStyle, Axis2, Border, BorderStyle, HeadingRegion, Rect2, Value, ValueOptions,
+use crate::{
+    output::pivot::{
+        Axis2, Footnote,
+        look::{
+            Area, AreaStyle, Border, BorderStyle, CellStyle, FontStyle, HeadingRegion, HorzAlign,
+            RowParity,
+        },
+        value::{DisplayValue, Value, ValueInner, ValueOptions},
+    },
+    spv::html,
 };
+
+/// The `(x,y)` position of a cell in a [Table].
+#[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash)]
+pub struct CellPos {
+    /// X
+    pub x: usize,
+    /// Y
+    pub y: usize,
+}
+
+impl CellPos {
+    pub fn new(x: usize, y: usize) -> Self {
+        Self { x, y }
+    }
+    pub fn for_axis((a, az): (Axis2, usize), bz: usize) -> Self {
+        match a {
+            Axis2::X => Self::new(az, bz),
+            Axis2::Y => Self::new(bz, az),
+        }
+    }
+
+    pub fn from_fn<F>(mut f: F) -> Self
+    where
+        F: FnMut(Axis2) -> usize,
+    {
+        Self::new(f(Axis2::X), f(Axis2::Y))
+    }
+}
+
+impl Index<Axis2> for CellPos {
+    type Output = usize;
+
+    fn index(&self, index: Axis2) -> &Self::Output {
+        match index {
+            Axis2::X => &self.x,
+            Axis2::Y => &self.y,
+        }
+    }
+}
+
+impl IndexMut<Axis2> for CellPos {
+    fn index_mut(&mut self, index: Axis2) -> &mut Self::Output {
+        match index {
+            Axis2::X => &mut self.x,
+            Axis2::Y => &mut self.y,
+        }
+    }
+}
+
+/// A rectangular group of cells in a [Table].
+#[derive(Clone, Debug, Default)]
+pub struct CellRect {
+    /// X range.
+    pub x: Range<usize>,
+    /// Y range.
+    pub y: Range<usize>,
+}
+
+impl CellRect {
+    pub fn new(x: Range<usize>, y: Range<usize>) -> Self {
+        Self { x, y }
+    }
+    pub fn for_cell(cell: CellPos) -> Self {
+        Self::new(cell.x..cell.x + 1, cell.y..cell.y + 1)
+    }
+    pub fn for_ranges((a_axis, a): (Axis2, Range<usize>), b: Range<usize>) -> Self {
+        match a_axis {
+            Axis2::X => Self { x: a, y: b },
+            Axis2::Y => Self { x: b, y: a },
+        }
+    }
+    pub fn top_left(&self) -> CellPos {
+        CellPos::new(self.x.start, self.y.start)
+    }
+    pub fn is_empty(&self) -> bool {
+        self.x.is_empty() || self.y.is_empty()
+    }
+    pub fn map<F>(&self, mut f: F) -> Self
+    where
+        F: FnMut(Axis2, Range<usize>) -> Range<usize>,
+    {
+        Self {
+            x: f(Axis2::X, self.x.clone()),
+            y: f(Axis2::Y, self.y.clone()),
+        }
+    }
+}
+
+impl Index<Axis2> for CellRect {
+    type Output = Range<usize>;
+
+    fn index(&self, index: Axis2) -> &Self::Output {
+        match index {
+            Axis2::X => &self.x,
+            Axis2::Y => &self.y,
+        }
+    }
+}
+
+impl IndexMut<Axis2> for CellRect {
+    fn index_mut(&mut self, index: Axis2) -> &mut Self::Output {
+        match index {
+            Axis2::X => &mut self.x,
+            Axis2::Y => &mut self.y,
+        }
+    }
+}
 
 #[derive(Clone, Debug)]
 pub struct CellRef<'a> {
-    pub coord: Coord2,
+    pub pos: CellPos,
     pub content: &'a Content,
 }
 
@@ -52,16 +169,16 @@ impl CellRef<'_> {
         self.content.is_empty()
     }
 
-    pub fn rect(&self) -> Rect2 {
-        self.content.rect(self.coord)
+    pub fn rect(&self) -> CellRect {
+        self.content.rect(self.pos)
     }
 
     pub fn next_x(&self) -> usize {
-        self.content.next_x(self.coord.x())
+        self.content.next_x(self.pos.x)
     }
 
     pub fn is_top_left(&self) -> bool {
-        self.content.is_top_left(self.coord)
+        self.content.is_top_left(self.pos)
     }
 
     pub fn span(&self, axis: Axis2) -> usize {
@@ -96,7 +213,7 @@ impl Content {
     /// Returns the rectangle that this cell covers, only if the cell contains
     /// that information. (Joined cells always do, and other cells usually
     /// don't.)
-    pub fn joined_rect(&self) -> Option<&Rect2> {
+    pub fn joined_rect(&self) -> Option<&CellRect> {
         match self {
             Content::Join(cell) => Some(&cell.region),
             _ => None,
@@ -104,26 +221,25 @@ impl Content {
     }
 
     /// Returns the rectangle that this cell covers. If the cell doesn't contain
-    /// that information, returns a rectangle containing `coord`.
-    pub fn rect(&self, coord: Coord2) -> Rect2 {
+    /// that information, returns a rectangle containing `pos`.
+    pub fn rect(&self, pos: CellPos) -> CellRect {
         match self {
             Content::Join(cell) => cell.region.clone(),
-            _ => Rect2::for_cell(coord),
+            _ => CellRect::for_cell(pos),
         }
     }
 
     pub fn next_x(&self, x: usize) -> usize {
-        self.joined_rect()
-            .map_or(x + 1, |region| region[Axis2::X].end)
+        self.joined_rect().map_or(x + 1, |region| region.x.end)
     }
 
-    pub fn is_top_left(&self, coord: Coord2) -> bool {
-        self.joined_rect().is_none_or(|r| coord == r.top_left())
+    pub fn is_top_left(&self, pos: CellPos) -> bool {
+        self.joined_rect().is_none_or(|r| pos == r.top_left())
     }
 
     pub fn span(&self, axis: Axis2) -> usize {
         self.joined_rect().map_or(1, |r| {
-            let range = &r.0[axis];
+            let range = &r[axis];
             range.end - range.start
         })
     }
@@ -134,11 +250,8 @@ impl Content {
     pub fn row_span(&self) -> usize {
         self.span(Axis2::Y)
     }
-}
-
-impl Default for Content {
-    fn default() -> Self {
-        Self::Value(CellInner::default())
+    pub fn default_for_area(area: Area) -> Self {
+        Self::Value(CellInner::new(area, Default::default()))
     }
 }
 
@@ -147,11 +260,11 @@ pub struct Cell {
     inner: CellInner,
 
     /// Occupied table region.
-    region: Rect2,
+    region: CellRect,
 }
 
 impl Cell {
-    fn new(inner: CellInner, region: Rect2) -> Self {
+    fn new(inner: CellInner, region: CellRect) -> Self {
         Self { inner, region }
     }
 }
@@ -176,6 +289,10 @@ impl CellInner {
         }
     }
 
+    pub fn with_rotate(self, rotate: bool) -> Self {
+        Self { rotate, ..self }
+    }
+
     pub fn is_empty(&self) -> bool {
         self.value.inner.is_empty()
     }
@@ -185,11 +302,17 @@ impl CellInner {
 #[derive(derive_more::Debug)]
 pub struct Table {
     /// Number of rows and columns.
-    pub n: Coord2,
+    pub n: CellPos,
 
     /// Table header rows and columns.
-    pub h: Coord2,
+    ///
+    /// This is a subset of `n`, so `h.x <= n.x` and
+    /// `h.y <= n.y`.
+    pub h: CellPos,
 
+    /// Table contents.
+    ///
+    /// The array has `n.x` columns and `n.y` rows.
     pub contents: Array2<Content>,
 
     /// Styles for areas of the table.
@@ -201,7 +324,7 @@ pub struct Table {
     pub borders: EnumMap<Border, BorderStyle>,
 
     /// Horizontal ([Axis2::Y]) and vertical ([Axis2::X]) rules.
-    pub rules: EnumMap<Axis2, Array2<Border>>,
+    pub rules: EnumMap<Axis2, Array2<Option<Border>>>,
 
     /// How to present values.
     #[debug(skip)]
@@ -210,45 +333,52 @@ pub struct Table {
 
 impl Table {
     pub fn new(
-        n: Coord2,
-        headers: Coord2,
+        n: CellPos,
+        headers: CellPos,
         areas: EnumMap<Area, AreaStyle>,
         borders: EnumMap<Border, BorderStyle>,
-        value_options: ValueOptions,
+        value_options: impl Into<ValueOptions>,
     ) -> Self {
         Self {
             n,
             h: headers,
-            contents: Array::default((n.x(), n.y())),
+            contents: Array::from_shape_fn((n.x, n.y), |(x, y)| {
+                let area = match (x < headers.x, y < headers.y) {
+                    (true, true) => Area::Corner,
+                    (true, false) => Area::Labels(Axis2::Y),
+                    (false, true) => Area::Labels(Axis2::X),
+                    (false, false) => Area::Data(RowParity::Even),
+                };
+                Content::default_for_area(area)
+            }),
             areas,
             borders,
             rules: enum_map! {
-                Axis2::X => Array::from_elem((n.x() + 1, n.y()), Border::Title),
-                Axis2::Y => Array::from_elem((n.x(), n.y() + 1), Border::Title),
+                Axis2::X => Array::default((n.x + 1, n.y)),
+                Axis2::Y => Array::default((n.x, n.y + 1)),
             },
-            value_options,
+            value_options: value_options.into(),
         }
     }
 
-    pub fn get(&self, coord: Coord2) -> CellRef<'_> {
+    pub fn get(&self, coord: CellPos) -> CellRef<'_> {
         CellRef {
-            coord,
-            content: &self.contents[[coord.x(), coord.y()]],
+            pos: coord,
+            content: &self.contents[[coord.x, coord.y]],
         }
     }
 
-    pub fn get_rule(&self, axis: Axis2, pos: Coord2) -> BorderStyle {
-        self.borders[self.rules[axis][[pos.x(), pos.y()]]]
+    pub fn get_rule(&self, axis: Axis2, pos: CellPos) -> Option<BorderStyle> {
+        self.rules[axis][[pos.x, pos.y]].map(|b| self.borders[b])
     }
 
-    pub fn put(&mut self, region: Rect2, inner: CellInner) {
-        use Axis2::*;
-        if region[X].len() == 1 && region[Y].len() == 1 {
-            self.contents[[region[X].start, region[Y].start]] = Content::Value(inner);
+    pub fn put(&mut self, region: CellRect, inner: CellInner) {
+        if region.x.len() == 1 && region.y.len() == 1 {
+            self.contents[[region.x.start, region.y.start]] = Content::Value(inner);
         } else {
             let cell = Arc::new(Cell::new(inner, region.clone()));
-            for y in region[Y].clone() {
-                for x in region[X].clone() {
+            for y in region.y.clone() {
+                for x in region.x.clone() {
                     self.contents[[x, y]] = Content::Join(cell.clone())
                 }
             }
@@ -257,13 +387,13 @@ impl Table {
 
     pub fn h_line(&mut self, border: Border, x: Range<usize>, y: usize) {
         for x in x {
-            self.rules[Axis2::Y][[x, y]] = border;
+            self.rules[Axis2::Y][[x, y]] = Some(border);
         }
     }
 
     pub fn v_line(&mut self, border: Border, x: usize, y: Range<usize>) {
         for y in y {
-            self.rules[Axis2::X][[x, y]] = border;
+            self.rules[Axis2::X][[x, y]] = Some(border);
         }
     }
 
@@ -288,10 +418,10 @@ impl Table {
     }
 
     /// The heading region that `pos` is part of, if any.
-    pub fn heading_region(&self, pos: Coord2) -> Option<HeadingRegion> {
-        if pos.x() < self.h.x() {
+    pub fn heading_region(&self, pos: CellPos) -> Option<HeadingRegion> {
+        if pos.x < self.h.x {
             Some(HeadingRegion::Rows)
-        } else if pos.y() < self.h.y() {
+        } else if pos.y < self.h.y {
             Some(HeadingRegion::Columns)
         } else {
             None
@@ -323,8 +453,8 @@ impl Iterator for XIter<'_> {
     fn next(&mut self) -> Option<Self::Item> {
         let next_x = self
             .x
-            .map_or(0, |x| self.table.get(Coord2::new(x, self.y)).next_x());
-        if next_x >= self.table.n.x() {
+            .map_or(0, |x| self.table.get(CellPos::new(x, self.y)).next_x());
+        if next_x >= self.table.n.x {
             None
         } else {
             self.x = Some(next_x);
@@ -346,7 +476,7 @@ impl<'a> Cells<'a> {
             next: if table.is_empty() {
                 None
             } else {
-                Some(table.get(Coord2::new(0, 0)))
+                Some(table.get(CellPos::new(0, 0)))
             },
         }
     }
@@ -363,9 +493,9 @@ impl<'a> Iterator for Cells<'a> {
         self.next = loop {
             let next_x = next.next_x();
             let coord = if next_x < self.table.n[X] {
-                Coord2::new(next_x, next.coord.y())
-            } else if next.coord.y() + 1 < self.table.n[Y] {
-                Coord2::new(0, next.coord.y() + 1)
+                CellPos::new(next_x, next.pos.y)
+            } else if next.pos.y + 1 < self.table.n[Y] {
+                CellPos::new(0, next.pos.y + 1)
             } else {
                 break None;
             };
@@ -378,48 +508,46 @@ impl<'a> Iterator for Cells<'a> {
     }
 }
 
-pub struct DrawCell<'a> {
+pub struct DrawCell<'a, 'b> {
     pub rotate: bool,
     pub inner: &'a ValueInner,
-    pub style: &'a AreaStyle,
+    pub cell_style: &'a CellStyle,
+    pub font_style: &'a FontStyle,
     pub subscripts: &'a [String],
     pub footnotes: &'a [Arc<Footnote>],
     pub value_options: &'a ValueOptions,
+    pub substitutions: &'b dyn Fn(html::Variable) -> Option<Cow<'b, str>>,
 }
 
-impl<'a> DrawCell<'a> {
+impl<'a, 'b> DrawCell<'a, 'b> {
     pub fn new(inner: &'a CellInner, table: &'a Table) -> Self {
-        let default_area_style = &table.areas[inner.area];
-        let (style, subscripts, footnotes) = if let Some(styling) = &inner.value.styling {
-            (
-                styling.style.as_ref().unwrap_or(default_area_style),
-                styling.subscripts.as_slice(),
-                styling.footnotes.as_slice(),
-            )
-        } else {
-            (default_area_style, [].as_slice(), [].as_slice())
-        };
         Self {
             rotate: inner.rotate,
             inner: &inner.value.inner,
-            style,
-            subscripts,
-            footnotes,
+            font_style: inner
+                .value
+                .font_style()
+                .unwrap_or(&table.areas[inner.area].font_style),
+            cell_style: inner
+                .value
+                .cell_style()
+                .unwrap_or(&table.areas[inner.area].cell_style),
+            subscripts: inner.value.subscripts(),
+            footnotes: inner.value.footnotes(),
             value_options: &table.value_options,
+            substitutions: &|_| None,
         }
     }
 
     pub fn display(&self) -> DisplayValue<'a> {
         self.inner
             .display(self.value_options)
-            .with_font_style(&self.style.font_style)
             .with_subscripts(self.subscripts)
             .with_footnotes(self.footnotes)
     }
 
     pub fn horz_align(&self, display: &DisplayValue) -> HorzAlign {
-        self.style
-            .cell_style
+        self.cell_style
             .horz_align
             .unwrap_or_else(|| HorzAlign::for_mixed(display.var_type()))
     }

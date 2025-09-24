@@ -4,11 +4,14 @@
 [License](license.md)
 
 - [Running PSPP](invoking/index.md)
-  - [Converting Data](invoking/pspp-convert.md)
+  - [Converting Files](invoking/pspp-convert.md)
   - [Inspecting System Files](invoking/pspp-show.md)
   - [Inspecting Portable Files](invoking/pspp-show-por.md)
   - [Inspecting SPSS/PC+ Files](invoking/pspp-show-pc.md)
+  - [Inspecting SPSS Viewer Files](invoking/pspp-show-spv.md)
+  - [Identifying Files](invoking/pspp-identify.md)
   - [Decrypting Files](invoking/pspp-decrypt.md)
+  - [Output Driver Configuration](invoking/output.md)
 
 # Language Overview
 

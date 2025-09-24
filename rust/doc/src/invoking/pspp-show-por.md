@@ -85,7 +85,7 @@ The following `<MODE>`s are available:
 
 ## Options
 
-The following options affect how `pspp show-por` reads `<INPUT>`:
+`pspp show-por` accepts the following options:
 
 * `--data [<MAX_CASES>]`  
   For mode `dictionary`, and `encodings`, this instructs `pspp
@@ -93,26 +93,13 @@ The following options affect how `pspp show-por` reads `<INPUT>`:
   then that sets a limit on the number of cases to read.  Without this
   option, PSPP will not read any cases.
 
-The following options affect how `pspp show-por` writes its output:
-
-* `-f <FORMAT>`  
-  `--format <FORMAT>`  
-  Specifies the format to use for output.  `<FORMAT>` may be one of
-  the following:
-
-  - `json`: JSON using indentation and spaces for easy human
-    consumption.
-  - `ndjson`: [Newline-delimited JSON].
-  - `output`: Pivot tables with the PSPP output engine.  Use `-o` for
-    additional configuration.
-  - `discard`: Do not produce any output.
-
-  When these options are not used, the default output format is chosen
-  based on the `[OUTPUT]` extension.  If `[OUTPUT]` is not specified,
-  then output defaults to JSON.
-
-  [Newline-delimited JSON]: https://github.com/ndjson/ndjson-spec
-
 * `-o <OUTPUT_OPTIONS>`  
-  Adds `<OUTPUT_OPTIONS>` to the output engine configuration.
+  Adds `<OUTPUT_OPTIONS>` to the output engine configuration.  See
+  [Output Drivers](output.md) for information on how to configure
+  output.
+
+  If no output driver is specified, the default output format is
+  chosen based on `[OUTPUT]`'s extension.  If `[OUTPUT]` is omitted,
+  output is written to stdout in [JSON](output.md#json-output-json)
+  format.
 

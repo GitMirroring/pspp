@@ -206,12 +206,26 @@ AreaStyle =>
 
 `AreaStyle` represents style properties of an area.
 
-`valign` is 0 for top alignment, 1 for bottom alginment, 2 for
-center.
+`valign` has the following values:
 
-`halign` is 0 for left alignment, 1 for right, 2 for center, 3 for
-mixed, 4 for decimal.  For decimal alignment, `decimal-offset` is the
-offset of the decimal point in 20ths of a point.
+| `valign` | Vertical Alignment |
+|---------:|:-------------------|
+|        0 | Top                |
+|        1 | Bottom             |
+|        2 | Center             |
+
+`halign` has the following values:
+
+| `halign` | Horizontal Alignment |
+|---------:|:---------------------|
+|        0 | Left                 |
+|        1 | Right                |
+|        2 | Center               |
+|        3 | Mixed                |
+|        4 | Decimal              |
+
+For decimal alignment, `decimal-offset` is the offset of the decimal
+point, in 20ths of a point.
 
 `left-margin`, `right-margin`, `top-margin`, and `bottom-margin` are
 also measured in 20ths of a point.

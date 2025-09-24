@@ -21,9 +21,9 @@ use enum_map::EnumMap;
 use serde::Serialize;
 
 use crate::{
-    format::{Format, Settings as FormatSettings},
+    format::{F8_2, Format, Settings as FormatSettings},
     message::Severity,
-    output::pivot::Look,
+    output::pivot::look::Look,
 };
 
 /// Whether to show variable or value labels or the underlying value or variable
@@ -136,14 +136,14 @@ impl Default for Settings {
             macros: MacroSettings::default(),
             max_loops: 40,
             workspace: 64 * 1024 * 1024,
-            default_format: Format::F8_2,
+            default_format: F8_2,
             testing: false,
             fuzz_bits: 6,
             scale_min: 24,
             commands: Compatibility::default(),
             global: Compatibility::default(),
             syntax: Compatibility::default(),
-            formats: FormatSettings::default(),
+            formats: Default::default(),
             endian: EndianSettings::default(),
             small: 0.0001,
             show_values: Show::default(),

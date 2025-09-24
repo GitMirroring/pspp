@@ -48,7 +48,7 @@ use crate::{
     format::DisplayPlain,
     output::{
         Item, Text,
-        pivot::{Axis3, Dimension, Group, PivotTable, Value},
+        pivot::{Axis3, Dimension, Group, PivotTable, value::Value},
     },
     variable::{VarType, VarWidth},
 };
@@ -88,6 +88,10 @@ pub trait RawString: Debug + PartialEq + Eq + PartialOrd + Ord + Hash {
 
     fn is_empty(&self) -> bool {
         self.raw_string_bytes().is_empty()
+    }
+
+    fn is_spaces(&self) -> bool {
+        self.without_trailing_spaces().is_empty()
     }
 
     fn len(&self) -> usize {
@@ -261,6 +265,24 @@ impl ByteString {
     /// Creates a new [ByteString] that consists of `n` ASCII spaces.
     pub fn spaces(n: usize) -> Self {
         Self(std::iter::repeat_n(b' ', n).collect())
+    }
+
+    pub fn display_hex(&self) -> HexBytes<'_> {
+        HexBytes(self.0.as_slice())
+    }
+    pub fn to_hex(&self) -> String {
+        self.display_hex().to_string()
+    }
+}
+
+pub struct HexBytes<'a>(&'a [u8]);
+
+impl<'a> Display for HexBytes<'a> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        for byte in self.0 {
+            write!(f, "{:02X}", *byte)?;
+        }
+        Ok(())
     }
 }
 
@@ -574,6 +596,50 @@ impl<B> Datum<B> {
         matches!(self, Self::String(_))
     }
 
+    pub fn is_number_and<F>(&self, f: F) -> bool
+    where
+        F: FnOnce(Option<f64>) -> bool,
+    {
+        if let Self::Number(number) = self {
+            f(*number)
+        } else {
+            false
+        }
+    }
+
+    pub fn is_string_or<F>(&self, f: F) -> bool
+    where
+        F: FnOnce(Option<f64>) -> bool,
+    {
+        if let Self::Number(number) = self {
+            f(*number)
+        } else {
+            true
+        }
+    }
+
+    pub fn is_string_and<F>(&self, f: F) -> bool
+    where
+        F: FnOnce(&B) -> bool,
+    {
+        if let Self::String(string) = self {
+            f(string)
+        } else {
+            false
+        }
+    }
+
+    pub fn is_number_or<F>(&self, f: F) -> bool
+    where
+        F: FnOnce(&B) -> bool,
+    {
+        if let Self::String(string) = self {
+            f(string)
+        } else {
+            true
+        }
+    }
+
     /// Returns the number inside this datum, or `None` if this is a string
     /// datum.
     pub fn as_number(&self) -> Option<Option<f64>> {
@@ -646,6 +712,10 @@ where
             (Self::Number(a), Datum::Number(b)) => a == b,
             _ => false,
         }
+    }
+
+    pub fn is_spaces(&self) -> bool {
+        self.is_string_and(|s| s.is_spaces())
     }
 
     pub fn as_raw(&self) -> Datum<&ByteStr> {

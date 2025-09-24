@@ -25,7 +25,7 @@ use crate::{
     identifier::{Error as IdError, Identifier},
     output::{
         Details, Item, Text,
-        pivot::{Axis3, Dimension, Group, PivotTable, Value},
+        pivot::{Axis3, Dimension, Group, PivotTable, value::Value},
     },
     sys::{
         encoding::{Error as EncodingError, default_encoding, get_encoding},
@@ -71,6 +71,7 @@ use std::{
     mem::take,
     num::NonZeroU8,
     ops::Range,
+    sync::Arc,
 };
 use thiserror::Error as ThisError;
 
@@ -79,7 +80,7 @@ pub mod records;
 /// An error encountered reading raw system file records.
 ///
 /// Any error prevents reading further data from the system file.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Error<D> {
     /// Range of file offsets where the error occurred.
     pub offsets: Option<Range<u64>>,
@@ -129,7 +130,7 @@ where
 }
 
 /// Details of an [Error].
-#[derive(ThisError, Debug)]
+#[derive(Clone, ThisError, Debug)]
 pub enum ErrorDetails {
     /// Not an SPSS system file.
     #[error("Not an SPSS system file")]
@@ -145,7 +146,7 @@ pub enum ErrorDetails {
 
     /// I/O error.
     #[error("I/O error ({0})")]
-    Io(#[from] IoError),
+    Io(Arc<IoError>),
 
     /// Invalid SAV compression code.
     #[error("Invalid SAV compression code {0}")]
@@ -247,6 +248,12 @@ pub enum ErrorDetails {
         #[from]
         EncodingError,
     ),
+}
+
+impl From<IoError> for ErrorDetails {
+    fn from(value: IoError) -> Self {
+        ErrorDetails::Io(Arc::new(value))
+    }
 }
 
 /// A warning reading a raw system file record.
@@ -1116,7 +1123,7 @@ impl CompressionAction {
 /// An error reading a case from a system file.
 ///
 /// Used for SPSS system files and SPSS/PC+ system files.
-#[derive(ThisError, Display, Debug)]
+#[derive(Clone, ThisError, Display, Debug)]
 pub enum CaseDetails {
     /// Unexpected end of file {case_ofs} bytes into case {case_number} with expected length {case_len} bytes.
     EofInCase {
@@ -1147,7 +1154,13 @@ pub enum CaseDetails {
     },
 
     /// I/O error ({0})
-    Io(#[from] IoError),
+    Io(Arc<IoError>),
+}
+
+impl From<IoError> for CaseDetails {
+    fn from(value: IoError) -> Self {
+        CaseDetails::Io(Arc::new(value))
+    }
 }
 
 impl Datum<ByteString> {

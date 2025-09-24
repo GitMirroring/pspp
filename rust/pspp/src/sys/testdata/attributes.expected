@@ -1,12 +1,10 @@
-╭──────────────────────┬────────────────────────╮
-│       Created        │    01-JAN-2011 20:53:52│
-├──────────────────────┼────────────────────────┤
-│Writer Product        │PSPP synthetic test file│
-│       Version        │1.2.3                   │
-├──────────────────────┼────────────────────────┤
-│       Compression    │None                    │
-│       Number of Cases│                       0│
-╰──────────────────────┴────────────────────────╯
+╭────────────────┬────────────────────────╮
+│Created         │    01-JAN-2011 20:53:52│
+│Writer  Product │PSPP synthetic test file│
+│        Version │1.2.3                   │
+│Compression     │None                    │
+│Number of Cases │                       0│
+╰────────────────┴────────────────────────╯
 
 ╭─────────┬────────────────────────╮
 │Label    │PSPP synthetic test file│
@@ -22,21 +20,18 @@
 │ThirdVariable │       3│     │                 │Input │    8│Right    │F8.0        │F8.0        │              │
 ╰──────────────┴────────┴─────┴─────────────────┴──────┴─────┴─────────┴────────────┴────────────┴──────────────╯
 
-       Data File and Variable Attributes
-╭───────────────────────────────┬─────────────╮
-│Variable and Name              │    Value    │
-├───────────────────────────────┼─────────────┤
-│(dataset)         Attr1[1]     │Value1       │
-│                  Attr1[2]     │'déclaration'│
-│                  SécondAttr[1]│123          │
-│                  SécondAttr[2]│456          │
-├───────────────────────────────┼─────────────┤
-│FirstVariable     $@Role       │1            │
-│                  adèle[1]     │23           │
-│                  adèle[2]     │34           │
-│                  bert         │123          │
-├───────────────────────────────┼─────────────┤
-│SécondVariable    xyzzy        │quux         │
-├───────────────────────────────┼─────────────┤
-│ThirdVariable     fizz         │buzz         │
-╰───────────────────────────────┴─────────────╯
+      Data File and Variable Attributes
+╭────────────────────────────┬─────────────╮
+│Variable and Name           │    Value    │
+├────────────────────────────┼─────────────┤
+│(dataset)      Attr1[1]     │Value1       │
+│               Attr1[2]     │'déclaration'│
+│               SécondAttr[1]│123          │
+│               SécondAttr[2]│456          │
+│FirstVariable  $@Role       │1            │
+│               adèle[1]     │23           │
+│               adèle[2]     │34           │
+│               bert         │123          │
+│SécondVariable xyzzy        │quux         │
+│ThirdVariable  fizz         │buzz         │
+╰────────────────────────────┴─────────────╯

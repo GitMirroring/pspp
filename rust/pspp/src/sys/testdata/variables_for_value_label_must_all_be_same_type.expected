@@ -1,13 +1,11 @@
 Warning at file offsets 0x110 to 0x118: In value label record: First variable index is for a string variable but the following variable indexes are for numeric variables: [2]
 
-╭──────────────────────┬────────────────────────╮
-│       Created        │    01-JAN-2011 20:53:52│
-├──────────────────────┼────────────────────────┤
-│Writer Product        │PSPP synthetic test file│
-├──────────────────────┼────────────────────────┤
-│       Compression    │SAV                     │
-│       Number of Cases│Unknown                 │
-╰──────────────────────┴────────────────────────╯
+╭────────────────┬────────────────────────╮
+│Created         │    01-JAN-2011 20:53:52│
+│Writer  Product │PSPP synthetic test file│
+│Compression     │SAV                     │
+│Number of Cases │Unknown                 │
+╰────────────────┴────────────────────────╯
 
 ╭─────────┬─╮
 │Variables│2│
@@ -21,9 +19,9 @@ Warning at file offsets 0x110 to 0x118: In value label record: First variable in
 │num1│       2│     │                 │Input│    8│Right    │F8.0        │F8.0        │              │
 ╰────┴────────┴─────┴─────────────────┴─────┴─────┴─────────┴────────────┴────────────┴──────────────╯
 
-        Value Labels
-╭─────────────────────┬───╮
-│Variable Value       │   │
-├─────────────────────┼───┤
-│str1           xyzzy │one│
-╰─────────────────────┴───╯
+     Value Labels
+╭───────────────┬───╮
+│Variable Value │   │
+├───────────────┼───┤
+│str1   xyzzy   │one│
+╰───────────────┴───╯

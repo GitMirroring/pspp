@@ -2,14 +2,12 @@ This system file does not indicate its own character encoding.  For best results
 
 Text string contains invalid bytes for UTF-8 encoding: "PSPP synthetic test file: ����                                  "
 
-╭──────────────────────┬────────────────────────╮
-│       Created        │    01-JAN-2011 20:53:52│
-├──────────────────────┼────────────────────────┤
-│Writer Product        │PSPP synthetic test file│
-├──────────────────────┼────────────────────────┤
-│       Compression    │None                    │
-│       Number of Cases│                       0│
-╰──────────────────────┴────────────────────────╯
+╭────────────────┬────────────────────────╮
+│Created         │    01-JAN-2011 20:53:52│
+│Writer  Product │PSPP synthetic test file│
+│Compression     │None                    │
+│Number of Cases │                       0│
+╰────────────────┴────────────────────────╯
 
 ╭─────────┬──────────────────────────────╮
 │Label    │PSPP synthetic test file: ����│

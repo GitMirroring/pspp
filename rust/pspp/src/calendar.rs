@@ -14,17 +14,28 @@
 // You should have received a copy of the GNU General Public License along with
 // this program.  If not, see <http://www.gnu.org/licenses/>.
 
+/// Dates and times in PSPP.
+///
+/// PSPP represents dates as the number of seconds since [EPOCH], and times as
+/// the number of seconds since midnight.
 use chrono::{Datelike, Days, Month, NaiveDate, NaiveDateTime, NaiveTime};
 use num::FromPrimitive;
 use thiserror::Error as ThisError;
 
 use crate::format::Settings;
 
+/// The PSPP epoch, 14 Oct 1582, as a [NaiveDate].
 const EPOCH: NaiveDate = NaiveDate::from_ymd_opt(1582, 10, 14).unwrap();
+
+/// The PSPP epoch, 14 Oct 1582, as a [NaiveDateTime].
 const EPOCH_DATETIME: NaiveDateTime = EPOCH.and_time(NaiveTime::MIN);
 
 pub fn date_time_to_pspp(date_time: NaiveDateTime) -> f64 {
     (date_time - EPOCH_DATETIME).as_seconds_f64()
+}
+
+pub fn time_to_pspp(time: NaiveTime) -> f64 {
+    (time - NaiveTime::MIN).as_seconds_f64()
 }
 
 /// Takes a count of days from 14 Oct 1582 and translates it into a Gregorian

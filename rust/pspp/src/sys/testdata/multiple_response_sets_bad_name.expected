@@ -2,15 +2,13 @@ Invalid multiple response set name.  Multiple response set name "b" does not beg
 
 Invalid multiple response set name.  Multiple response set name "e" does not begin with required "$".
 
-╭──────────────────────┬────────────────────────╮
-│       Created        │    01-JAN-2011 20:53:52│
-├──────────────────────┼────────────────────────┤
-│Writer Product        │PSPP synthetic test file│
-│       Version        │1.2.3                   │
-├──────────────────────┼────────────────────────┤
-│       Compression    │None                    │
-│       Number of Cases│                       0│
-╰──────────────────────┴────────────────────────╯
+╭────────────────┬────────────────────────╮
+│Created         │    01-JAN-2011 20:53:52│
+│Writer  Product │PSPP synthetic test file│
+│        Version │1.2.3                   │
+│Compression     │None                    │
+│Number of Cases │                       0│
+╰────────────────┴────────────────────────╯
 
 ╭─────────┬────────────────────────╮
 │Label    │PSPP synthetic test file│

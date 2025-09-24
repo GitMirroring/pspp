@@ -15,21 +15,23 @@
 // this program.  If not, see <http://www.gnu.org/licenses/>.
 
 use std::cmp::{max, min};
-use std::collections::HashMap;
-use std::iter::once;
+use std::iter::{once, zip};
 use std::ops::Range;
 use std::sync::Arc;
 
 use enum_map::{Enum, EnumMap, enum_map};
-use itertools::interleave;
+use itertools::{Itertools, interleave};
 use num::Integer;
 use smallvec::SmallVec;
 
-use crate::output::pivot::VertAlign;
-use crate::output::table::DrawCell;
-
-use super::pivot::{Axis2, BorderStyle, Coord2, Look, PivotTable, Rect2, Stroke};
-use super::table::{Content, Table};
+use crate::output::pivot::look::Color;
+use crate::output::{
+    pivot::{
+        Axis2, Coord2, PivotTable, Rect2,
+        look::{BorderStyle, Look, Stroke, VertAlign},
+    },
+    table::{CellPos, CellRect, Content, DrawCell, Table},
+};
 
 /// Parameters for rendering a table_item to a device.
 ///
@@ -51,20 +53,22 @@ pub struct Params {
     /// Nominal size of a character in the most common font:
     /// `font_size[Axis2::X]` is the em width.
     /// `font_size[Axis2::Y]` is the line leading.
-    pub font_size: EnumMap<Axis2, usize>,
+    pub font_size: EnumMap<Axis2, isize>,
 
     /// Width of different kinds of lines.
-    pub line_widths: EnumMap<Stroke, usize>,
+    pub line_widths: EnumMap<Stroke, isize>,
 
     /// 1/96" of an inch (1px) in the rendering unit.  Currently used only for
-    /// column width ranges, as in `width_ranges` in
-    /// [crate::output::pivot::Look].  Set to `None` to disable this feature.
-    pub px_size: Option<usize>,
+    /// column width ranges, as in `width_ranges` in [Look].  Set to `None` to
+    /// disable this feature.
+    ///
+    /// [Look]: crate::output::pivot::look::Look
+    pub px_size: Option<isize>,
 
     /// Minimum cell width or height before allowing the cell to be broken
     /// across two pages.  (Joined cells may always be broken at join
     /// points.)
-    pub min_break: EnumMap<Axis2, usize>,
+    pub min_break: EnumMap<Axis2, isize>,
 
     /// True if the driver supports cell margins.  (If false, the rendering
     /// engine will insert a small space betweeen adjacent cells that don't have
@@ -88,7 +92,7 @@ pub struct Params {
 
 impl Params {
     /// Returns a small but visible width.
-    fn em(&self) -> usize {
+    fn em(&self) -> isize {
         self.font_size[Axis2::X]
     }
 }
@@ -110,10 +114,10 @@ pub trait Device {
     ///
     /// - `map[Extreme::Max]` is the minimum width required to avoid line breaks
     ///   other than at new-lines.
-    fn measure_cell_width(&self, cell: &DrawCell) -> EnumMap<Extreme, usize>;
+    fn measure_cell_width(&self, cell: &DrawCell) -> EnumMap<Extreme, isize>;
 
     /// Returns the height required to render `cell` given a width of `width`.
-    fn measure_cell_height(&self, cell: &DrawCell, width: usize) -> usize;
+    fn measure_cell_height(&self, cell: &DrawCell, width: isize) -> isize;
 
     /// Given that there is space measuring `size` to render `cell`, where
     /// `size.y()` is insufficient to render the entire height of the cell,
@@ -125,7 +129,7 @@ pub trait Device {
     ///
     /// Optional.  If [Params::can_adjust_break] is false, the rendering engine
     /// assumes that all breakpoints are acceptable.
-    fn adjust_break(&self, cell: &Content, size: Coord2) -> usize;
+    fn adjust_break(&self, cell: &Content, size: Coord2) -> isize;
 
     /// Draws a generalized intersection of lines in `bb`.
     ///
@@ -135,7 +139,7 @@ pub trait Device {
     /// `styles[Axis2::X][1]`: style of line from bottom of `bb` to its center.
     /// `styles[Axis2::Y][0]`: style of line from left of `bb` to its center.
     /// `styles[Axis2::Y][1]`: style of line from right of `bb` to its center.
-    fn draw_line(&mut self, bb: Rect2, styles: EnumMap<Axis2, [BorderStyle; 2]>);
+    fn draw_line(&mut self, bb: Rect2, styles: EnumMap<Axis2, [BorderStyle; 2]>, bg: Color);
 
     /// Draws `cell` within bounding box `bb`.  `clip` is the same as `bb` (the
     /// common case) or a subregion enclosed by `bb`.  In the latter case only
@@ -151,10 +155,9 @@ pub trait Device {
     fn draw_cell(
         &mut self,
         draw_cell: &DrawCell,
-        alternate_row: bool,
         bb: Rect2,
-        valign_offset: usize,
-        spill: EnumMap<Axis2, [usize; 2]>,
+        valign_offset: isize,
+        spill: EnumMap<Axis2, [isize; 2]>,
         clip: &Rect2,
     );
 
@@ -167,203 +170,57 @@ pub trait Device {
     fn scale(&mut self, factor: f64);
 }
 
-/// A layout for rendering a specific table on a specific device.
-///
-/// May represent the layout of an entire table presented to [Pager::new], or a
-/// rectangular subregion of a table broken out using [Break::next] to allow a
-/// table to be broken across multiple pages.
-///
-/// A page's size is not limited to the size passed in as part of [Params].
-/// [Pager] breaks a [Page] into smaller [page]s that will fit in the available
-/// space.
-///
-/// # Rendered cells
-///
-/// The horizontal cells rendered are the leftmost `h[X]`, then `r[X]`.
-/// The vertical cells rendered are the topmost `h[Y]`, then `r[Y]`.
-/// `n[i]` is the sum of `h[i]` and `r[i].len()`.
 #[derive(Debug)]
-struct Page {
-    table: Arc<Table>,
-
-    /// Size of the table in cells.
-    ///
-    n: Coord2,
-
-    /// Header size.  Cells `0..h[X]` are rendered horizontally, and `0..h[Y]` vertically.
-    h: Coord2,
-
-    /// Main region of cells to render.
-    r: Rect2,
-
-    /// Mappings from [Page] positions to those in the underlying [Table].
-    maps: EnumMap<Axis2, [Map; 2]>,
+struct RenderedTable {
+    table: Table,
 
     /// "Cell positions".
     ///
-    /// cp[X] represents x positions within the table.
-    /// cp[X][0] = 0.
-    /// cp[X][1] = the width of the leftmost vertical rule.
-    /// cp[X][2] = cp[X][1] + the width of the leftmost column.
-    /// cp[X][3] = cp[X][2] + the width of the second-from-left vertical rule.
-    /// and so on:
-    /// cp[X][2 * n[X]] = x position of the rightmost vertical rule.
-    /// cp[X][2 * n[X] + 1] = total table width including all rules.
+    /// `cp[X]` represents `x` positions within the table:
     ///
-    /// Similarly, cp[Y] represents y positions within the table.
-    /// cp[Y][0] = 0.
-    /// cp[Y][1] = the height of the topmost horizontal rule.
-    /// cp[Y][2] = cp[Y][1] + the height of the topmost row.
-    /// cp[Y][3] = cp[Y][2] + the height of the second-from-top horizontal rule.
-    /// and so on:
-    /// cp[Y][2 * n[Y]] = y position of the bottommost horizontal rule.
-    /// cp[Y][2 * n[Y] + 1] = total table height including all rules.
+    /// - `cp[X][0]` = 0.
+    /// - `cp[X][1]` = the width of the leftmost vertical rule.
+    /// - `cp[X][2]` = `cp[X][1]` + the width of the leftmost column.
+    /// - `cp[X][3]` = `cp[X][2]` + the width of the second-from-left vertical rule.
+    /// - ...
+    /// - `cp[X][2 * n[X]]` = `x` position of the rightmost vertical rule.
+    /// - `cp[X][2 * n[X] + 1]` = total table width including all rules.
+    ///
+    /// So, for 0-based column `i`:
+    ///
+    /// * The rule to its left covers `cp[X][i * 2]..cp[X][i * 2 + 1]`.
+    /// * The column covers `cp[X][i * 2 + 1]..cp[X][i * 2 + 2]`.
+    /// * The rule to its right covers `cp[X][i * 2 + 2]..cp[X][i * 2 + 3]`.
+    ///
+    /// Similarly, `cp[Y]` represents `y` positions within the table:
+    ///
+    /// - `cp[Y][0]` = 0.
+    /// - `cp[Y][1]` = the height of the topmost horizontal rule.
+    /// - `cp[Y][2]` = `cp[Y][1]` + the height of the topmost row.
+    /// - `cp[Y][3]` = `cp[Y][2]` + the height of the second-from-top horizontal rule.
+    /// - ...
+    /// - `cp[Y][2 * n[Y]]` = `y` position of the bottommost horizontal rule.
+    /// - `cp[Y][2 * n[Y] + 1]` = total table height including all rules.
+    ///
+    /// So, for 0-based row `i`:
+    ///
+    /// * The rule above it covers `cp[Y][i * 2]..cp[Y][i * 2 + 1]`.
+    /// * The row covers `cp[Y][i * 2 + 1]..cp[Y][i * 2 + 2]`.
+    /// * The rule below it covers `cp[Y][i * 2 + 2]..cp[Y][i * 2 + 3]`.
     ///
     /// Rules and columns can have width or height 0, in which case consecutive
     /// values in this array are equal.
-    cp: EnumMap<Axis2, Vec<usize>>,
-
-    /// [Break::next] can break a table such that some cells are not fully
-    /// contained within a render_page.  This will happen if a cell is too wide
-    /// or two tall to fit on a single page, or if a cell spans multiple rows
-    /// or columns and the page only includes some of those rows or columns.
-    ///
-    /// This hash table contains represents each such cell that doesn't
-    /// completely fit on this page.
-    ///
-    /// Each overflow cell borders at least one header edge of the table and may
-    /// border more.  (A single table cell that is so large that it fills the
-    /// entire page can overflow on all four sides!)
-    ///
-    /// # Interpretation
-    ///
-    /// overflow[X][0]: space trimmed off its left side.
-    /// overflow[X][1]: space trimmed off its right side.
-    /// overflow[Y][0]: space trimmed off its top.
-    /// overflow[Y][1]: space trimmed off its bottom.
-    ///
-    /// During rendering, this information is used to position the rendered
-    /// portion of the cell within the available space.
-    ///
-    /// When a cell is rendered, sometimes it is permitted to spill over into
-    /// space that is ordinarily reserved for rules.  Either way, this space is
-    /// still included in overflow values.
-    ///
-    /// Suppose, for example, that a cell that joins 2 columns has a width of 60
-    /// pixels and content "abcdef", that the 2 columns that it joins have
-    /// widths of 20 and 30 pixels, respectively, and that therefore the rule
-    /// between the two joined columns has a width of 10 (20 + 10 + 30 = 60).
-    /// It might render like this, if each character is 10x10, and showing a few
-    /// extra table cells for context:
-    ///
-    /// ```text
-    /// +------+
-    /// |abcdef|
-    /// +--+---+
-    /// |gh|ijk|
-    /// +--+---+
-    /// ```
-    ///
-    /// If this render_page is broken at the rule that separates "gh" from
-    /// "ijk", then the page that contains the left side of the "abcdef" cell
-    /// will have overflow[X][1] of 10 + 30 = 40 for its portion of the cell,
-    /// and the page that contains the right side of the cell will have
-    /// overflow[X][0] of 20 + 10 = 30.  The two resulting pages would look like
-    /// this:
-    ///
-    /// ```text
-    /// +---
-    /// |abc
-    /// +--+
-    /// |gh|
-    /// +--+
-    /// ```
-    ///
-    /// and:
-    ///
-    /// ```text
-    /// ----+
-    /// cdef|
-    /// +---+
-    /// |ijk|
-    /// +---+
-    /// ```
-    /// Each entry maps from a cell that overflows to the space that has been
-    /// trimmed off the cell:
-    overflows: HashMap<Coord2, EnumMap<Axis2, [usize; 2]>>,
-
-    /// If a single column (or row) is too wide (or tall) to fit on a page
-    /// reasonably, then render_break_next() will split a single row or column
-    /// across multiple render_pages.  This member indicates when this has
-    /// happened:
-    ///
-    /// is_edge_cutoff[X][0] is true if pixels have been cut off the left side
-    /// of the leftmost column in this page, and false otherwise.
-    ///
-    /// is_edge_cutoff[X][1] is true if pixels have been cut off the right side
-    /// of the rightmost column in this page, and false otherwise.
-    ///
-    /// is_edge_cutoff[Y][0] and is_edge_cutoff[Y][1] are similar for the top
-    /// and bottom of the table.
-    ///
-    /// The effect of is_edge_cutoff is to prevent rules along the edge in
-    /// question from being rendered.
-    ///
-    /// When is_edge_cutoff is true for a given edge, the 'overflows' hmap will
-    /// contain a node for each cell along that edge.
-    is_edge_cutoff: EnumMap<Axis2, [bool; 2]>,
+    cp: EnumMap<Axis2, Vec<isize>>,
 }
 
-/// Returns the width of `extent` along `axis`.
-fn axis_width(cp: &[usize], extent: Range<usize>) -> usize {
-    cp[extent.end] - cp[extent.start]
-}
-
-/// Returns the width of cells within `extent` along `axis`.
-fn joined_width(cp: &[usize], extent: Range<usize>) -> usize {
-    axis_width(cp, cell_ofs(extent.start)..cell_ofs(extent.end) - 1)
-}
-/// Returns the offset in [Self::cp] of the cell with index `cell_index`.
-/// That is, if `cell_index` is 0, then the offset is 1, that of the leftmost
-/// or topmost cell; if `cell_index` is 1, then the offset is 3, that of the
-/// next cell to the right (or below); and so on. */
-fn cell_ofs(cell_index: usize) -> usize {
-    cell_index * 2 + 1
-}
-
-/// Returns the offset in [Self::cp] of the rule with index `rule_index`.
-/// That is, if `rule_index` is 0, then the offset is that of the leftmost
-/// or topmost rule; if `rule_index` is 1, then the offset is that of the
-/// next rule to the right (or below); and so on.
-fn rule_ofs(rule_index: usize) -> usize {
-    rule_index * 2
-}
-
-/// Returns the width of cell `z` along `axis`.
-fn cell_width(cp: &[usize], z: usize) -> usize {
-    let ofs = cell_ofs(z);
-    axis_width(cp, ofs..ofs + 1)
-}
-
-/// Is `ofs` the offset of a rule in `cp`?
-fn is_rule(z: usize) -> bool {
-    z.is_even()
-}
-
-#[derive(Clone)]
-pub struct RenderCell<'a> {
-    rect: Rect2,
-    content: &'a Content,
-}
-
-impl Page {
-    /// Creates and returns a new [Page] for rendering `table` with the given
+impl RenderedTable {
+    /// Creates and returns a new [RenderedTable] for rendering `table` with the given
     /// `look` on `device`.
     ///
     /// The new [Page] will be suitable for rendering on a device whose page
     /// size is `params.size`, but the caller is responsible for actually
     /// breaking it up to fit on such a device, using the [Break] abstraction.
-    fn new(table: Arc<Table>, device: &dyn Device, min_width: usize, look: &Look) -> Self {
+    fn new(table: Table, device: &dyn Device, min_width: Option<isize>, look: &Look) -> Self {
         use Axis2::*;
         use Extreme::*;
 
@@ -389,11 +246,11 @@ impl Page {
 
         // Calculate minimum and maximum widths of cells that do not span
         // multiple columns.
-        let mut unspanned_columns = EnumMap::from_fn(|_| vec![0; n.x()]);
+        let mut unspanned_columns = EnumMap::from_fn(|_| vec![0; n.x]);
         for cell in table.cells().filter(|cell| cell.col_span() == 1) {
             let mut w = device.measure_cell_width(&DrawCell::new(cell.inner(), &table));
             if device.params().px_size.is_some() {
-                if let Some(region) = table.heading_region(cell.coord) {
+                if let Some(region) = table.heading_region(cell.pos) {
                     let wr = &heading_widths[region];
                     if w[Min] < wr[Min] {
                         w[Min] = wr[Min];
@@ -409,7 +266,7 @@ impl Page {
                 }
             }
 
-            let x = cell.coord[X];
+            let x = cell.pos[X];
             for ext in [Min, Max] {
                 if unspanned_columns[ext][x] < w[ext] {
                     unspanned_columns[ext][x] = w[ext];
@@ -426,13 +283,15 @@ impl Page {
             for ext in [Min, Max] {
                 distribute_spanned_width(
                     w[ext],
-                    &unspanned_columns[ext][rect[X].clone()],
-                    &mut columns[ext][rect[X].clone()],
-                    &rules[X][rect[X].start..rect[X].end + 1],
+                    &unspanned_columns[ext][rect.x.clone()],
+                    &mut columns[ext][rect.x.clone()],
+                    &rules[X][rect.x.start..rect.x.end + 1],
                 );
             }
         }
-        if min_width > 0 {
+        if let Some(min_width) = min_width
+            && min_width > 0
+        {
             for ext in [Min, Max] {
                 distribute_spanned_width(
                     min_width,
@@ -446,28 +305,25 @@ impl Page {
         // In pathological cases, spans can cause the minimum width of a column
         // to exceed the maximum width.  This bollixes our interpolation
         // algorithm later, so fix it up.
-        for i in 0..n.x() {
+        for i in 0..n.x {
             if columns[Min][i] > columns[Max][i] {
                 columns[Max][i] = columns[Min][i];
             }
         }
 
         // Decide final column widths.
-        let rule_widths = rules[X].iter().copied().sum::<usize>();
-        let table_widths = EnumMap::from_fn(|ext| columns[ext].iter().sum::<usize>() + rule_widths);
+        let rule_widths = rules[X].iter().copied().sum::<isize>();
+        let table_widths = EnumMap::from_fn(|ext| columns[ext].iter().sum::<isize>() + rule_widths);
 
         let cp_x = if table_widths[Max] <= device.params().size[X] {
             // Fits even with maximum widths.  Use them.
             Self::use_row_widths(&columns[Max], &rules[X])
-        } else if table_widths[Min] <= device.params().size[X] {
+        } else if device.params().size[X] > table_widths[Min] {
             // Fits with minimum widths, so distribute the leftover space.
-            //Self::new_with_interpolated_widths()
-            Self::interpolate_row_widths(
-                device.params(),
-                &columns[Min],
-                &columns[Max],
-                table_widths[Min],
-                table_widths[Max],
+            Self::interpolate_column_widths(
+                device.params().size[Axis2::X],
+                &columns,
+                &table_widths,
                 &rules[X],
             )
         } else {
@@ -481,10 +337,10 @@ impl Page {
         for cell in table.cells().filter(|cell| cell.row_span() == 1) {
             let rect = cell.rect();
 
-            let w = joined_width(&cp_x, rect[X].clone());
+            let w = joined_width(&cp_x, rect.x.clone());
             let h = device.measure_cell_height(&DrawCell::new(cell.inner(), &table), w);
 
-            let row = &mut unspanned_rows[cell.coord.y()];
+            let row = &mut unspanned_rows[cell.pos.y];
             if h > *row {
                 *row = h;
             }
@@ -494,13 +350,13 @@ impl Page {
         let mut rows = unspanned_rows.clone();
         for cell in table.cells().filter(|cell| cell.row_span() > 1) {
             let rect = cell.rect();
-            let w = joined_width(&cp_x, rect[X].clone());
+            let w = joined_width(&cp_x, rect.x.clone());
             let h = device.measure_cell_height(&DrawCell::new(cell.inner(), &table), w);
             distribute_spanned_width(
                 h,
-                &unspanned_rows[rect[Y].clone()],
-                &mut rows[rect[Y].clone()],
-                &rules[Y][rect[Y].start..rect[Y].end + 1],
+                &unspanned_rows[rect.y.clone()],
+                &mut rows[rect.y.clone()],
+                &rules[Y][rect.y.start..rect.y.end + 1],
             );
         }
 
@@ -520,21 +376,22 @@ impl Page {
                 h[axis] = 0;
             }
         }
-        let r = Rect2::new(h[X]..n[X], h[Y]..n[Y]);
-        let maps = Self::new_mappings(h, &r);
         Self {
             table,
-            n,
-            h,
-            r,
             cp: Axis2::new_enum(cp_x, cp_y),
-            overflows: HashMap::new(),
-            is_edge_cutoff: EnumMap::default(),
-            maps,
         }
     }
 
-    fn use_row_widths(rows: &[usize], rules: &[usize]) -> Vec<usize> {
+    /// A [Page] always has the same headers as its underlying [Table].
+    fn h(&self) -> CellPos {
+        self.table.h
+    }
+
+    fn n(&self) -> CellPos {
+        self.table.n
+    }
+
+    fn use_row_widths(rows: &[isize], rules: &[isize]) -> Vec<isize> {
         let mut vec = once(0)
             .chain(interleave(rules, rows).copied())
             .collect::<Vec<_>>();
@@ -544,21 +401,18 @@ impl Page {
         vec
     }
 
-    fn interpolate_row_widths(
-        params: &Params,
-        rows_min: &[usize],
-        rows_max: &[usize],
-        w_min: usize,
-        w_max: usize,
-        rules: &[usize],
-    ) -> Vec<usize> {
-        let avail = params.size[Axis2::X] - w_min;
-        let wanted = w_max - w_min;
+    fn interpolate_column_widths(
+        target: isize,
+        columns: &EnumMap<Extreme, Vec<isize>>,
+        widths: &EnumMap<Extreme, isize>,
+        rules: &[isize],
+    ) -> Vec<isize> {
+        use Extreme::*;
+
+        let avail = target - widths[Min];
+        let wanted = widths[Max] - widths[Min];
         let mut w = wanted / 2;
-        let rows_mid = rows_min
-            .iter()
-            .copied()
-            .zip(rows_max.iter().copied())
+        let rows_mid = zip(columns[Min].iter().copied(), columns[Max].iter().copied())
             .map(|(min, max)| {
                 w += avail * (max - min);
                 let extra = w / wanted;
@@ -570,28 +424,32 @@ impl Page {
     }
 
     /// Returns the width of `extent` along `axis`.
-    fn axis_width(&self, axis: Axis2, extent: Range<usize>) -> usize {
+    fn axis_width(&self, axis: Axis2, extent: Range<usize>) -> isize {
         axis_width(&self.cp[axis], extent)
     }
 
     /// Returns the width of cells within `extent` along `axis`.
-    fn joined_width(&self, axis: Axis2, extent: Range<usize>) -> usize {
+    fn joined_width(&self, axis: Axis2, extent: Range<usize>) -> isize {
         joined_width(&self.cp[axis], extent)
     }
 
     /// Returns the width of the headers along `axis`.
-    fn headers_width(&self, axis: Axis2) -> usize {
-        self.axis_width(axis, rule_ofs(0)..cell_ofs(self.h[axis]))
+    ///
+    /// The headers do not include the rule along the right or bottom edge of
+    /// the headers; that rule is considered to be part of the top or left body
+    /// cell.
+    fn headers_width(&self, axis: Axis2) -> isize {
+        self.axis_width(axis, rule_ofs(0)..cell_ofs(self.h()[axis]))
     }
 
     /// Returns the width of rule `z` along `axis`.
-    fn rule_width(&self, axis: Axis2, z: usize) -> usize {
+    fn rule_width(&self, axis: Axis2, z: usize) -> isize {
         let ofs = rule_ofs(z);
         self.axis_width(axis, ofs..ofs + 1)
     }
 
     /// Returns the width of rule `z` along `axis`, counting in reverse order.
-    fn rule_width_r(&self, axis: Axis2, z: usize) -> usize {
+    fn rule_width_r(&self, axis: Axis2, z: usize) -> isize {
         let ofs = self.rule_ofs_r(axis, z);
         self.axis_width(axis, ofs..ofs + 1)
     }
@@ -603,294 +461,233 @@ impl Page {
     /// rule; if `rule_index_r` is 1, then the offset is that of the next rule to the left
     /// (or above); and so on.
     fn rule_ofs_r(&self, axis: Axis2, rule_index_r: usize) -> usize {
-        (self.n[axis] - rule_index_r) * 2
+        (self.table.n[axis] - rule_index_r) * 2
     }
 
     /// Returns the width of cell `z` along `axis`.
-    fn cell_width(&self, axis: Axis2, z: usize) -> usize {
+    fn cell_width(&self, axis: Axis2, z: usize) -> isize {
         let ofs = cell_ofs(z);
         self.axis_width(axis, ofs..ofs + 1)
     }
 
     /// Returns the width of the widest cell, excluding headers, along `axis`.
-    fn max_cell_width(&self, axis: Axis2) -> usize {
-        (self.h[axis]..self.n[axis])
+    fn max_cell_width(&self, axis: Axis2) -> isize {
+        (self.h()[axis]..self.n()[axis])
             .map(|z| self.cell_width(axis, z))
             .max()
             .unwrap_or(0)
     }
+}
 
-    fn width(&self, axis: Axis2) -> usize {
-        *self.cp[axis].last().unwrap()
-    }
+/// A layout for rendering a specific table on a specific device.
+///
+/// May represent the layout of an entire table presented to [Pager::new], or a
+/// rectangular subregion of a table broken out using [Break::next] to allow a
+/// table to be broken across multiple pages.
+///
+/// A page's size is not limited to the size passed in as part of [Params].
+/// [Pager] breaks a [Page] into smaller [page]s that will fit in the available
+/// space.
+///
+/// A [Page] always has the same headers as its [Table].
+///
+/// # Rendered cells
+///
+/// - The columns rendered are the leftmost `self.table.h[X]`, then `r[X]`.
+/// - The rows rendered are the topmost `self.table.h[Y]`, then `r[Y]`.
+#[derive(Clone, Debug)]
+struct Page {
+    /// Rendered table.
+    table: Arc<RenderedTable>,
+    ranges: EnumMap<Axis2, Range<isize>>,
+}
 
-    fn new_mappings(h: Coord2, r: &Rect2) -> EnumMap<Axis2, [Map; 2]> {
-        EnumMap::from_fn(|axis| {
-            [
-                Map {
-                    p0: 0,
-                    t0: 0,
-                    ofs: 0,
-                    n: h[axis],
-                },
-                Map {
-                    p0: h[axis],
-                    t0: r[axis].start,
-                    ofs: r[axis].start - h[axis],
-                    n: r[axis].len(),
-                },
-            ]
-        })
-    }
-
-    fn get_map(&self, axis: Axis2, z: usize) -> &Map {
-        if z < self.h[axis] {
-            &self.maps[axis][0]
-        } else {
-            &self.maps[axis][1]
-        }
-    }
-
-    fn map_z(&self, axis: Axis2, z: usize) -> usize {
-        z + self.get_map(axis, z).ofs
-    }
-
-    fn map_coord(&self, coord: Coord2) -> Coord2 {
-        Coord2::from_fn(|a| self.map_z(a, coord[a]))
-    }
-
-    fn get_cell(&self, coord: Coord2) -> RenderCell<'_> {
-        let maps = EnumMap::from_fn(|axis| self.get_map(axis, coord[axis]));
-        let cell = self.table.get(self.map_coord(coord));
-        RenderCell {
-            rect: Rect2(cell.rect().0.map(|axis, Range { start, end }| {
-                let m = maps[axis];
-                max(m.p0, start - m.ofs)..min(m.p0 + m.n, end - m.ofs)
-            })),
-            content: cell.content,
-        }
-    }
-
-    /// Creates and returns a new [Page] whose contents are a subregion of this
-    /// page's contents.  The new page includes cells `extent` (exclusive) along
-    /// `axis`, plus any headers on `axis`.
+impl Page {
+    /// Creates and returns a new [RenderedTable] for rendering `table` with the given
+    /// `look` on `device`.
     ///
-    /// If `pixel0` is nonzero, then it is a number of pixels to exclude from
-    /// the left or top (according to `axis`) of cell `extent.start`.
-    /// Similarly, `pixel1` is a number of pixels to exclude from the right or
-    /// bottom of cell `extent.end - 1`.  (`pixel0` and `pixel1` are used to
-    /// render cells that are too large to fit on a single page.)
-    ///
-    /// The whole of axis `!axis` is included.  (The caller may follow up with
-    /// another call to select on `!axis`.)
-    fn select(
-        self: &Arc<Self>,
-        a: Axis2,
-        extent: Range<usize>,
-        pixel0: usize,
-        pixel1: usize,
-    ) -> Arc<Self> {
-        let b = !a;
-        let z0 = extent.start;
-        let z1 = extent.end;
-
-        // If all of the page is selected, just make a copy.
-        if z0 == self.h[a] && z1 == self.n[a] && pixel0 == 0 && pixel1 == 0 {
-            return self.clone();
-        }
-
-        // Figure out `n`, `h`, `r` for the subpage.
-        let trim = [z0 - self.h[a], self.n[a] - z1];
-        let mut n = self.n;
-        n[a] -= trim[0] + trim[1];
-        let h = self.h;
-        let mut r = self.r.clone();
-        r[a].start += trim[0];
-        r[a].end -= trim[1];
-
-        // An edge is cut off if it was cut off in `self` or if we're trimming
-        // pixels off that side of the page and there are no headers.
-        let mut is_edge_cutoff = self.is_edge_cutoff;
-        is_edge_cutoff[a][0] = h[a] == 0 && (pixel0 > 0 || (z0 == 0 && self.is_edge_cutoff[a][0]));
-        is_edge_cutoff[a][1] = pixel1 > 0 || (z1 == self.n[a] && self.is_edge_cutoff[a][1]);
-
-        // Select widths from `self` into subpage.
-        let scp = self.cp[a].as_slice();
-        let mut dcp = Vec::with_capacity(2 * n[a] + 1);
-        dcp.push(0);
-        let mut total = 0;
-        for z in 0..=rule_ofs(h[a]) {
-            total += if z == 0 && is_edge_cutoff[a][0] {
-                0
-            } else {
-                scp[z + 1] - scp[z]
-            };
-            dcp.push(total);
-        }
-        for z in cell_ofs(z0)..=cell_ofs(z1 - 1) {
-            total += scp[z + 1] - scp[z];
-            if z == cell_ofs(z0) {
-                total -= pixel0;
-            }
-            if z == cell_ofs(z1 - 1) {
-                total -= pixel1;
-            }
-            dcp.push(total);
-        }
-        let z = self.rule_ofs_r(a, 0);
-        if !is_edge_cutoff[a][1] {
-            total += scp[z + 1] - scp[z];
-        }
-        dcp.push(total);
-        debug_assert_eq!(dcp.len(), 1 + 2 * n[a] + 1);
-
-        let mut cp = EnumMap::default();
-        cp[a] = dcp;
-        cp[!a] = self.cp[!a].clone();
-
-        let mut overflows = HashMap::new();
-
-        // Add new overflows.
-        let s = Selection {
-            a,
-            b,
-            h,
-            z0,
-            z1,
-            p0: pixel0,
-            p1: pixel1,
-        };
-        if self.h[a] == 0 || z0 > self.h[a] || pixel0 > 0 {
-            let mut z = 0;
-            while z < self.n[b] {
-                let d = Coord2::for_axis((a, z0), z);
-                let cell = self.get_cell(d);
-                let overflow0 = pixel0 > 0 || cell.rect[a].start < z0;
-                let overflow1 = cell.rect[a].end > z1 || (cell.rect[a].end == z1 && pixel1 > 0);
-                if overflow0 || overflow1 {
-                    let mut overflow = self.overflows.get(&d).cloned().unwrap_or_default();
-                    if overflow0 {
-                        overflow[a][0] +=
-                            pixel0 + self.axis_width(a, cell_ofs(cell.rect[a].start)..cell_ofs(z0));
-                    }
-                    if overflow1 {
-                        overflow[a][1] +=
-                            pixel1 + self.axis_width(a, cell_ofs(z1)..cell_ofs(cell.rect[a].end));
-                    }
-                    assert!(
-                        overflows
-                            .insert(s.coord_to_subpage(cell.rect.top_left()), overflow)
-                            .is_none()
-                    );
-                }
-                z += cell.rect[b].len();
-            }
-        }
-
-        let mut z = 0;
-        while z < self.n[b] {
-            let d = Coord2::for_axis((a, z1 - 1), z);
-            let cell = self.get_cell(d);
-            if cell.rect[a].end > z1
-                || (cell.rect[a].end == z1 && pixel1 > 0)
-                    && overflows.contains_key(&s.coord_to_subpage(cell.rect.top_left()))
-            {
-                let mut overflow = self.overflows.get(&d).cloned().unwrap_or_default();
-                overflow[a][1] +=
-                    pixel1 + self.axis_width(a, cell_ofs(z1)..cell_ofs(cell.rect[a].end));
-                assert!(
-                    overflows
-                        .insert(s.coord_to_subpage(cell.rect.top_left()), overflow)
-                        .is_none()
-                );
-            }
-            z += cell.rect[b].len();
-        }
-
-        // Copy overflows from `self` into the subpage.
-        // XXX this could be done at the start, which would simplify the while loops above
-        for (coord, overflow) in self.overflows.iter() {
-            let cell = self.table.get(*coord);
-            let rect = cell.rect();
-            if rect[a].end > z0 && rect[a].start < z1 {
-                overflows
-                    .entry(s.coord_to_subpage(rect.top_left()))
-                    .or_insert(*overflow);
-            }
-        }
-
-        let maps = Self::new_mappings(h, &r);
-        Arc::new(Self {
-            table: self.table.clone(),
-            n,
-            h,
-            r,
-            maps,
-            cp,
-            overflows,
-            is_edge_cutoff,
-        })
+    /// The new [Page] will be suitable for rendering on a device whose page
+    /// size is `params.size`, but the caller is responsible for actually
+    /// breaking it up to fit on such a device, using the [Break] abstraction.
+    pub fn new(table: Table, device: &dyn Device, min_width: Option<isize>, look: &Look) -> Self {
+        let table = Arc::new(RenderedTable::new(table, device, min_width, look));
+        let ranges = EnumMap::from_fn(|axis| {
+            table.cp[axis][1 + table.h()[axis] * 2]..table.cp[axis].last().copied().unwrap()
+        });
+        Self { table, ranges }
     }
 
-    fn total_size(&self, axis: Axis2) -> usize {
-        self.cp[axis].last().copied().unwrap()
+    pub fn split(&self, axis: Axis2) -> Break {
+        Break::new(self.clone(), axis)
+    }
+
+    fn width(&self, axis: Axis2) -> isize {
+        self.table.cp[axis].last().copied().unwrap()
     }
 
     fn draw(&self, device: &mut dyn Device, ofs: Coord2) {
-        use Axis2::*;
-        self.draw_cells(
-            device,
-            ofs,
-            Rect2::new(0..self.n[X] * 2 + 1, 0..self.n[Y] * 2 + 1),
-        );
-    }
+        fn overlap(a: &Range<isize>, b: &Range<isize>) -> bool {
+            a.contains(&b.start) || b.contains(&a.start)
+        }
 
-    fn draw_cells(&self, device: &mut dyn Device, ofs: Coord2, cells: Rect2) {
         use Axis2::*;
-        for y in cells[Y].clone() {
-            let mut x = cells[X].start;
-            while x < cells[X].end {
-                if !is_rule(x) && !is_rule(y) {
-                    let cell = self.get_cell(Coord2::new(x / 2, y / 2));
-                    self.draw_cell(device, ofs, &cell);
-                    x = rule_ofs(cell.rect[X].end);
+        let cp = &self.table.cp;
+        let headers = Coord2::from_fn(|a| self.table.headers_width(a));
+        for (y, yr) in self.table.cp[Y]
+            .iter()
+            .copied()
+            .tuple_windows()
+            .map(|(y0, y1)| y0..y1)
+            .enumerate()
+            .filter_map(|(y, yr)| if y % 2 == 1 { Some((y / 2, yr)) } else { None })
+        {
+            if yr.start >= headers[Y] && !overlap(&yr, &self.ranges[Y]) {
+                continue;
+            }
+            for (x, xr) in self.table.cp[X]
+                .iter()
+                .copied()
+                .tuple_windows()
+                .map(|(x0, x1)| x0..x1)
+                .enumerate()
+                .filter_map(|(x, xr)| if x % 2 == 1 { Some((x / 2, xr)) } else { None })
+            {
+                if xr.start >= headers[X] && !overlap(&xr, &self.ranges[X]) {
+                    continue;
+                }
+                let cell = self.table.table.get(CellPos { x, y });
+                // XXX skip if not top-left cell
+                let rect = cell.rect();
+                let mut bb = Rect2::from_fn(|a| {
+                    cp[a][rect[a].start * 2 + 1]..cp[a][(rect[a].end - 1) * 2 + 2]
+                });
+                let mut clip = if y < self.table.h().y {
+                    if x < self.table.h().x {
+                        // Corner
+                        bb.clone()
+                    } else {
+                        // Top stub
+                        Rect2::new(
+                            max(bb[X].start, self.ranges[X].start)
+                                ..min(bb[X].end, self.ranges[X].end),
+                            bb[Y].clone(),
+                        )
+                    }
+                } else if x < self.table.h().x {
+                    // Left stub
+                    Rect2::new(
+                        bb[X].clone(),
+                        max(bb[Y].start, self.ranges[Y].start)..min(bb[Y].end, self.ranges[Y].end),
+                    )
                 } else {
-                    x += 1;
+                    // Body
+                    Rect2::from_fn(|a| {
+                        max(bb[a].start, self.ranges[a].start)..min(bb[a].end, self.ranges[a].end)
+                    })
+                };
+                if clip[X].start >= clip[X].end || clip[Y].start >= clip[Y].end {
+                    continue;
                 }
+                for a in [X, Y] {
+                    if bb[a].start >= self.ranges[a].start {
+                        let h = self.ranges[a].start - self.table.headers_width(a);
+                        bb[a].start -= h;
+                        bb[a].end -= h;
+                        clip[a].start -= h;
+                        clip[a].end -= h;
+                    }
+                }
+                let draw_cell = DrawCell::new(cell.content.inner(), &self.table.table);
+                let valign_offset = match draw_cell.cell_style.vert_align {
+                    VertAlign::Top => 0,
+                    VertAlign::Middle => self.extra_height(device, &bb, &draw_cell) / 2,
+                    VertAlign::Bottom => self.extra_height(device, &bb, &draw_cell),
+                };
+                device.draw_cell(
+                    &draw_cell,
+                    bb.translate(ofs),
+                    valign_offset,
+                    EnumMap::from_fn(|_| [0, 0]),
+                    &clip.translate(ofs),
+                )
             }
         }
 
-        for y in cells[Y].clone() {
-            for x in cells[X].clone() {
-                if is_rule(x) || is_rule(y) {
-                    self.draw_rule(device, ofs, Coord2::new(x, y));
+        for (y, yr) in self.table.cp[Y]
+            .iter()
+            .copied()
+            .tuple_windows()
+            .map(|(y0, y1)| y0..y1)
+            .enumerate()
+        {
+            for (x, xr) in self.table.cp[X]
+                .iter()
+                .copied()
+                .tuple_windows()
+                .map(|(x0, x1)| x0..x1)
+                .enumerate()
+                .filter(|(x, _)| *x % 2 == 0 || y % 2 == 0)
+            {
+                let mut bb = Rect2::new(xr.clone(), yr.clone());
+
+                let h = self.table.headers_width(X);
+                if xr.start < h {
+                } else if self.ranges[X].contains(&xr.start) {
+                    bb[X].start -= self.ranges[X].start - h;
+                    bb[X].end -= self.ranges[X].start - h;
+                } else {
+                    continue;
                 }
+
+                let h = self.table.headers_width(Y);
+                if yr.start < h {
+                } else if self.ranges[Y].contains(&yr.start) {
+                    bb[Y].start -= self.ranges[Y].start - h;
+                    bb[Y].end -= self.ranges[Y].start - h;
+                } else {
+                    continue;
+                }
+
+                let bg = if !self.table.table.is_empty() {
+                    let x = (x / 2).min(self.table.n().x - 1);
+                    let y = (y / 2).min(self.table.n().y - 1);
+                    let cell = self.table.table.get(CellPos::new(x, y));
+                    let area = cell.inner().area;
+                    self.table.table.areas[area].font_style.bg
+                } else {
+                    Color::WHITE
+                };
+
+                self.draw_rule(device, ofs, CellPos { x, y }, bb, bg);
             }
         }
     }
 
-    fn draw_rule(&self, device: &mut dyn Device, ofs: Coord2, coord: Coord2) {
-        const NO_BORDER: BorderStyle = BorderStyle::none();
+    fn draw_rule(
+        &self,
+        device: &mut dyn Device,
+        ofs: Coord2,
+        coord: CellPos,
+        bb: Rect2,
+        bg: Color,
+    ) {
         let styles = EnumMap::from_fn(|a: Axis2| {
             let b = !a;
-            if !is_rule(coord[a])
-                || (self.is_edge_cutoff[a][0] && coord[a] == 0)
-                || (self.is_edge_cutoff[a][1] && coord[a] == self.n[a] * 2)
-            {
-                [NO_BORDER, NO_BORDER]
+            if !is_rule(coord[a]) {
+                [None, None]
             } else if is_rule(coord[b]) {
                 let first = if coord[b] > 0 {
                     let mut e = coord;
                     e[b] -= 1;
                     self.get_rule(a, e)
                 } else {
-                    NO_BORDER
+                    None
                 };
 
-                let second = if coord[b] / 2 < self.n[b] {
+                let second = if coord[b] / 2 < self.table.n()[b] {
                     self.get_rule(a, coord)
                 } else {
-                    NO_BORDER
+                    None
                 };
 
                 [first, second]
@@ -900,87 +697,65 @@ impl Page {
             }
         });
 
-        if !styles
-            .values()
-            .all(|border| border.iter().all(BorderStyle::is_none))
-        {
-            let bb =
-                Rect2::from_fn(|a| self.cp[a][coord[a]]..self.cp[a][coord[a] + 1]).translate(ofs);
-            device.draw_line(bb, styles);
+        if styles.values().any(|[a, b]| a.is_some() || b.is_some()) {
+            const NO_BORDER: BorderStyle = BorderStyle::none();
+            let styles = styles.map(|_, [a, b]| [a.unwrap_or(NO_BORDER), b.unwrap_or(NO_BORDER)]);
+            device.draw_line(bb.translate(ofs), styles, bg);
         }
     }
 
-    fn get_rule(&self, a: Axis2, coord: Coord2) -> BorderStyle {
-        let coord = Coord2::from_fn(|a| coord[a] / 2);
-        let coord = self.map_coord(coord);
-
-        let border = self.table.get_rule(a, coord);
-        if self.h[a] > 0 && coord[a] == self.h[a] {
-            let border2 = self
-                .table
-                .get_rule(a, Coord2::for_axis((a, self.h[a]), coord[!a]));
-            border.combine(border2)
-        } else {
-            border
-        }
+    fn get_rule(&self, a: Axis2, coord: CellPos) -> Option<BorderStyle> {
+        let coord = CellPos::from_fn(|a| coord[a] / 2);
+        self.table.table.get_rule(a, coord)
     }
 
-    fn extra_height(&self, device: &dyn Device, bb: &Rect2, cell: &DrawCell) -> usize {
+    fn extra_height(&self, device: &dyn Device, bb: &Rect2, cell: &DrawCell) -> isize {
         use Axis2::*;
-        let height = device.measure_cell_height(cell, bb[X].len());
-        usize::saturating_sub(bb[Y].len(), height)
+        let height = device.measure_cell_height(cell, bb[X].len() as isize);
+        bb[Y].len() as isize - height
     }
-    fn draw_cell(&self, device: &mut dyn Device, ofs: Coord2, cell: &RenderCell) {
-        use Axis2::*;
+}
 
-        let mut bb = Rect2::from_fn(|a| {
-            self.cp[a][cell.rect[a].start * 2 + 1]..self.cp[a][cell.rect[a].end * 2]
-        })
-        .translate(ofs);
-        /*
-            let spill = EnumMap::from_fn(|a| {
-                [
-                    self.rule_width(a, cell.rect[a].start) / 2,
-                    self.rule_width(a, cell.rect[a].end) / 2,
-                ]
-        });*/
-        let spill = EnumMap::from_fn(|_| [0, 0]);
+/// Returns the width of `extent` along `axis`.
+fn axis_width(cp: &[isize], extent: Range<usize>) -> isize {
+    cp[extent.end] - cp[extent.start]
+}
 
-        let clip = if let Some(overflow) = self.overflows.get(&cell.rect.top_left()) {
-            Rect2::from_fn(|a| {
-                let mut clip = bb[a].clone();
-                if overflow[a][0] > 0 {
-                    bb[a].start -= overflow[a][0];
-                    if cell.rect[a].start == 0 && !self.is_edge_cutoff[a][0] {
-                        clip.start = ofs[a] + self.cp[a][cell.rect[a].start * 2];
-                    }
-                }
+/// Returns the width of cells within `extent` along `axis`.
+fn joined_width(cp: &[isize], extent: Range<usize>) -> isize {
+    axis_width(cp, cell_ofs(extent.start)..cell_ofs(extent.end) - 1)
+}
+/// Returns the offset in [Self::cp] of the cell with index `cell_index`.
+/// That is, if `cell_index` is 0, then the offset is 1, that of the leftmost
+/// or topmost cell; if `cell_index` is 1, then the offset is 3, that of the
+/// next cell to the right (or below); and so on. */
+fn cell_ofs(cell_index: usize) -> usize {
+    cell_index * 2 + 1
+}
 
-                if overflow[a][1] > 0 {
-                    bb[a].end += overflow[a][1];
-                    if cell.rect[a].end == self.n[a] && !self.is_edge_cutoff[a][1] {
-                        clip.end = ofs[a] + self.cp[a][cell.rect[a].end * 2 + 1];
-                    }
-                }
+/// Returns the offset in [Self::cp] of the rule with index `rule_index`.
+/// That is, if `rule_index` is 0, then the offset is that of the leftmost
+/// or topmost rule; if `rule_index` is 1, then the offset is that of the
+/// next rule to the right (or below); and so on.
+fn rule_ofs(rule_index: usize) -> usize {
+    rule_index * 2
+}
 
-                clip
-            })
-        } else {
-            bb.clone()
-        };
+/// Returns the width of cell `z` along `axis`.
+fn cell_width(cp: &[isize], z: usize) -> isize {
+    let ofs = cell_ofs(z);
+    axis_width(cp, ofs..ofs + 1)
+}
 
-        // Header rows are never alternate rows.
-        let alternate_row =
-            usize::checked_sub(cell.rect[Y].start, self.h[Y]).is_some_and(|row| row % 2 == 1);
+/// Is `ofs` the offset of a rule in `cp`?
+fn is_rule(z: usize) -> bool {
+    z.is_even()
+}
 
-        let draw_cell = DrawCell::new(cell.content.inner(), &self.table);
-        let valign_offset = match draw_cell.style.cell_style.vert_align {
-            VertAlign::Top => 0,
-            VertAlign::Middle => self.extra_height(device, &bb, &draw_cell) / 2,
-            VertAlign::Bottom => self.extra_height(device, &bb, &draw_cell),
-        };
-        device.draw_cell(&draw_cell, alternate_row, bb, valign_offset, spill, &clip)
-    }
+#[derive(Clone)]
+pub struct RenderCell<'a> {
+    rect: CellRect,
+    content: &'a Content,
 }
 
 struct Selection {
@@ -988,21 +763,29 @@ struct Selection {
     b: Axis2,
     z0: usize,
     z1: usize,
-    p0: usize,
-    p1: usize,
-    h: Coord2,
+    p0: isize,
+    p1: isize,
+    h: CellPos,
 }
 
 impl Selection {
     /// Returns the coordinates of `coord` as it will appear in this subpage.
     ///
     /// `coord` must be in the selected region or the results will not make
-    /// sense.
-    fn coord_to_subpage(&self, coord: Coord2) -> Coord2 {
+    /// sense (or will panic due to overflow).
+    fn coord_to_subpage(&self, coord: CellPos) -> CellPos {
         let a = self.a;
         let b = self.b;
         let ha0 = self.h[a];
-        Coord2::for_axis((a, max(coord[a] + ha0 - self.z0, ha0)), coord[b])
+        let z = coord[a];
+        let z_subpage = if (0..ha0).contains(&z) {
+            z
+        } else if (self.z0..self.z1).contains(&z) {
+            z - self.z0 + ha0
+        } else {
+            unreachable!("{z} is not in {:?} or {:?}", 0..ha0, self.z0..self.z1);
+        };
+        CellPos::for_axis((a, z_subpage), coord[b])
     }
 }
 
@@ -1059,10 +842,10 @@ struct Map {
 /// the right.  That way each rule contributes to both the cell on its left and
 /// on its right.)
 fn distribute_spanned_width(
-    width: usize,
-    unspanned: &[usize],
-    spanned: &mut [usize],
-    rules: &[usize],
+    width: isize,
+    unspanned: &[isize],
+    spanned: &mut [isize],
+    rules: &[isize],
 ) {
     let n = unspanned.len();
     if n == 0 {
@@ -1072,15 +855,15 @@ fn distribute_spanned_width(
     debug_assert_eq!(spanned.len(), n);
     debug_assert_eq!(rules.len(), n + 1);
 
-    let total_unspanned = unspanned.iter().sum::<usize>()
+    let total_unspanned = unspanned.iter().sum::<isize>()
         + rules
             .get(1..n)
-            .map_or(0, |rules| rules.iter().copied().sum::<usize>());
+            .map_or(0, |rules| rules.iter().copied().sum::<isize>());
     if total_unspanned >= width {
         return;
     }
 
-    let d0 = n;
+    let d0 = n as isize;
     let d1 = 2 * total_unspanned.max(1);
     let d = if total_unspanned > 0 {
         d0 * d1 * 2
@@ -1107,14 +890,15 @@ fn distribute_spanned_width(
 
 /// Returns the width of the rule in `table` that is at offset `z` along axis
 /// `a`, if rendered on `device`.
-fn measure_rule(device: &dyn Device, table: &Table, a: Axis2, z: usize) -> usize {
+fn measure_rule(device: &dyn Device, table: &Table, a: Axis2, z: usize) -> isize {
     let b = !a;
 
     // Determine the types of rules that are present.
     let mut rules = EnumMap::default();
     for w in 0..table.n[b] {
-        let stroke = table.get_rule(a, Coord2::for_axis((a, z), w)).stroke;
-        rules[stroke] = true;
+        if let Some(border) = table.get_rule(a, CellPos::for_axis((a, z), w)) {
+            rules[border.stroke] = true;
+        }
     }
 
     // Turn off [Stroke::None] because it has width 0 and we needn't bother.
@@ -1142,77 +926,20 @@ fn measure_rule(device: &dyn Device, table: &Table, a: Axis2, z: usize) -> usize
 }
 
 #[derive(Debug)]
-struct Break {
-    page: Arc<Page>,
+pub struct Break {
+    page: Page,
 
     /// Axis along which `page` is being broken.
     axis: Axis2,
-
-    /// Next cell along `axis`.
-    z: usize,
-
-    /// Pixel offset within cell `z` (usually 0).
-    pixel: usize,
-
-    /// Width of headers of `page` along `axis`.
-    hw: usize,
 }
 
 impl Break {
-    fn new(page: Arc<Page>, axis: Axis2) -> Self {
-        let z = page.h[axis];
-        let hw = page.headers_width(axis);
-        Self {
-            page,
-            axis,
-            z,
-            pixel: 0,
-            hw,
-        }
+    fn new(page: Page, axis: Axis2) -> Self {
+        Self { page, axis }
     }
 
     fn has_next(&self) -> bool {
-        self.z < self.page.n[self.axis]
-    }
-
-    /// Returns the width that would be required along this breaker's axis to
-    /// render a page from the current position up to but not including `cell`.
-    fn needed_size(&self, cell: usize) -> usize {
-        // Width of header not including its rightmost rule.
-        let mut size = self
-            .page
-            .axis_width(self.axis, 0..rule_ofs(self.page.h[self.axis]));
-
-        // If we have a pixel offset and there is no header, then we omit
-        // the leftmost rule of the body.  Otherwise the rendering is deceptive
-        // because it looks like the whole cell is present instead of a partial
-        // cell.
-        //
-        // Otherwise (if there is a header) we will be merging two rules: the
-        // rightmost rule in the header and the leftmost rule in the body.  We
-        // assume that the width of a merged rule is the larger of the widths of
-        // either rule individually.
-        if self.pixel == 0 || self.page.h[self.axis] > 0 {
-            size += max(
-                self.page.rule_width(self.axis, self.page.h[self.axis]),
-                self.page.rule_width(self.axis, self.z),
-            );
-        }
-
-        // Width of body, minus any pixel offset in the leftmost cell.
-        size += self
-            .page
-            .joined_width(self.axis, self.z..cell)
-            .checked_sub(self.pixel)
-            .unwrap();
-
-        // Width of rightmost rule in body merged with leftmost rule in headers.
-        size += max(
-            self.page.rule_width_r(self.axis, 0),
-            self.page.rule_width(self.axis, cell),
-        );
-
-        size
+        !self.page.ranges[self.axis].is_empty()
     }
 
     /// Returns a new [Page] that is up to `size` pixels wide along the axis
@@ -1220,128 +947,55 @@ impl Break {
     /// completely broken up, or if `size` is too small to reasonably render any
     /// cells.  The latter will never happen if `size` is at least as large as
     /// the page size passed to [Page::new] along the axis using for breaking.
-    fn next(&mut self, device: &dyn Device, size: usize) -> Option<Arc<Page>> {
+    fn next(&mut self, device: &dyn Device, size: isize) -> Result<Option<Page>, ()> {
         if !self.has_next() {
-            return None;
+            return Ok(None);
         }
-
-        self.find_breakpoint(device, size).map(|(z, pixel)| {
-            let page = match pixel {
-                0 => self.page.select(self.axis, self.z..z, self.pixel, 0),
-                pixel => self.page.select(
-                    self.axis,
-                    self.z..z + 1,
-                    pixel,
-                    self.page.cell_width(self.axis, z) - pixel,
-                ),
-            };
-            self.z = z;
-            self.pixel = pixel;
-            page
-        })
-    }
-
-    fn break_cell(&self, device: &dyn Device, z: usize, overflow: usize) -> usize {
-        if self.cell_is_breakable(device, z) {
-            // If there is no right header and we render a partial cell
-            // on the right side of the body, then we omit the rightmost
-            // rule of the body.  Otherwise the rendering is deceptive
-            // because it looks like the whole cell is present instead
-            // of a partial cell.
-            //
-            // This is similar to code for the left side in
-            // [Self::needed_size].
-            let rule_allowance = self.page.rule_width(self.axis, z);
-
-            // The amount that, if we added cell `z`, the rendering
-            // would overfill the allocated `size`.
-            let overhang = overflow - rule_allowance; // XXX could go negative
-
-            // The width of cell `z`.
-            let cell_size = self.page.cell_width(self.axis, z);
-
-            // The amount trimmed off the left side of `z`, and the
-            // amount left to render.
-            let cell_ofs = if z == self.z { self.pixel } else { 0 };
-            let cell_left = cell_size - cell_ofs;
-
-            // If some of the cell remains to render, and there would
-            // still be some of the cell left afterward, then partially
-            // render that much of the cell.
-            let mut pixel = if cell_left > 0 && cell_left > overhang {
-                cell_left - overhang + cell_ofs
-            } else {
-                0
-            };
-
-            // If there would be only a tiny amount of the cell left
-            // after rendering it partially, reduce the amount rendered
-            // slightly to make the output look a little better.
-            let em = device.params().em();
-            if pixel + em > cell_size {
-                pixel = pixel.saturating_sub(em);
-            }
-
-            // If we're breaking vertically, then consider whether the
-            // cells being broken have a better internal breakpoint than
-            // the exact number of pixels available, which might look
-            // bad e.g. because it breaks in the middle of a line of
-            // text.
-            if self.axis == Axis2::Y && device.params().can_adjust_break {
-                let mut x = 0;
-                while x < self.page.n[Axis2::X] {
-                    let cell = self.page.get_cell(Coord2::new(x, z));
-                    let better_pixel = device.adjust_break(
-                        cell.content,
-                        Coord2::new(
-                            self.page
-                                .joined_width(Axis2::X, cell.rect[Axis2::X].clone()),
-                            pixel,
-                        ),
-                    );
-                    x += cell.rect[Axis2::X].len();
-
-                    if better_pixel < pixel {
-                        let start_pixel = if z > self.z { self.pixel } else { 0 };
-                        if better_pixel > start_pixel {
-                            pixel = better_pixel;
-                            break;
-                        } else if better_pixel == 0 && z != self.z {
-                            pixel = 0;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            pixel
-        } else {
-            0
+        let target = size - self.page.table.headers_width(self.axis);
+        if target <= 0 {
+            return Err(());
         }
-    }
-
-    fn find_breakpoint(&mut self, device: &dyn Device, size: usize) -> Option<(usize, usize)> {
-        for z in self.z..self.page.n[self.axis] {
-            let needed = self.needed_size(z + 1);
-            if needed > size {
-                let pixel = self.break_cell(device, z, needed - size);
-                if z == self.z && pixel == 0 {
-                    return None;
+        let start = self.page.ranges[self.axis].start;
+        let (end, next_start) = self.find_breakpoint(start..start + target, device);
+        let result = Page {
+            table: self.page.table.clone(),
+            ranges: EnumMap::from_fn(|axis| {
+                if axis == self.axis {
+                    start..end
                 } else {
-                    return Some((z, pixel));
+                    self.page.ranges[axis].clone()
+                }
+            }),
+        };
+        self.page.ranges[self.axis].start = next_start;
+        Ok(Some(result))
+    }
+
+    fn find_breakpoint(&self, range: Range<isize>, device: &dyn Device) -> (isize, isize) {
+        let cp = &self.page.table.cp[self.axis];
+
+        // If everything remaining fits, then take it all.
+        let max = cp.last().copied().unwrap();
+        if range.end >= max {
+            return (max, max);
+        }
+
+        // Otherwise, take as much as fits.
+        for c in 0..self.page.table.n()[self.axis] {
+            let position = cp[c * 2 + 3];
+            if position > range.end {
+                if c == 0
+                    || self.page.table.cell_width(self.axis, c)
+                        >= device.params().min_break[self.axis]
+                {
+                    // XXX various way to choose a better breakpoint
+                    return (range.end, range.end);
+                } else {
+                    return (cp[(c - 1) * 2 + 3], cp[(c - 1) * 2 + 2]);
                 }
             }
         }
-        Some((self.page.n[self.axis], 0))
-    }
-
-    /// Returns true if `cell` along this breaker's axis may be broken across a
-    /// page boundary.
-    ///
-    /// This is just a heuristic.  Breaking cells across page boundaries can
-    /// save space, but it looks ugly.
-    fn cell_is_breakable(&self, device: &dyn Device, cell: usize) -> bool {
-        self.page.cell_width(self.axis, cell) >= device.params().min_break[self.axis]
+        unreachable!()
     }
 }
 
@@ -1351,7 +1005,7 @@ pub struct Pager {
     /// [Page]s to be rendered, in order, vertically.  There may be up to 5
     /// pages, for the pivot table's title, layers, body, captions, and
     /// footnotes.
-    pages: SmallVec<[Arc<Page>; 5]>,
+    pages: SmallVec<[Page; 5]>,
 
     x_break: Option<Break>,
     y_break: Option<Break>,
@@ -1364,16 +1018,16 @@ impl Pager {
         layer_indexes: Option<&[usize]>,
     ) -> Self {
         let output = pivot_table.output(
-            layer_indexes.unwrap_or(&pivot_table.current_layer),
+            layer_indexes.unwrap_or(pivot_table.layer()),
             device.params().printing,
         );
 
         // Figure out the width of the body of the table. Use this to determine
         // the base scale.
-        let body_page = Page::new(Arc::new(output.body), device, 0, &pivot_table.look);
-        let body_width = body_page.width(Axis2::X);
+        let body_page = Page::new(output.body, device, None, &pivot_table.style.look);
+        let body_width = body_page.width(Axis2::X).min(device.params().size.x());
         let mut scale = if body_width > device.params().size[Axis2::X]
-            && pivot_table.look.shrink_to_fit[Axis2::X]
+            && pivot_table.style.look.shrink_to_fit[Axis2::X]
             && device.params().can_scale
         {
             device.params().size[Axis2::X] as f64 / body_width as f64
@@ -1382,22 +1036,20 @@ impl Pager {
         };
 
         let mut pages = SmallVec::new();
-        for table in [output.title, output.layers].into_iter().flatten() {
-            pages.push(Arc::new(Page::new(
-                Arc::new(table),
+        if let Some(title) = output.title {
+            pages.push(Page::new(
+                title,
                 device,
-                body_width,
-                &pivot_table.look,
-            )));
+                Some(body_width),
+                &pivot_table.style.look,
+            ));
         }
-        pages.push(Arc::new(body_page));
+        for layer in output.layers {
+            pages.push(Page::new(layer, device, None, &pivot_table.style.look));
+        }
+        pages.push(body_page);
         for table in [output.caption, output.footnotes].into_iter().flatten() {
-            pages.push(Arc::new(Page::new(
-                Arc::new(table),
-                device,
-                0,
-                &pivot_table.look,
-            )));
+            pages.push(Page::new(table, device, None, &pivot_table.style.look));
         }
         pages.reverse();
 
@@ -1410,11 +1062,11 @@ impl Pager {
         // shrinking the table vertically more than the scale would imply.
         // Shrinking only as much as necessary would require an iterative
         // search.
-        if pivot_table.look.shrink_to_fit[Axis2::Y] && device.params().can_scale {
+        if pivot_table.style.look.shrink_to_fit[Axis2::Y] && device.params().can_scale {
             let total_height = pages
                 .iter()
-                .map(|page: &Arc<Page>| page.total_size(Axis2::Y))
-                .sum::<usize>() as f64;
+                .map(|page: &Page| page.width(Axis2::Y))
+                .sum::<isize>() as f64;
             let max_height = device.params().size[Axis2::Y] as f64;
             if total_height * scale >= max_height {
                 scale *= max_height / total_height;
@@ -1430,30 +1082,30 @@ impl Pager {
     }
 
     /// True if there's content left to render.
-    pub fn has_next(&mut self, device: &dyn Device) -> bool {
-        while self
-            .y_break
-            .as_mut()
-            .is_none_or(|y_break| !y_break.has_next())
+    pub fn has_next(&mut self, device: &dyn Device) -> Option<&mut Break> {
+        // If there's a nonempty y_break, return it.
+        if let Some(y_break) = self.y_break.as_mut()
+            && y_break.has_next()
         {
-            self.y_break = self
-                .x_break
-                .as_mut()
-                .and_then(|x_break| {
-                    x_break.next(
-                        device,
-                        (device.params().size[Axis2::X] as f64 / self.scale) as usize,
-                    )
-                })
-                .map(|page| Break::new(page, Axis2::Y));
-            if self.y_break.is_none() {
-                match self.pages.pop() {
-                    Some(page) => self.x_break = Some(Break::new(page, Axis2::X)),
-                    _ => return false,
-                }
-            }
+            return self.y_break.as_mut();
         }
-        true
+
+        loop {
+            // Get a new y_break from the x_break.
+            if let Some(x_break) = &mut self.x_break
+                && let Some(page) = x_break
+                    .next(
+                        device,
+                        (device.params().size[Axis2::X] as f64 / self.scale) as isize,
+                    )
+                    .unwrap()
+            {
+                self.y_break = Some(page.split(Axis2::Y));
+                return self.y_break.as_mut();
+            }
+
+            self.x_break = Some(self.pages.pop()?.split(Axis2::X));
+        }
     }
 
     /// Draws a chunk of content to fit in a space that has vertical size
@@ -1461,29 +1113,25 @@ impl Pager {
     /// Returns the amount of vertical space actually used by the rendered
     /// chunk, which will be 0 if `space` is too small to render anything or if
     /// no content remains (use [Self::has_next] to distinguish these cases).
-    pub fn draw_next(&mut self, device: &mut dyn Device, mut space: usize) -> usize {
+    pub fn draw_next(&mut self, device: &mut dyn Device, mut space: isize) -> isize {
         use Axis2::*;
 
         if self.scale != 1.0 {
             device.scale(self.scale);
-            space = (space as f64 / self.scale) as usize;
+            space = (space as f64 / self.scale) as isize;
         }
 
         let mut ofs = Coord2::new(0, 0);
-        while self.has_next(device) {
-            let Some(page) = self
-                .y_break
-                .as_mut()
-                .and_then(|y_break| y_break.next(device, space - ofs[Y]))
-            else {
+        while let Some(y_break) = self.has_next(device) {
+            let Some(page) = y_break.next(device, space - ofs[Y]).unwrap_or_default() else {
                 break;
             };
             page.draw(device, ofs);
-            ofs[Y] += page.total_size(Y);
+            ofs[Y] += page.width(Y);
         }
 
         if self.scale != 1.0 {
-            ofs[Y] = (ofs[Y] as f64 * self.scale) as usize;
+            ofs[Y] = (ofs[Y] as f64 * self.scale) as isize;
         }
         ofs[Y]
     }

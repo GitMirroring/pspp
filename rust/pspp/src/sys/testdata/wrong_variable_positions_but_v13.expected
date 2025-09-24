@@ -1,12 +1,10 @@
-╭──────────────────────┬────────────────────────╮
-│       Created        │    05-JAN-2011 20:53:52│
-├──────────────────────┼────────────────────────┤
-│Writer Product        │PSPP synthetic test file│
-│       Version        │13.2.3                  │
-├──────────────────────┼────────────────────────┤
-│       Compression    │None                    │
-│       Number of Cases│                       1│
-╰──────────────────────┴────────────────────────╯
+╭────────────────┬────────────────────────╮
+│Created         │    05-JAN-2011 20:53:52│
+│Writer  Product │PSPP synthetic test file│
+│        Version │13.2.3                  │
+│Compression     │None                    │
+│Number of Cases │                       1│
+╰────────────────┴────────────────────────╯
 
 ╭─────────┬────────────────────────╮
 │Label    │PSPP synthetic test file│

@@ -16,15 +16,12 @@
 
 use std::{fmt::Debug, io::Cursor};
 
-use crate::{
-    format::Decimal,
-    output::pivot::{
-        Axis2, Border, BoxBorder, FootnoteMarkerPosition, FootnoteMarkerType, HeadingRegion,
-        LabelPosition, RowColBorder,
-    },
+use crate::output::pivot::{
+    Axis2, FootnoteMarkerPosition, FootnoteMarkerType,
+    look::{self, Border, BoxBorder, HeadingRegion, LabelPosition, RowColBorder},
 };
 
-use super::{Area, BorderStyle, Color, HorzAlign, Look, Stroke, VertAlign};
+use crate::output::pivot::look::{Area, BorderStyle, Color, HorzAlign, Look, Stroke, VertAlign};
 use binrw::{BinRead, BinResult, Error as BinError, binread};
 use enum_map::enum_map;
 
@@ -53,7 +50,7 @@ pub fn parse_tlo(input: &[u8]) -> BinResult<Look> {
 }
 
 /// Points (72/inch) to pixels (96/inch).
-fn pt_to_px(pt: i32) -> usize {
+fn pt_to_px(pt: i32) -> isize {
     num::cast((pt as f64 * (96.0 / 72.0)).round()).unwrap_or_default()
 }
 
@@ -63,7 +60,7 @@ fn px_to_pt(px: i32) -> i32 {
 }
 
 /// 20ths of a point to pixels (96/inch).
-fn pt20_to_px(pt20: i32) -> usize {
+fn pt20_to_px(pt20: i32) -> isize {
     num::cast((pt20 as f64 * (96.0 / 72.0 / 20.0)).round()).unwrap_or_default()
 }
 
@@ -97,13 +94,13 @@ impl From<TableLook> for Look {
                 FootnoteMarkerPosition::Superscript
             },
             areas: enum_map! {
-                    Area::Title => super::AreaStyle::from_tlo(look.pv_cell_style.title_color, &look.pv_text_style.title_style),
+                    Area::Title => look::AreaStyle::from_tlo(look.pv_cell_style.title_color, &look.pv_text_style.title_style),
                     Area::Caption => (&look.pv_text_style.caption).into(),
                     Area::Footer => (&look.pv_text_style.footer).into(),
                     Area::Corner => (&look.pv_text_style.corner).into(),
                     Area::Labels(Axis2::X) => (&look.pv_text_style.column_labels).into(),
                     Area::Labels(Axis2::Y) => (&look.pv_text_style.row_labels).into(),
-                    Area::Data => (&look.pv_text_style.data).into(),
+                    Area::Data(_) => (&look.pv_text_style.data).into(),
                     Area::Layers => (&look.pv_text_style.layers).into(),
             },
                 borders: enum_map!  {
@@ -141,8 +138,7 @@ impl From<TableLook> for Look {
                 Axis2::X => (flags & 0x10) != 0,
                 Axis2::Y => (flags & 0x20) != 0
             },
-            top_continuation: (flags & 0x80) != 0,
-            bottom_continuation: (flags & 0x100) != 0,
+            show_continuations: [(flags & 0x80) != 0, (flags & 0x100) != 0],
             continuation: {
                 let s = &look.v2_styles.continuation;
                 if s.is_empty() {
@@ -218,6 +214,7 @@ enum Separator {
     None,
     #[br(magic = 1u16)]
     Some {
+        #[br(parse_with(parse_tlo_color))]
         color: Color,
         style: u16,
         width: u16,
@@ -249,17 +246,10 @@ impl From<Separator> for BorderStyle {
     }
 }
 
-impl BinRead for Color {
-    type Args<'a> = ();
-
-    fn read_options<R: std::io::Read + std::io::Seek>(
-        reader: &mut R,
-        endian: binrw::Endian,
-        _args: (),
-    ) -> BinResult<Self> {
-        let raw = <u32>::read_options(reader, endian, ())?;
-        Ok(Color::new(raw as u8, (raw >> 8) as u8, (raw >> 16) as u8))
-    }
+#[binrw::parser(reader, endian)]
+fn parse_tlo_color() -> BinResult<Color> {
+    let raw = <u32>::read_options(reader, endian, ())?;
+    Ok(Color::new(raw as u8, (raw >> 8) as u8, (raw >> 16) as u8))
 }
 
 #[binread]
@@ -277,8 +267,9 @@ struct PvCellStyle {
 #[br(little)]
 #[derive(Debug)]
 struct AreaColor {
-    #[br(magic = b"\0\x01\0")]
+    #[br(magic(b"\0\x01\0"), parse_with(parse_tlo_color))]
     color10: Color,
+    #[br(parse_with(parse_tlo_color))]
     color0: Color,
     shading: u8,
     #[br(temp, magic = 0u8)]
@@ -290,18 +281,8 @@ impl From<AreaColor> for Color {
         match area_color.shading {
             0 => area_color.color0,
             x1 @ 1..=9 => {
-                let Color {
-                    r: r0,
-                    g: g0,
-                    b: b0,
-                    ..
-                } = area_color.color0;
-                let Color {
-                    r: r1,
-                    g: g1,
-                    b: b1,
-                    ..
-                } = area_color.color10;
+                let (r0, g0, b0) = area_color.color0.into_rgb();
+                let (r1, g1, b1) = area_color.color10.into_rgb();
                 fn mix(c0: u32, c1: u32, x1: u32) -> u8 {
                     let x0 = 10 - x1;
                     ((c0 * x0 + c1 * x1) / 10) as u8
@@ -347,23 +328,22 @@ struct MostAreas {
     style: AreaStyle,
 }
 
-impl From<&MostAreas> for super::AreaStyle {
+impl From<&MostAreas> for look::AreaStyle {
     fn from(area: &MostAreas) -> Self {
         Self::from_tlo(area.color, &area.style)
     }
 }
 
-impl super::AreaStyle {
+impl look::AreaStyle {
     fn from_tlo(bg: Color, style: &AreaStyle) -> Self {
         Self {
-            cell_style: super::CellStyle {
+            cell_style: look::CellStyle {
                 horz_align: match style.halign {
                     0 => Some(HorzAlign::Left),
                     1 => Some(HorzAlign::Right),
                     2 => Some(HorzAlign::Center),
                     4 => Some(HorzAlign::Decimal {
                         offset: style.decimal_offset as f64 / (72.0 * 20.0) * 96.0,
-                        decimal: Decimal::Comma,
                     }),
                     _ => None,
                 },
@@ -382,17 +362,13 @@ impl super::AreaStyle {
                     }
                 },
             },
-            font_style: super::FontStyle {
+            font_style: look::FontStyle {
                 bold: style.weight > 400,
                 italic: style.italic,
                 underline: style.underline,
-                markup: false,
                 font: style.font_name.string.clone(),
-                fg: {
-                    let fg = style.text_color;
-                    [fg, fg]
-                },
-                bg: [bg, bg],
+                fg: style.text_color,
+                bg,
                 size: -style.font_size * 3 / 4,
             },
         }
@@ -427,6 +403,7 @@ struct AreaStyle {
     rtf_charset_number: u32,
     x: u8,
     font_name: U8String,
+    #[br(parse_with(parse_tlo_color))]
     text_color: Color,
     #[br(temp, magic = 0u16)]
     _tmp: (),
@@ -490,7 +467,7 @@ impl Default for V2Styles {
 }
 
 #[binrw::parser(reader, endian)]
-fn parse_bool() -> BinResult<bool> {
+pub fn parse_bool() -> BinResult<bool> {
     let byte = <u8>::read_options(reader, endian, ())?;
     match byte {
         0 => Ok(false),

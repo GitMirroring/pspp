@@ -26,7 +26,7 @@ use ctables::ctables_command;
 use data_list::data_list_command;
 use descriptives::descriptives_command;
 use either::Either;
-use flagset::{FlagSet, flags};
+use enumset::{EnumSet, EnumSetType};
 use pspp_derive::FromTokens;
 
 use crate::{
@@ -46,30 +46,29 @@ pub mod ctables;
 pub mod data_list;
 pub mod descriptives;
 
-flags! {
-    enum State: u8 {
-        /// No active dataset yet defined.
-        Initial,
+#[derive(Debug, EnumSetType)]
+enum State {
+    /// No active dataset yet defined.
+    Initial,
 
-        /// Active dataset has been defined.
-        Data,
+    /// Active dataset has been defined.
+    Data,
 
-        /// Inside `INPUT PROGRAM`.
-        InputProgram,
+    /// Inside `INPUT PROGRAM`.
+    InputProgram,
 
-        /// Inside `FILE TYPE`.
-        FileType,
+    /// Inside `FILE TYPE`.
+    FileType,
 
-        /// State nested inside `LOOP` or `DO IF`, inside [State::Data].
-        NestedData,
+    /// State nested inside `LOOP` or `DO IF`, inside [State::Data].
+    NestedData,
 
-        /// State nested inside `LOOP` or `DO IF`, inside [State::InputProgram].
-        NestedInputProgram,
-    }
+    /// State nested inside `LOOP` or `DO IF`, inside [State::InputProgram].
+    NestedInputProgram,
 }
 
 struct Command {
-    allowed_states: FlagSet<State>,
+    allowed_states: EnumSet<State>,
     enhanced_only: bool,
     testing_only: bool,
     no_abbrev: bool,
@@ -817,7 +816,7 @@ fn commands() -> &'static [Command] {
             ctables_command(),
             data_list_command(),
             Command {
-                allowed_states: FlagSet::full(),
+                allowed_states: EnumSet::all(),
                 enhanced_only: false,
                 testing_only: false,
                 no_abbrev: false,

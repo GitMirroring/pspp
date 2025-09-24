@@ -19,9 +19,9 @@ SPV manifest contains the string `allowPivoting=true`, without a
 new-line.  PSPP uses this string to identify an SPV file; it is
 invariant across the corpus.
 
-> SPV files always begin with the 7-byte sequence 50 4b 03 04 14 00
-> 08, but this is not a useful magic number because most Zip archives
-> start the same way.
+> SPV files always begin with the 2-byte sequence 50 4b (`PK`), but
+> this is not a useful magic number because all Zip archives start the
+> same way.
 >
 > Checking only for the presence of `META-INF/MANIFEST.MF` is also not
 > a useful magic number because this file name also appears in every
@@ -42,18 +42,19 @@ table, a heading, a block of text, etc.)  or a group of them.  The
 member whose output goes at the beginning of the document is numbered
 0, the next member in the output is numbered 1, and so on.
 
-Structure members contain XML. This XML is sometimes self-contained,
+[Structure members] contain XML. This XML is sometimes self-contained,
 but it often references detail members in the Zip archive, which are
 named as follows:
 
 * `PREFIX_table.xml` and `PREFIX_tableData.bin`  
   `PREFIX_lightTableData.bin`  
   The structure of a table plus its data.  Older SPV files pair a
-  `PREFIX_table.xml` file that describes the table's structure with a
-  binary `PREFIX_tableData.bin` file that gives its data.  Newer SPV
-  files (the majority of those in the corpus) instead include a
-  single `PREFIX_lightTableData.bin` file that incorporates both into
-  a single binary format.
+  `PREFIX_table.xml` [legacy detail XML member] that describes the
+  table's structure with a `PREFIX_tableData.bin` [legacy detail
+  binary member] that gives its data.  Newer SPV files (the majority
+  of those in the corpus) instead include a single
+  `PREFIX_lightTableData.bin` [light detail binary member] that
+  incorporates both into a single binary format.
 
 * `PREFIX_warning.xml` and `PREFIX_warningData.bin`  
   `PREFIX_lightWarningData.bin`  
@@ -88,3 +89,8 @@ their exact names do not matter to readers as long as they are unique.
 
 SPSS tolerates corrupted Zip archives that Zip reader libraries tend
 to reject.  These can be fixed up with `zip -FF`.
+
+[Structure members]: structure.md
+[legacy detail XML member]: legacy-detail-xml.md
+[legacy detail binary member]: legacy-detail-binary.md
+[light detail binary member]: light-detail.md

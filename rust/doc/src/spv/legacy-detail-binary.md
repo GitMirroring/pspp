@@ -31,13 +31,14 @@ of the other data in the member.  Versions 0xaf and 0xb0 are known.  We
 will refer to "version 0xaf" and "version 0xb0" members later on.
 
 A legacy member consists of `n-sources` data sources, each of which
-has Metadata and Data.
+has `Metadata` and `Data`.
 
 `member-size` is the size of the legacy binary member, in bytes.
 
-The Data and Strings above are commented out because the Metadata has
-some oddities that mean that the Data sometimes seems to start at an
-unexpected place.  The following section goes into detail.
+The `Data` and `Strings` above are commented out because the
+`Metadata` has some oddities that mean that the `Data` sometimes seems
+to start at an unexpected place.  The following section goes into
+detail.
 
 <!-- toc -->
 
@@ -54,24 +55,25 @@ A data source has `n-variables` variables, each with `n-values` data
 values.
 
 `source-name` is a 28- or 64-byte string padded on the right with
-0-bytes.  The names that appear in the corpus are very generic: usually
-`tableData` for pivot table data or `source0` for chart data.
+0-bytes.  The names that appear in the corpus are very generic:
+usually `tableData` for pivot table data or `source0` for chart data.
+They are encoded in ASCII.
 
-A given Metadata's `data-offset` is the offset, in bytes, from the
-beginning of the member to the start of the corresponding Data.  This
-allows programs to skip to the beginning of the data for a particular
-source.  In every case in the corpus, the Data follow the Metadata in
-the same order, but it is important to use `data-offset` instead of
-reading sequentially through the file because of the exception described
-below.
+A given `Metadata`'s `data-offset` is the offset, in bytes, from the
+beginning of the member to the start of the corresponding `Data`.
+This allows programs to skip to the beginning of the data for a
+particular source.  In every case in the corpus, the `Data` follow the
+`Metadata` in the same order, but it is important to use `data-offset`
+instead of reading sequentially through the file because of the
+exception described below.
 
-One SPV file in the corpus has legacy binary members with version
-0xb0 but a 28-byte `source-name` field (and only a single source).  In
-practice, this means that the 64-byte `source-name` used in version 0xb0
-has a lot of 0-bytes in the middle followed by the `variable-name` of
-the following Data.  As long as a reader treats the first 0-byte in the
-`source-name` as terminating the string, it can properly interpret these
-members.
+One SPV file in the corpus has legacy binary members with version 0xb0
+but a 28-byte `source-name` field (and only a single source).  In
+practice, this means that the 64-byte `source-name` used in version
+0xb0 has a lot of 0-bytes in the middle followed by the
+`variable-name` of the following `Data`.  As long as a reader treats
+the first 0-byte in the `source-name` as terminating the string, it
+can properly interpret these members.
 
 The meaning of `x` in version 0xb0 is unknown.
 
@@ -82,14 +84,14 @@ Data => Variable*[n-variables]
 Variable => byte*288[variable-name] double*[n-values]
 ```
 
-Data follow the `Metadata` in the legacy binary format, with sources
+`Data` follow the `Metadata` in the legacy binary format, with sources
 in the same order (but readers should use the `data-offset` in
-`Metadata` records, rather than reading sequentially).  Each Variable
-begins with a `variable-name` that generally indicates its role in the
-pivot table, e.g. "cell", "cellFormat", "dimension0categories",
-"dimension0group0", followed by the numeric data, one double per
-datum.  A double with the maximum negative double `-DBL_MAX`
-represents the system-missing value `SYSMIS`.
+`Metadata` records, rather than reading sequentially).  Each
+`Variable` begins with a `variable-name` that generally indicates its
+role in the pivot table, e.g. `cell`, `cellFormat`,
+`dimension0categories`, `dimension0group0`, followed by the numeric
+data, one double per datum.  A double with the maximum negative double
+`-DBL_MAX` represents the system-missing value `SYSMIS`.
 
 ## String Data
 
@@ -108,10 +110,10 @@ Label => int32[frequency] string[label]
 
 Each variable may include a mix of numeric and string data values.
 If a legacy binary member contains any string data, `Strings` is present;
-otherwise, it ends just after the last Data element.
+otherwise, it ends just after the last `Data` element.
 
 The string data overlays the numeric data.  When a variable includes
-any string data, its Variable represents the string values with a
+any string data, its `Variable` represents the string values with a
 `SYSMIS` or NaN placeholder.  (Not all such values need be
 placeholders.)
 

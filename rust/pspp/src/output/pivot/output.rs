@@ -14,19 +14,27 @@
 // You should have received a copy of the GNU General Public License along with
 // this program.  If not, see <http://www.gnu.org/licenses/>.
 
-use std::{iter::zip, ops::Range, sync::Arc};
+use std::{
+    iter::{once, repeat},
+    ops::Range,
+    sync::Arc,
+};
 
 use enum_map::{EnumMap, enum_map};
 use itertools::Itertools;
 
 use crate::output::{
-    pivot::{HeadingRegion, LabelPosition, Path},
-    table::{CellInner, Table},
+    pivot::{
+        Footnote, Path,
+        look::{HeadingRegion, LabelPosition, RowParity},
+    },
+    table::{CellInner, CellPos, CellRect, Table},
 };
 
-use super::{
-    Area, Axis2, Axis3, Border, BorderStyle, BoxBorder, Color, Coord2, Dimension, Footnote,
-    IntoValueOptions, PivotTable, Rect2, RowColBorder, Stroke, Value,
+use crate::output::pivot::{
+    Axis2, Axis3, Dimension, PivotTable,
+    look::{Area, Border, BorderStyle, BoxBorder, Color, RowColBorder, Stroke},
+    value::Value,
 };
 
 /// All of the combinations of dimensions along an axis.
@@ -92,7 +100,7 @@ impl PivotTable {
             };
             presentation_indexes[vary_axis] = &vary_indexes;
             let data_indexes = self.convert_indexes_ptod(presentation_indexes);
-            if self.get(&data_indexes).is_some() {
+            if self.get(&*data_indexes).is_some() {
                 return false;
             }
         }
@@ -104,7 +112,7 @@ impl PivotTable {
         layer_indexes: &[usize],
         omit_empty: bool,
     ) -> AxisEnumeration {
-        let axis = &self.axes[enum_axis];
+        let axis = &self.structure.axes[enum_axis];
         let extent = self.axis_extent(enum_axis);
         let indexes = if axis.dimensions.is_empty() {
             vec![0]
@@ -134,20 +142,22 @@ impl PivotTable {
         }
     }
 
-    fn create_aux_table3<I>(&self, area: Area, rows: I) -> Table
+    fn create_aux_table<I>(&self, area: Area, axis: Axis2, cells: I) -> Table
     where
-        I: Iterator<Item = Box<Value>> + ExactSizeIterator,
+        I: IntoIterator<Item = Box<Value>>,
+        I::IntoIter: ExactSizeIterator,
     {
+        let cells = cells.into_iter();
         let mut table = Table::new(
-            Coord2::new(1, rows.len()),
-            Coord2::new(0, 0),
-            self.look.areas.clone(),
+            CellPos::for_axis((axis, cells.len()), 1),
+            CellPos::new(0, 0),
+            self.style.look.areas.clone(),
             self.borders(false),
-            self.into_value_options(),
+            self,
         );
-        for (y, row) in rows.enumerate() {
+        for (z, row) in cells.into_iter().enumerate() {
             table.put(
-                Rect2::for_cell(Coord2::new(0, y)),
+                CellRect::for_cell(CellPos::for_axis((axis, z), 0)),
                 CellInner::new(area, row),
             );
         }
@@ -156,35 +166,76 @@ impl PivotTable {
 
     fn create_aux_table_if_nonempty<I>(&self, area: Area, rows: I) -> Option<Table>
     where
-        I: Iterator<Item = Box<Value>> + ExactSizeIterator,
+        I: IntoIterator<Item = Box<Value>>,
+        I::IntoIter: ExactSizeIterator,
     {
+        let rows = rows.into_iter();
         if rows.len() > 0 {
-            Some(self.create_aux_table3(area, rows))
+            Some(self.create_aux_table(area, Axis2::Y, rows))
         } else {
             None
         }
     }
 
     fn borders(&self, printing: bool) -> EnumMap<Border, BorderStyle> {
+        fn resolve_border_style(
+            border: Border,
+            borders: &EnumMap<Border, BorderStyle>,
+            show_grid_lines: bool,
+        ) -> BorderStyle {
+            // Use the style for `border` if it's non-`None`.
+            let style = borders[border];
+            if style.stroke != Stroke::None {
+                return style;
+            }
+
+            // Use the fallback style, if any, if it's non-`None`.
+            if let Some(fallback) = border.fallback()
+                && let style = borders[fallback]
+                && style.stroke != Stroke::None
+            {
+                return style;
+            }
+
+            // Show grid lines.
+            if show_grid_lines {
+                return BorderStyle {
+                    stroke: Stroke::Dashed,
+                    color: Color::BLACK,
+                };
+            }
+
+            // Use `None` after all.
+            style
+        }
+
         EnumMap::from_fn(|border| {
-            resolve_border_style(border, &self.look.borders, printing && self.show_grid_lines)
+            resolve_border_style(
+                border,
+                &self.style.look.borders,
+                printing && self.style.show_grid_lines,
+            )
         })
     }
 
+    /// Constructs a [Table] for the body of this `PivotTable` for the layer
+    /// with the specified indexes.  `printing` specifies whether the table is
+    /// for printing or screen display (grid lines are only enabled for
+    /// printing).
     pub fn output_body(&self, layer_indexes: &[usize], printing: bool) -> Table {
         let headings = EnumMap::from_fn(|axis| Headings::new(self, axis, layer_indexes));
 
-        let data = Coord2::from_fn(|axis| headings[axis].width());
-        let mut stub = Coord2::from_fn(|axis| headings[!axis].height());
-        if headings[Axis2::Y].row_label_position == LabelPosition::Corner && stub.y() == 0 {
+        let data = CellPos::from_fn(|axis| headings[axis].width());
+        let mut stub = CellPos::from_fn(|axis| headings[!axis].height());
+        if headings[Axis2::Y].row_label_position == LabelPosition::Corner && stub.y == 0 {
             stub[Axis2::Y] = 1;
         }
         let mut body = Table::new(
-            Coord2::from_fn(|axis| data[axis] + stub[axis]),
+            CellPos::from_fn(|axis| data[axis] + stub[axis]),
             stub,
-            self.look.areas.clone(),
+            self.style.look.areas.clone(),
             self.borders(printing),
-            self.into_value_options(),
+            self,
         );
 
         for h in [Axis2::X, Axis2::Y] {
@@ -199,77 +250,94 @@ impl PivotTable {
                     Axis3::Z => layer_indexes,
                 };
                 let data_indexes = self.convert_indexes_ptod(presentation_indexes);
-                let value = self.get(&data_indexes);
+                let value = self.get(&*data_indexes);
                 body.put(
-                    Rect2::new(x..x + 1, y..y + 1),
-                    CellInner {
-                        rotate: false,
-                        area: Area::Data,
-                        value: Box::new(value.cloned().unwrap_or_default()),
-                    },
+                    CellRect::new(x..x + 1, y..y + 1),
+                    CellInner::new(
+                        Area::Data(RowParity::from(y - stub[Axis2::Y])),
+                        Box::new(value.cloned().unwrap_or_default()),
+                    ),
                 );
             }
         }
 
         // Insert corner text, but only if there's a stub and only if row labels
         // are not in the corner.
-        if self.corner_text.is_some()
-            && self.look.row_label_position == LabelPosition::Nested
-            && stub.x() > 0
-            && stub.y() > 0
+        if self.metadata.corner_text.is_some()
+            && self.style.look.row_label_position == LabelPosition::Nested
+            && stub.x > 0
+            && stub.y > 0
         {
             body.put(
-                Rect2::new(0..stub.x(), 0..stub.y()),
-                CellInner::new(Area::Corner, self.corner_text.clone().unwrap_or_default()),
+                CellRect::new(0..stub.x, 0..stub.y),
+                CellInner::new(
+                    Area::Corner,
+                    self.metadata.corner_text.clone().unwrap_or_default(),
+                ),
             );
         }
 
-        if body.n.x() > 0 && body.n.y() > 0 {
-            body.h_line(Border::InnerFrame(BoxBorder::Top), 0..body.n.x(), 0);
-            body.h_line(
-                Border::InnerFrame(BoxBorder::Bottom),
-                0..body.n.x(),
-                body.n.y(),
-            );
-            body.v_line(Border::InnerFrame(BoxBorder::Left), 0, 0..body.n.y());
-            body.v_line(
-                Border::InnerFrame(BoxBorder::Right),
-                body.n.x(),
-                0..body.n.y(),
-            );
+        if body.n.x > 0 && body.n.y > 0 {
+            body.h_line(Border::InnerFrame(BoxBorder::Top), 0..body.n.x, 0);
+            body.h_line(Border::InnerFrame(BoxBorder::Bottom), 0..body.n.x, body.n.y);
+            body.v_line(Border::InnerFrame(BoxBorder::Left), 0, 0..body.n.y);
+            body.v_line(Border::InnerFrame(BoxBorder::Right), body.n.x, 0..body.n.y);
 
-            body.h_line(Border::DataTop, 0..body.n.x(), stub.y());
-            body.v_line(Border::DataLeft, stub.x(), 0..body.n.y());
+            body.h_line(Border::DataTop, 0..body.n.x, stub.y);
+            body.v_line(Border::DataLeft, stub.x, 0..body.n.y);
         }
         body
     }
 
+    /// Constructs a [Table] for this `PivotTable`'s title.  Returns `None` if
+    /// the table doesn't have a title.
     pub fn output_title(&self) -> Option<Table> {
-        Some(self.create_aux_table3(Area::Title, [self.title.as_ref()?.clone()].into_iter()))
+        Some(self.create_aux_table(
+            Area::Title,
+            Axis2::Y,
+            [self.metadata.title.as_ref()?.clone()],
+        ))
     }
 
-    pub fn output_layers(&self, layer_indexes: &[usize]) -> Option<Table> {
-        let mut layers = Vec::new();
-        for (dimension, &layer_index) in zip(
-            self.axes[Axis3::Z]
-                .dimensions
-                .iter()
-                .map(|index| &self.dimensions[*index]),
-            layer_indexes,
-        ) {
-            if !dimension.is_empty() {
-                layers.push(dimension.nth_leaf(layer_index).unwrap().name.clone());
-            }
-        }
-        layers.reverse();
-
-        self.create_aux_table_if_nonempty(Area::Layers, layers.into_iter())
+    /// Constructs a [Table] for this `PivotTable`'s layer values.  Returns
+    /// `None` if the table doesn't have layers.
+    pub fn output_layers(&self, layer_indexes: &[usize]) -> Vec<Table> {
+        self.structure.axes[Axis3::Z]
+            .dimensions
+            .iter()
+            .map(|index| &self.structure.dimensions[*index])
+            .zip(layer_indexes)
+            .rev()
+            .filter(|(dimension, _)| !dimension.is_empty() && !dimension.hide_all_labels)
+            .map(|(dimension, &layer_index)| {
+                let mut cells = Vec::with_capacity(4);
+                let (groups, leaf) = dimension.leaf_path(layer_index).unwrap().into_parts();
+                for (group, separator) in groups
+                    .iter()
+                    .zip(once(": ").chain(repeat(" ")))
+                    .filter(|(group, _separator)| group.show_label)
+                {
+                    cells.push(Box::new(group.name().clone()));
+                    cells.push(Box::new(Value::new_user_text(separator)));
+                }
+                cells.push(Box::new(leaf.name().clone()));
+                self.create_aux_table(Area::Layers, Axis2::X, cells)
+            })
+            .collect()
     }
 
+    /// Constructs a [Table] for this `PivotTable`'s caption.  Returns `None` if
+    /// the table doesn't have a caption.
     pub fn output_caption(&self) -> Option<Table> {
-        Some(self.create_aux_table3(Area::Caption, [self.caption.as_ref()?.clone()].into_iter()))
+        Some(self.create_aux_table(
+            Area::Caption,
+            Axis2::Y,
+            [self.metadata.caption.as_ref()?.clone()],
+        ))
     }
 
+    /// Constructs a [Table] for this `PivotTable`'s footnotes.  Returns `None`
+    /// if the table doesn't have footnotes.
     pub fn output_footnotes(&self, footnotes: &[Arc<Footnote>]) -> Option<Table> {
         self.create_aux_table_if_nonempty(
             Area::Footer,
@@ -283,22 +351,29 @@ impl PivotTable {
         )
     }
 
+    /// Constructs [OutputTables] for this `PivotTable`, for the specified
+    /// layer, formatted for screen display or printing as specified.
     pub fn output(&self, layer_indexes: &[usize], printing: bool) -> OutputTables {
         // Produce most of the tables.
-        let title = self.show_title.then(|| self.output_title()).flatten();
+        let title = self.style.show_title.then(|| self.output_title()).flatten();
         let layers = self.output_layers(layer_indexes);
         let body = self.output_body(layer_indexes, printing);
-        let caption = self.show_caption.then(|| self.output_caption()).flatten();
+        let caption = self
+            .style
+            .show_caption
+            .then(|| self.output_caption())
+            .flatten();
 
         // Then collect the footnotes from those tables.
-        let tables = [
-            title.as_ref(),
-            layers.as_ref(),
-            Some(&body),
-            caption.as_ref(),
-        ];
-        let footnotes =
-            self.output_footnotes(&self.collect_footnotes(tables.into_iter().flatten()));
+        let title_iter = once(title.as_ref()).flatten();
+        let layers_iter = layers.iter();
+        let body_iter = once(&body);
+        let caption_iter = once(caption.as_ref()).flatten();
+        let tables_iter = title_iter
+            .chain(layers_iter)
+            .chain(body_iter)
+            .chain(caption_iter);
+        let footnotes = self.output_footnotes(&self.collect_footnotes(tables_iter));
 
         OutputTables {
             title,
@@ -310,11 +385,11 @@ impl PivotTable {
     }
 
     fn nonempty_layer_dimensions(&self) -> impl Iterator<Item = &Dimension> {
-        self.axes[Axis3::Z]
+        self.structure.axes[Axis3::Z]
             .dimensions
             .iter()
             .rev()
-            .map(|index| &self.dimensions[*index])
+            .map(|index| &self.structure.dimensions[*index])
             .filter(|d| !d.root.is_empty())
     }
 
@@ -343,20 +418,36 @@ impl PivotTable {
     }
 }
 
+/// [Table]s for outputting a layer of a [PivotTable].
 pub struct OutputTables {
+    /// Title table, if any.
     pub title: Option<Table>,
-    pub layers: Option<Table>,
+    /// Layers tables, if any.
+    pub layers: Vec<Table>,
+    /// Table body.
     pub body: Table,
+    /// Table caption, if any.
     pub caption: Option<Table>,
+    /// Footnotes, if any.
     pub footnotes: Option<Table>,
 }
 
 impl Path<'_> {
-    pub fn get(&self, y: usize, height: usize) -> Option<&Value> {
-        if y + 1 == height {
-            Some(&self.leaf.name)
+    /// Gets the label to be displayed for this path to a leaf within a heading
+    /// block with the given `height`.  Returns both the label and the range of
+    /// rows within the heading block that displays the label.
+    ///
+    /// A path to a leaf that contains `n` groups must be displayed in a heading
+    /// block with at least `n + 1` rows.  Within a heading block with `height`
+    /// rows, the groups are displayed in rows `0..n`, and the leaf is displayed
+    /// in rows `n..height`.  Thus, each group is displayed in exactly one row,
+    /// but the leaf can span multiple rows.
+    pub fn get(&self, y: usize, height: usize) -> (&Value, Range<usize>) {
+        debug_assert!(height > self.groups.len());
+        if let Some(group) = self.groups.get(y) {
+            (&*group.name, y..y + 1)
         } else {
-            self.groups.get(y).map(|group| &*group.name)
+            (&self.leaf.name, self.groups.len()..height)
         }
     }
 }
@@ -380,9 +471,7 @@ impl<'a> Heading<'a> {
         let mut columns = Vec::new();
         let mut height = 0;
         for indexes in column_enumeration.iter() {
-            let mut path = dimension
-                .leaf_path(dimension.presentation_order[indexes[dim_index]])
-                .unwrap();
+            let mut path = dimension.leaf_path(indexes[dim_index]).unwrap();
             path.groups.retain(|group| group.show_label);
             height = height.max(1 + path.groups.len());
             columns.push(path);
@@ -418,65 +507,97 @@ impl<'a> Heading<'a> {
         rotate_inner_labels: bool,
         rotate_outer_labels: bool,
         inner: bool,
-        dimension_label_position: LabelPosition,
+        n_dimensions: usize,
     ) {
         let v = !h;
 
+        // Go through the heading row by row.
         for row in 0..self.height {
             // Find all the categories, dropping columns without a category.
             let categories = self.columns.iter().enumerate().filter_map(|(x, column)| {
-                column.get(row, self.height).map(|name| (x..x + 1, name))
+                let (name, y_range) = column.get(row, self.height);
+                (y_range.start == row).then_some((x..x + 1, y_range, name))
             });
 
             // Merge adjacent identical categories (but don't merge across a vertical rule).
             let categories = categories
-                .coalesce(|(a_r, a), (b_r, b)| {
+                .coalesce(|(a_r, a_yr, a), (b_r, b_yr, b)| {
                     if a_r.end == b_r.start && !vrules[b_r.start] && std::ptr::eq(a, b) {
-                        Ok((a_r.start..b_r.end, a))
+                        Ok((a_r.start..b_r.end, a_yr, a))
                     } else {
-                        Err(((a_r, a), (b_r, b)))
+                        Err(((a_r, a_yr, a), (b_r, b_yr, b)))
                     }
                 })
                 .collect::<Vec<_>>();
-            for (Range { start: x1, end: x2 }, name) in categories.iter().cloned() {
-                let y1 = v_ofs + row;
-                let y2 = y1 + 1;
+            for (Range { start: x1, end: x2 }, yr, name) in categories.iter().cloned() {
+                let y1 = v_ofs + yr.start;
+                let y2 = v_ofs + yr.end;
+
+                let is_outer_row = y1 == 0;
+                let is_inner_row = y2 == self.height;
+                let rotate =
+                    (rotate_inner_labels && is_inner_row) || (rotate_outer_labels && is_outer_row);
                 table.put(
-                    Rect2::for_ranges((h, x1 + h_ofs..x2 + h_ofs), y1..y2),
-                    CellInner {
-                        rotate: {
-                            let is_outer_row = y1 == 0;
-                            let is_inner_row = y2 == self.height;
-                            (rotate_inner_labels && is_inner_row)
-                                || (rotate_outer_labels && is_outer_row)
-                        },
-                        area: Area::Labels(h),
-                        value: Box::new(name.clone()),
-                    },
+                    CellRect::for_ranges((h, x1 + h_ofs..x2 + h_ofs), y1..y2),
+                    CellInner::new(Area::Labels(h), Box::new(name.clone())).with_rotate(rotate),
                 );
 
                 // Draw all the vertical lines in our running example, other
-                // than the far left and far right ones.  Only the ones that
-                // start in the last row of the heading are drawn with the
-                // "category" style, the rest with the "dimension" style,
-                // e.g. only the `║` below are category style:
+                // than the far left and far right ones.
+                //
+                // On an axis with only one dimension, all the lines are drawn
+                // in "category" style.
+                //
+                // On an axis with multiple dimensions, lines that start at the
+                // innermost leaf categories are drawn in "category" style, and
+                // all the other lines (which start above the leaves) are drawn
+                // in "dimension" style.
+                //
+                // # Example
+                //
+                // Suppose we have four dimensions `a` through `d`, each with
+                // three numbered categories `a1`, `a2`, `a3` (etc.).  Two of
+                // the categories in each dimension are grouped into `ag1`
+                // (etc.).  Then, only the doubled lines below are category
+                // style:
                 //
                 // ```text
-                // ┌─────────────────────────────────────────────────────┐
-                // │                         bbbb                        │
-                // ├─────────────────┬─────────────────┬─────────────────┤
-                // │      bbbb1      │      bbbb2      │      bbbb3      │
-                // ├─────────────────┼─────────────────┼─────────────────┤
-                // │       aaaa      │       aaaa      │       aaaa      │
-                // ├─────╥─────╥─────┼─────╥─────╥─────┼─────╥─────╥─────┤
-                // │aaaa1║aaaa2║aaaa3│aaaa1║aaaa2║aaaa3│aaaa1║aaaa2║aaaa3│
-                // └─────╨─────╨─────┴─────╨─────╨─────┴─────╨─────╨─────┘
-                //```
+                // Category and Dimension Borders 1
+                //                            b            │
+                //                      bg1       │        │
+                //                  b1   │   b2   │   b3   │
+                //                   a   │    a   │    a   │
+                //                 │ ag1 │  │ ag1 │  │ ag1 │
+                // d      c      a1│a2║a3│a1│a2║a3│a1│a2║a3│
+                // dg1 d1 c1      0│ 1║ 2│ 3│ 4║ 5│ 6│ 7║ 8│
+                //       ╶─────────┼──╫──┼──┼──╫──┼──┼──╫──┤
+                //        cg1 c2  9│10║11│12│13║14│15│16║17│
+                //           ══════╪══╬══╪══╪══╬══╪══╪══╬══╡
+                //            c3 18│19║20│21│22║23│24│25║26│
+                //    ╶────────────┼──╫──┼──┼──╫──┼──┼──╫──┤
+                //     d2 c1     27│28║29│30│31║32│33│34║35│
+                //       ╶─────────┼──╫──┼──┼──╫──┼──┼──╫──┤
+                //        cg1 c2 36│37║38│39│40║41│42│43║44│
+                //           ══════╪══╬══╪══╪══╬══╪══╪══╬══╡
+                //            c3 45│46║47│48│49║50│51│52║53│
+                // ────────────────┼──╫──┼──┼──╫──┼──┼──╫──┤
+                // d3     c1     54│55║56│57│58║59│60│61║62│
+                //       ╶─────────┼──╫──┼──┼──╫──┼──┼──╫──┤
+                //        cg1 c2 63│64║65│66│67║68│69│70║71│
+                //           ══════╪══╬══╪══╪══╬══╪══╪══╬══╡
+                //            c3 72│73║74│75│76║77│78│79║80│
+                // ────────────────┴──╨──┴──┴──╨──┴──┴──╨──╯
+                // ```
+                //
+                // (This is [tests::category_and_dimension_borders_1] with
+                // double instead of dashed lines, because double lines are
+                // easier to see in source code but SPSS shows rendering
+                // anomalies with them.)
                 let row_col = RowColBorder(region, v);
-                let border = if row == self.height - 1 && inner {
-                    Border::Category(row_col)
-                } else {
+                let border = if n_dimensions > 1 && (!inner || row != self.height - 1) {
                     Border::Dimension(row_col)
+                } else {
+                    Border::Category(row_col)
                 };
                 for x in [x1, x2] {
                     if !vrules[x] {
@@ -485,11 +606,15 @@ impl<'a> Heading<'a> {
                     }
                 }
 
-                // Draws the horizontal lines within a dimension, that is, those
+                // Draw the horizontal lines within a dimension, that is, those
                 // that separate a category (or group) from its parent group or
-                // dimension's label.  Our running example doesn't have groups
-                // but the `═════` lines below show the separators between
-                // categories and their dimension label:
+                // dimension's label.
+                //
+                // # Example
+                //
+                // Our running example doesn't have groups but the `═════` lines
+                // below show the separators between categories and their
+                // dimension label:
                 //
                 // ```text
                 // ┌─────────────────────────────────────────────────────┐
@@ -519,17 +644,6 @@ impl<'a> Heading<'a> {
                 }
             }
         }
-
-        if dimension_label_position == LabelPosition::Corner {
-            table.put(
-                Rect2::new(v_ofs..v_ofs + 1, 0..h_ofs),
-                CellInner {
-                    rotate: false,
-                    area: Area::Corner,
-                    value: self.dimension.root.name.clone(),
-                },
-            );
-        }
     }
 }
 
@@ -542,21 +656,26 @@ struct Headings<'a> {
 
 impl<'a> Headings<'a> {
     fn new(pt: &'a PivotTable, h: Axis2, layer_indexes: &[usize]) -> Self {
-        let column_enumeration = pt.enumerate_axis(h.into(), layer_indexes, pt.look.hide_empty);
+        let column_enumeration =
+            pt.enumerate_axis(h.into(), layer_indexes, pt.style.look.hide_empty);
 
-        let mut headings = pt.axes[h.into()]
+        let mut headings = pt.structure.axes[h.into()]
             .dimensions
             .iter()
             .copied()
             .enumerate()
             .rev()
             .filter_map(|(axis_index, dim_index)| {
-                Heading::new(&pt.dimensions[dim_index], axis_index, &column_enumeration)
+                Heading::new(
+                    &pt.structure.dimensions[dim_index],
+                    axis_index,
+                    &column_enumeration,
+                )
             })
             .collect::<Vec<_>>();
 
         let row_label_position = if h == Axis2::Y
-            && pt.look.row_label_position == LabelPosition::Corner
+            && pt.style.look.row_label_position == LabelPosition::Corner
             && headings
                 .iter_mut()
                 .map(|heading| heading.move_dimension_labels_to_corner())
@@ -616,12 +735,17 @@ impl<'a> Headings<'a> {
                 rotate_inner_labels,
                 rotate_outer_labels,
                 inner,
-                self.row_label_position,
+                self.headings.len(),
             );
             v_ofs += heading.height;
             if !inner {
-                // Draw the horizontal line between dimensions, e.g. the `=====`
-                // line here:
+                // Draw the horizontal line between dimensions.
+                //
+                // # Example
+                //
+                // Suppose we have two dimensions `aaaa` and `bbbb`, each with
+                // three numbered categories.  This code draws the `=====` line
+                // here:
                 //
                 // ```text
                 // ┌─────────────────────────────────────────────────────┐ __
@@ -641,50 +765,61 @@ impl<'a> Headings<'a> {
                 );
             }
         }
-    }
-}
 
-pub fn try_range<R>(range: R, bounds: std::ops::RangeTo<usize>) -> Option<std::ops::Range<usize>>
-where
-    R: std::ops::RangeBounds<usize>,
-{
-    let len = bounds.end;
-
-    let start = match range.start_bound() {
-        std::ops::Bound::Included(&start) => start,
-        std::ops::Bound::Excluded(start) => start.checked_add(1)?,
-        std::ops::Bound::Unbounded => 0,
-    };
-
-    let end = match range.end_bound() {
-        std::ops::Bound::Included(end) => end.checked_add(1)?,
-        std::ops::Bound::Excluded(&end) => end,
-        std::ops::Bound::Unbounded => len,
-    };
-
-    if start > end || end > len {
-        None
-    } else {
-        Some(std::ops::Range { start, end })
-    }
-}
-
-fn resolve_border_style(
-    border: Border,
-    borders: &EnumMap<Border, BorderStyle>,
-    show_grid_lines: bool,
-) -> BorderStyle {
-    let style = borders[border];
-    if style.stroke != Stroke::None {
-        style
-    } else {
-        let style = borders[border.fallback()];
-        if style.stroke != Stroke::None || !show_grid_lines {
-            style
-        } else {
-            BorderStyle {
-                stroke: Stroke::Dashed,
-                color: Color::BLACK,
+        // Display dimension labels in the corner.
+        //
+        // We allow a corner dimension label to spill over into additional
+        // otherwise blank columns in the stub, which can save horizontal space.
+        // For example, it can change this table:
+        //
+        // ```text
+        // Data File and Variable Attributes
+        // ╭────────────────────────┬─────╮
+        // │Variable and Name       │Value│
+        // ├────────────────────────┼─────┤
+        // │variable0         $@Role│0    │
+        // ├────────────────────────┼─────┤
+        // │variable1         $@Role│0    │
+        // ├────────────────────────┼─────┤
+        // │variable2         $@Role│0    │
+        // ├────────────────────────┼─────┤
+        // │variable3         $@Role│0    │
+        // ╰────────────────────────┴─────╯
+        // ```
+        //
+        // into this one:
+        //
+        // ```text
+        // Data File and Variable Attributes
+        // ╭──────────────────┬─────╮
+        // │Variable and Name │Value│
+        // ├──────────────────┼─────┤
+        // │variable0 $@Role  │0    │
+        // ├──────────────────┼─────┤
+        // │variable1 $@Role  │0    │
+        // ├──────────────────┼─────┤
+        // │variable2 $@Role  │0    │
+        // ├──────────────────┼─────┤
+        // │variable3 $@Role  │0    │
+        // ╰──────────────────┴─────╯
+        // ```
+        if self.row_label_position == LabelPosition::Corner {
+            let mut corner_labels = Vec::new();
+            let mut x = 0;
+            for heading in &self.headings {
+                if heading.dimension.root.show_label {
+                    corner_labels.push((x, heading));
+                }
+                x += heading.height;
+            }
+            for (i, (x0, heading)) in corner_labels.iter().copied().enumerate() {
+                let x1 = corner_labels
+                    .get(i + 1)
+                    .map_or(table.h[Axis2::X], |(x, _heading)| *x);
+                table.put(
+                    CellRect::new(x0..x1, 0..table.h[Axis2::Y]),
+                    CellInner::new(Area::Corner, heading.dimension.root.name.clone()),
+                );
             }
         }
     }

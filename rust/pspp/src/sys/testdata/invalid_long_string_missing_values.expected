@@ -10,15 +10,13 @@ Invalid long string missing value for numeric variable NUM1.
 
 Invalid long string missing value for 7-byte string variable STR4.
 
-╭──────────────────────┬────────────────────────╮
-│       Created        │    01-JAN-2011 20:53:52│
-├──────────────────────┼────────────────────────┤
-│Writer Product        │PSPP synthetic test file│
-│       Version        │1.2.3                   │
-├──────────────────────┼────────────────────────┤
-│       Compression    │None                    │
-│       Number of Cases│                       0│
-╰──────────────────────┴────────────────────────╯
+╭────────────────┬────────────────────────╮
+│Created         │    01-JAN-2011 20:53:52│
+│Writer  Product │PSPP synthetic test file│
+│        Version │1.2.3                   │
+│Compression     │None                    │
+│Number of Cases │                       0│
+╰────────────────┴────────────────────────╯
 
 ╭─────────┬──────────────────────────────╮
 │Label    │PSPP synthetic test file: ôõöø│

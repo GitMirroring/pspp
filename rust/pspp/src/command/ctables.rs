@@ -17,7 +17,7 @@
 use std::fmt::Debug;
 
 use either::Either;
-use flagset::FlagSet;
+use enumset::EnumSet;
 
 use super::{
     And, Asterisk, By, Command, Dash, Equals, Exp, Gt, InSquares, Integer, Number, Plus,
@@ -31,7 +31,7 @@ use crate::{
 
 pub(super) fn ctables_command() -> Command {
     Command {
-        allowed_states: FlagSet::full(),
+        allowed_states: EnumSet::all(),
         enhanced_only: false,
         testing_only: false,
         no_abbrev: false,

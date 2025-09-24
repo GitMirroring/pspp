@@ -18,7 +18,6 @@ use std::{
     fs::File,
     io::{BufRead, BufReader, Cursor, Seek},
     path::{Path, PathBuf},
-    sync::Arc,
 };
 
 use binrw::Endian;
@@ -31,8 +30,8 @@ use crate::{
     dictionary::Dictionary,
     identifier::Identifier,
     output::{
-        Details, Item, Text,
-        pivot::{Axis3, Dimension, Group, PivotTable, Value, tests::assert_lines_eq},
+        Item, Text,
+        pivot::{Axis3, Dimension, Group, PivotTable, tests::assert_lines_eq, value::Value},
     },
     sys::{
         WriteOptions,
@@ -242,7 +241,18 @@ fn bad_machine_integer_info_float_format() {
 
 #[test]
 fn bad_machine_integer_info_endianness() {
-    test_sack_sysfile("bad_machine_integer_info_endianness");
+    let input_filename = Path::new("src/sys/testdata")
+        .join("bad_machine_integer_info_endianness")
+        .with_extension("sack");
+    let input = String::from_utf8(std::fs::read(&input_filename).unwrap()).unwrap();
+    for (endian, extension) in [(Endian::Big, "big"), (Endian::Little, "little")] {
+        let expected_filename = input_filename
+            .with_extension(extension)
+            .with_added_extension("expected");
+        let expected = String::from_utf8(std::fs::read(&expected_filename).unwrap()).unwrap();
+        let sysfile = sack(&input, Some(&input_filename), endian).unwrap();
+        test_sysfile(Cursor::new(sysfile), &expected, &expected_filename);
+    }
 }
 
 #[test]
@@ -733,7 +743,7 @@ fn test_encrypted_sysfile(name: &str, password: &str) {
         .with_extension("sav");
     let sysfile = EncryptedFile::new(File::open(&input_filename).unwrap())
         .unwrap()
-        .unlock(password.as_bytes())
+        .unlock(password)
         .unwrap();
     let expected_filename = input_filename.with_extension("expected");
     let expected = String::from_utf8(std::fs::read(&expected_filename).unwrap()).unwrap();
@@ -809,9 +819,9 @@ where
                 }
                 output.push(pt.into());
             }
-            Item::new(Details::Group(output.into_iter().map(Arc::new).collect()))
+            output.into_iter().collect()
         }
-        Err(error) => Item::new(Details::Text(Box::new(Text::new_log(error.to_string())))),
+        Err(error) => Text::new_log(error.to_string()).into_item(),
     };
 
     let actual = output.to_string();

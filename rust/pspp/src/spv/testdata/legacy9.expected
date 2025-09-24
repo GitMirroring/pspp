@@ -1,0 +1,18 @@
+    Analysis
+Duncan[a,b]
+       │ Subset
+SP36  N│   1
+───────┼───────
+3    12│27.4817
+───────┼───────
+2    12│27.4908
+───────┼───────
+1    12│27.5442
+───────┼───────
+Sig.   │   .587
+───────┴───────
+Means for groups in homogeneous subsets are displayed.
+ Based on observed means.
+ The error term is Mean Square(Error) = ,069.
+a. Uses Harmonic Mean Sample Size = 12,000.
+b. Alpha = 0,05.

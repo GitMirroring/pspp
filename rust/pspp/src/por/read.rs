@@ -35,7 +35,7 @@ use crate::{
     dictionary::{DictIndex, Dictionary},
     format::{Error as FormatError, Format, Type, UncheckedFormat},
     identifier::{Error as IdError, Identifier},
-    output::pivot::{MetadataEntry, MetadataValue, PivotTable, Value},
+    output::pivot::{MetadataEntry, MetadataValue, PivotTable, value::Value},
     por::portable_to_windows_1252,
     variable::{MissingValueRange, MissingValues, MissingValuesError, VarType, VarWidth, Variable},
 };
@@ -122,7 +122,7 @@ impl From<&Metadata> for PivotTable {
                 MetadataEntry {
                     name: Value::new_user_text("Created"),
                     value: MetadataValue::Leaf(
-                        value.creation.map(Value::new_date_time).unwrap_or_default(),
+                        value.creation.map(Value::new_date).unwrap_or_default(),
                     ),
                 },
                 maybe_string("Product", &value.product),
@@ -1158,7 +1158,7 @@ mod tests {
     use crate::{
         data::cases_to_output,
         output::{
-            Details, Item, Text,
+            Item, Text,
             pivot::{PivotTable, tests::assert_lines_eq},
         },
         por::{PortableFile, ReadPad},
@@ -1196,9 +1196,9 @@ mod tests {
                 output.push(PivotTable::from(&metadata).into());
                 output.extend(dictionary.all_pivot_tables().into_iter().map_into());
                 output.extend(cases_to_output(&dictionary, cases));
-                Item::new(Details::Group(output.into_iter().map_into().collect()))
+                output.into_iter().collect()
             }
-            Err(error) => Item::new(Details::Text(Box::new(Text::new_log(error.to_string())))),
+            Err(error) => Text::new_log(error.to_string()).into_item(),
         };
 
         let actual = output.to_string();

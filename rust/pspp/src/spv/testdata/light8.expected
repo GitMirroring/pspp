@@ -1,0 +1,12 @@
+    Crosstabulation
+Total
+Variable B Marginal
+╭──────────────┬──────╮
+│Statistics    │      │
+├──────────────┼──────┤
+│Count         │    21│
+│Expected Count│  21.0│
+│% within A    │ 35.0%│
+│% within B    │100.0%│
+│% of Total    │ 35.0%│
+╰──────────────┴──────╯

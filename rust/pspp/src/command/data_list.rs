@@ -15,7 +15,7 @@
 // this program.  If not, see <http://www.gnu.org/licenses/>.
 
 use either::Either;
-use flagset::FlagSet;
+use enumset::EnumSet;
 
 use super::{Comma, Command, Equals, Integer, Punctuated, Seq0, Seq1, Slash};
 use crate::{
@@ -25,7 +25,7 @@ use crate::{
 
 pub(super) fn data_list_command() -> Command {
     Command {
-        allowed_states: FlagSet::full(),
+        allowed_states: EnumSet::all(),
         enhanced_only: false,
         testing_only: false,
         no_abbrev: false,
