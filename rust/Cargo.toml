@@ -3,6 +3,7 @@ members = [
   "pspp",
   "pspp-derive",
   "pspp-lsp",
+  "paper-sizes",
 ]
 default-members = ["pspp"]
 resolver = "2"
