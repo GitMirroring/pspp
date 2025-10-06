@@ -172,6 +172,74 @@ impl PaperSize {
     }
 }
 
+/// An error parsing a [PaperSize].
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum ParsePaperSizeError {
+    /// Invalid paper height.
+    InvalidHeight,
+
+    /// Invalid paper width.
+    InvalidWidth,
+
+    /// Invalid unit of measurement.
+    InvalidUnit,
+
+    /// Missing unit of measurement.
+    MissingUnit,
+
+    /// Missing delimiter.
+    MissingDelimiter,
+}
+
+impl Error for ParsePaperSizeError {}
+
+impl Display for ParsePaperSizeError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ParsePaperSizeError::InvalidHeight => write!(f, "Invalid paper height"),
+            ParsePaperSizeError::InvalidWidth => write!(f, "Invalid paper width"),
+            ParsePaperSizeError::InvalidUnit => write!(f, "Invalid unit of measurement"),
+            ParsePaperSizeError::MissingUnit => write!(f, "Missing unit in paper size"),
+            ParsePaperSizeError::MissingDelimiter => write!(f, "Missing delimiter in paper size"),
+        }
+    }
+}
+
+impl FromStr for PaperSize {
+    type Err = ParsePaperSizeError;
+
+    /// Parses a paper size that takes one of the forms `8.5x11in` or `8.5,11in`
+    /// or `8.5,11,in`, with optional white space.
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let Some((width, rest)) = s.split_once([',', 'x']) else {
+            return Err(ParsePaperSizeError::MissingDelimiter);
+        };
+        let (height, unit) = if let Some(result) = rest.split_once(',') {
+            result
+        } else if let Some(alpha) = rest.find(|c: char| c.is_alphabetic()) {
+            rest.split_at(alpha)
+        } else {
+            return Err(ParsePaperSizeError::MissingUnit);
+        };
+
+        let width = f64::from_str(width.trim()).map_err(|_| ParsePaperSizeError::InvalidWidth)?;
+        let height =
+            f64::from_str(height.trim()).map_err(|_| ParsePaperSizeError::InvalidHeight)?;
+        let unit = Unit::from_str(unit.trim()).map_err(|_| ParsePaperSizeError::InvalidUnit)?;
+        Ok(Self {
+            width,
+            height,
+            unit,
+        })
+    }
+}
+
+impl Display for PaperSize {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}x{}{}", self.width, self.height, self.unit)
+    }
+}
+
 /// An error parsing a [PaperSpec].
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum ParsePaperSpecError {
@@ -186,6 +254,18 @@ pub enum ParsePaperSpecError {
 
     /// Missing field in paper specification.
     MissingField,
+}
+
+impl From<ParsePaperSizeError> for ParsePaperSpecError {
+    fn from(value: ParsePaperSizeError) -> Self {
+        match value {
+            ParsePaperSizeError::InvalidHeight => Self::InvalidHeight,
+            ParsePaperSizeError::InvalidWidth => Self::InvalidWidth,
+            ParsePaperSizeError::InvalidUnit => Self::InvalidUnit,
+            ParsePaperSizeError::MissingUnit => Self::MissingField,
+            ParsePaperSizeError::MissingDelimiter => Self::MissingField,
+        }
+    }
 }
 
 impl Error for ParsePaperSpecError {}
@@ -224,23 +304,16 @@ impl PaperSpec {
 impl FromStr for PaperSpec {
     type Err = ParsePaperSpecError;
 
+    /// Parses a paper specification as `name,<size>`, where `<size>` is one of
+    /// the formats supported by [PaperSize::from_str].
+    ///
+    /// The canonical form of a paper specification is `name,width,height,unit`.
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut tokens = s.split(',').map(|s| s.trim());
-        if let Some(name) = tokens.next()
-            && let Some(width) = tokens.next()
-            && let Some(height) = tokens.next()
-            && let Some(unit) = tokens.next()
-        {
-            let width = f64::from_str(width).map_err(|_| ParsePaperSpecError::InvalidWidth)?;
-            let height = f64::from_str(height).map_err(|_| ParsePaperSpecError::InvalidHeight)?;
-            let unit = Unit::from_str(unit).map_err(|_| ParsePaperSpecError::InvalidUnit)?;
-            Ok(Self {
-                name: String::from(name).into(),
-                size: PaperSize::new(width, height, unit),
-            })
-        } else {
-            Err(ParsePaperSpecError::MissingField)
-        }
+        let (name, size) = s.split_once(',').ok_or(ParsePaperSpecError::MissingField)?;
+        Ok(Self {
+            name: String::from(name).into(),
+            size: size.parse()?,
+        })
     }
 }
 
@@ -660,10 +733,11 @@ impl Catalog {
 
 #[cfg(test)]
 mod tests {
-    use std::{borrow::Cow, path::Path};
+    use std::{borrow::Cow, path::Path, str::FromStr};
 
     use crate::{
-        CatalogBuildError, CatalogBuilder, PaperSize, PaperSpec, ParsePaperSpecError, Unit, locale,
+        A4, CatalogBuildError, CatalogBuilder, PaperSize, PaperSpec, ParsePaperSizeError,
+        ParsePaperSpecError, Unit, locale,
     };
 
     #[test]
@@ -715,9 +789,57 @@ mod tests {
     }
 
     #[test]
+    fn papersize() {
+        assert_eq!(
+            "8.5x11in".parse(),
+            Ok(PaperSize::new(8.5, 11.0, Unit::Inch))
+        );
+        assert_eq!(
+            "8.5,11in".parse(),
+            Ok(PaperSize::new(8.5, 11.0, Unit::Inch))
+        );
+        assert_eq!(
+            " 8.5 x 11 in ".parse(),
+            Ok(PaperSize::new(8.5, 11.0, Unit::Inch))
+        );
+        assert_eq!(
+            PaperSize::from_str("8.5x.in"),
+            Err(ParsePaperSizeError::InvalidHeight)
+        );
+        assert_eq!(
+            PaperSize::from_str(".x11in"),
+            Err(ParsePaperSizeError::InvalidWidth)
+        );
+        assert_eq!(
+            PaperSize::from_str("8.5x11xyzzy"),
+            Err(ParsePaperSizeError::InvalidUnit)
+        );
+        assert_eq!(
+            PaperSize::from_str("8.5x11"),
+            Err(ParsePaperSizeError::MissingUnit)
+        );
+        assert_eq!(
+            PaperSize::from_str(" 8.5  11 in "),
+            Err(ParsePaperSizeError::MissingDelimiter)
+        );
+        assert_eq!(
+            PaperSize::new(8.5, 11.0, Unit::Inch).to_string(),
+            "8.5x11in"
+        );
+        assert_eq!(A4.size.to_string(), "210x297mm");
+    }
+
+    #[test]
     fn paperspec() {
         assert_eq!(
             "Letter,8.5,11,in".parse(),
+            Ok(PaperSpec::new(
+                Cow::from("Letter"),
+                PaperSize::new(8.5, 11.0, Unit::Inch)
+            ))
+        );
+        assert_eq!(
+            "Letter,8.5x11in".parse(),
             Ok(PaperSpec::new(
                 Cow::from("Letter"),
                 PaperSize::new(8.5, 11.0, Unit::Inch)
