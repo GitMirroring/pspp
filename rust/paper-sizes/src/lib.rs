@@ -240,6 +240,29 @@ impl Display for PaperSize {
     }
 }
 
+#[cfg(feature = "serde")]
+impl serde::Serialize for PaperSize {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        self.to_string().serialize(serializer)
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de> serde::Deserialize<'de> for PaperSize {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        use serde::de::Error;
+        String::deserialize(deserializer)?
+            .parse()
+            .map_err(D::Error::custom)
+    }
+}
+
 /// An error parsing a [PaperSpec].
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum ParsePaperSpecError {
@@ -1004,5 +1027,18 @@ mod tests {
                 "Expected A4 (210x297) or letter (216x279) paper, got {w}x{h} mm"
             );
         }
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn test_serde() {
+        assert_eq!(
+            serde_json::to_string(&PaperSize::new(8.5, 11.0, Unit::Inch)).unwrap(),
+            "\"8.5x11in\""
+        );
+        assert_eq!(
+            serde_json::from_str::<PaperSize>("\"8.5x11in\"").unwrap(),
+            PaperSize::new(8.5, 11.0, Unit::Inch)
+        )
     }
 }
