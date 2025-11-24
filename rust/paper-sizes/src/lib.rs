@@ -42,6 +42,9 @@ use xdg::BaseDirectories;
 #[cfg(target_os = "linux")]
 mod locale;
 
+#[cfg(feature = "serde")]
+mod serde;
+
 include!(concat!(env!("OUT_DIR"), "/paperspecs.rs"));
 
 static PAPERSIZE_FILENAME: &str = "papersize";
@@ -68,6 +71,14 @@ pub enum Unit {
 /// [Unit] name cannot be parsed.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct ParseUnitError;
+
+impl Error for ParseUnitError {}
+
+impl Display for ParseUnitError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "unknown unit")
+    }
+}
 
 impl FromStr for Unit {
     type Err = ParseUnitError;
@@ -98,7 +109,7 @@ impl Unit {
     ///
     /// To convert a quantity of unit `a` into unit `b`, multiply by
     /// `a.as_unit(b)`.
-    fn as_unit(&self, other: Unit) -> f64 {
+    pub fn as_unit(&self, other: Unit) -> f64 {
         match (*self, other) {
             (Unit::Point, Unit::Point) => 1.0,
             (Unit::Point, Unit::Inch) => 1.0 / 72.0,
@@ -116,6 +127,80 @@ impl Unit {
 impl Display for Unit {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.name())
+    }
+}
+
+/// A physical length with a [Unit].
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub struct Length {
+    /// The length.
+    pub value: f64,
+
+    /// The length's unit.
+    pub unit: Unit,
+}
+
+impl Length {
+    /// Constructs a new `Length` from `value` and `unit`.
+    pub fn new(value: f64, unit: Unit) -> Self {
+        Self { value, unit }
+    }
+
+    /// Returns this length converted to `unit`.
+    pub fn as_unit(&self, unit: Unit) -> Self {
+        Self {
+            value: self.value * unit.as_unit(Unit::Inch),
+            unit,
+        }
+    }
+
+    /// Returns the value of this length in `unit`.
+    pub fn into_unit(&self, unit: Unit) -> f64 {
+        self.as_unit(unit).value
+    }
+}
+
+/// An error parsing a [Length].
+#[derive(Copy, Clone, Debug)]
+pub enum ParseLengthError {
+    /// Missing unit.
+    MissingUnit,
+    /// Invalid unit.
+    InvalidUnit,
+    /// Invalid value
+    InvalidValue,
+}
+
+impl Error for ParseLengthError {}
+
+impl Display for ParseLengthError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ParseLengthError::MissingUnit => write!(f, "Missing unit"),
+            ParseLengthError::InvalidUnit => write!(f, "Invalid unit of measurement"),
+            ParseLengthError::InvalidValue => write!(f, "Invalid length"),
+        }
+    }
+}
+
+impl FromStr for Length {
+    type Err = ParseLengthError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if let Some(index) = s.find(|c: char| c.is_alphabetic()) {
+            let (value, unit) = s.split_at(index);
+            let value = value.parse().map_err(|_| ParseLengthError::InvalidValue)?;
+            let unit = unit.parse().map_err(|_| ParseLengthError::InvalidUnit)?;
+            Ok(Self { value, unit })
+        } else {
+            Err(ParseLengthError::MissingUnit)
+        }
+    }
+}
+
+impl Display for Length {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}{}", self.value, self.unit)
     }
 }
 
@@ -169,6 +254,16 @@ impl PaperSize {
         let (aw, ah) = self.as_unit(unit).into_width_height();
         let (bw, bh) = other.as_unit(unit).into_width_height();
         aw.round() == bw.round() && ah.round() == bh.round()
+    }
+
+    /// Returns the paper's width as a [Length].
+    pub fn width(&self) -> Length {
+        Length::new(self.width, self.unit)
+    }
+
+    /// Returns the paper's height as a [Length].
+    pub fn height(&self) -> Length {
+        Length::new(self.height, self.unit)
     }
 }
 
@@ -237,29 +332,6 @@ impl FromStr for PaperSize {
 impl Display for PaperSize {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}x{}{}", self.width, self.height, self.unit)
-    }
-}
-
-#[cfg(feature = "serde")]
-impl serde::Serialize for PaperSize {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        self.to_string().serialize(serializer)
-    }
-}
-
-#[cfg(feature = "serde")]
-impl<'de> serde::Deserialize<'de> for PaperSize {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        use serde::de::Error;
-        String::deserialize(deserializer)?
-            .parse()
-            .map_err(D::Error::custom)
     }
 }
 
@@ -1027,18 +1099,5 @@ mod tests {
                 "Expected A4 (210x297) or letter (216x279) paper, got {w}x{h} mm"
             );
         }
-    }
-
-    #[cfg(feature = "serde")]
-    #[test]
-    fn test_serde() {
-        assert_eq!(
-            serde_json::to_string(&PaperSize::new(8.5, 11.0, Unit::Inch)).unwrap(),
-            "\"8.5x11in\""
-        );
-        assert_eq!(
-            serde_json::from_str::<PaperSize>("\"8.5x11in\"").unwrap(),
-            PaperSize::new(8.5, 11.0, Unit::Inch)
-        )
     }
 }
