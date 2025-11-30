@@ -149,7 +149,7 @@ impl Length {
     /// Returns this length converted to `unit`.
     pub fn as_unit(&self, unit: Unit) -> Self {
         Self {
-            value: self.value * unit.as_unit(Unit::Inch),
+            value: self.value * self.unit.as_unit(unit),
             unit,
         }
     }
@@ -831,7 +831,7 @@ mod tests {
     use std::{borrow::Cow, path::Path, str::FromStr};
 
     use crate::{
-        A4, CatalogBuildError, CatalogBuilder, PaperSize, PaperSpec, ParsePaperSizeError,
+        A4, CatalogBuildError, CatalogBuilder, Length, PaperSize, PaperSpec, ParsePaperSizeError,
         ParsePaperSpecError, Unit, locale,
     };
 
@@ -879,6 +879,67 @@ mod tests {
         );
         assert_eq!(
             format!("{:.3}", 12.7 * Unit::Millimeter.as_unit(Unit::Point)),
+            "36.000"
+        );
+    }
+
+    #[test]
+    fn length() {
+        assert_eq!(
+            format!(
+                "{:.3}",
+                Length::new(1.0, Unit::Inch).into_unit(Unit::Millimeter)
+            ),
+            "25.400"
+        );
+        assert_eq!(
+            format!("{:.3}", Length::new(1.0, Unit::Inch).into_unit(Unit::Inch)),
+            "1.000"
+        );
+        assert_eq!(
+            format!("{:.3}", Length::new(1.0, Unit::Inch).into_unit(Unit::Point)),
+            "72.000"
+        );
+        assert_eq!(
+            format!(
+                "{:.3}",
+                Length::new(36.0, Unit::Point).into_unit(Unit::Millimeter)
+            ),
+            "12.700"
+        );
+        assert_eq!(
+            format!(
+                "{:.3}",
+                Length::new(36.0, Unit::Point).into_unit(Unit::Inch)
+            ),
+            "0.500"
+        );
+        assert_eq!(
+            format!(
+                "{:.3}",
+                Length::new(36.0, Unit::Point).into_unit(Unit::Point)
+            ),
+            "36.000"
+        );
+        assert_eq!(
+            format!(
+                "{:.3}",
+                Length::new(12.7, Unit::Millimeter).into_unit(Unit::Millimeter)
+            ),
+            "12.700"
+        );
+        assert_eq!(
+            format!(
+                "{:.3}",
+                Length::new(12.7, Unit::Millimeter).into_unit(Unit::Inch)
+            ),
+            "0.500"
+        );
+        assert_eq!(
+            format!(
+                "{:.3}",
+                Length::new(12.7, Unit::Millimeter).into_unit(Unit::Point)
+            ),
             "36.000"
         );
     }
