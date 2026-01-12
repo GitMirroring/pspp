@@ -589,7 +589,7 @@ impl Area {
                     0 => Some(HorzAlign::Center),
                     2 => Some(HorzAlign::Left),
                     4 => Some(HorzAlign::Right),
-                    61473 => None,
+                    64173 => None,
                     _ => {
                         warn(LightWarning::InvalidHorizontalAlignment {
                             index,
