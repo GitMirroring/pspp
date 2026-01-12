@@ -9,8 +9,8 @@
 //! <https://cldr.unicode.org/index/downloads>, rename it as
 //! `cldr-json-full.zip` in the same directory as `build.rs`,
 //! and touch `build.rs` to force a rebuild.
-use crate::format::Decimal;
 use std::{collections::HashMap, sync::LazyLock};
+use crate::format::Decimal;
 
 /// Map from language to decimal point.
 pub static LANG_TO_DECIMAL: LazyLock<HashMap<&'static str, Decimal>> = LazyLock::new(|| {

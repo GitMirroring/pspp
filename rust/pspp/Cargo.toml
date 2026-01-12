@@ -1,6 +1,6 @@
 [package]
 name = "pspp"
-version = "0.5.0"
+version = "0.6.0"
 edition = "2024"
 authors = [ "Ben Pfaff", "John Darrington" ]
 description = "Statistical analysis software"
@@ -54,7 +54,7 @@ displaydoc = "0.2.5"
 codepage-437 = "0.1.0"
 serde_path_to_error = "0.1.20"
 html_parser = "0.7.0"
-paper-sizes = { path = "../paper-sizes", features = ["serde"] }
+paper-sizes = { path = "../paper-sizes", version = "0.4.0", features = ["serde"] }
 enumset = "1.1.10"
 bit-vec = "0.8.0"
 erased-serde = "0.4.9"
