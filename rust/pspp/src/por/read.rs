@@ -313,7 +313,7 @@ pub enum Warning {
     /// Invalid time {0}.
     InvalidTime(String),
 
-    /// Invalid variable name.
+    /// Renaming variable with invalid name to {new_name}.  {id_error}
     InvalidVariableName {
         /// Identifier error.
         id_error: IdError,
