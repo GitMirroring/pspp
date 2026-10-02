@@ -37,7 +37,6 @@ struct casewriter
   {
     struct taint *taint;
     struct caseproto *proto;
-    casenumber n_cases;
     const struct casewriter_class *class;
     void *aux;
   };
@@ -160,7 +159,6 @@ casewriter_create (const struct caseproto *proto,
   struct casewriter *writer = xmalloc (sizeof *writer);
   writer->taint = taint_create ();
   writer->proto = caseproto_ref (proto);
-  writer->n_cases = 0;
   writer->class = class;
   writer->aux = aux;
   return writer;
