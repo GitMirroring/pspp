@@ -542,6 +542,15 @@ proc_is_open (const struct dataset *ds)
   return ds->proc_state != PROC_COMMITTED;
 }
 
+/* Returns the number of cases that have been written to the new active file.
+   A procedure must be in progress. */
+casenumber
+proc_get_cases_written (const struct dataset *ds)
+{
+  assert (proc_is_open (ds));
+  return ds->cases_written;
+}
+
 /* "read" function for procedure casereader. */
 static struct ccase *
 proc_casereader_read (struct casereader *reader UNUSED, void *ds_)

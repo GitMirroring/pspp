@@ -21,7 +21,9 @@
 #include <math.h>
 #include <stdlib.h>
 
+#include "data/case.h"
 #include "data/casegrouper.h"
+#include "data/caseproto.h"
 #include "data/casereader.h"
 #include "data/casewriter.h"
 #include "data/dataset.h"
@@ -76,7 +78,8 @@ struct dsc_trns
     enum dsc_missing_type missing_type; /* Treatment of missing values. */
     enum mv_class exclude;      /* Classes of missing values to exclude. */
     const struct variable *filter;    /* Dictionary FILTER BY variable. */
-    struct casereader *z_reader; /* Reader for count, mean, stddev. */
+    struct casereader *z_stats_reader; /* Reader for count, mean, stddev. */
+    struct casereader *z_values_reader; /* Reader for Z score input values. */
     casenumber count;            /* Number left in this SPLIT FILE group.*/
     bool ok;
   };
@@ -129,6 +132,7 @@ struct dsc_var
   {
     const struct variable *v;         /* Variable to calculate on. */
     char *z_name;                     /* Name for z-score variable. */
+    char *z_label;                    /* Label for z-score variable. */
     double valid;                     /* Valid count. */
     struct moments *moments;    /* Moments. */
     double min, max;            /* Maximum and mimimum values. */
@@ -158,7 +162,9 @@ struct dsc_proc
     enum moment max_moment;     /* Highest moment needed for stats. */
 
     /* Z scores. */
-    struct casewriter *z_writer; /* Mean and stddev per SPLIT FILE group. */
+    struct casewriter *mean_stddev_writer; /* Mean and stddev per SPLIT FILE group. */
+    struct casewriter *values_writer;      /* Values to be scored. */
+    casenumber values_written;             /* Number of cases written to values_writer. */
   };
 
 /* Parsing. */
@@ -176,7 +182,7 @@ static void setup_z_trns (struct dsc_proc *, struct dataset *);
 
 /* Procedure execution functions. */
 static void calc_descriptives (struct dsc_proc *, struct casereader *,
-                               struct dataset *);
+                               struct dataset *, struct variable *order_var);
 static void display (struct dsc_proc *dsc);
 
 /* Parser and outline. */
@@ -205,7 +211,6 @@ cmd_descriptives (struct lexer *lexer, struct dataset *ds)
   };
 
   /* Parse DESCRIPTIVES. */
-  int z_ofs = 0;
   while (lex_token (lexer) != T_ENDCMD)
     {
       if (lex_match_id (lexer, "MISSING"))
@@ -229,10 +234,7 @@ cmd_descriptives (struct lexer *lexer, struct dataset *ds)
             }
         }
       else if (lex_match_id (lexer, "SAVE"))
-        {
-          save_z_scores = true;
-          z_ofs = lex_ofs (lexer) - 1;
-        }
+        save_z_scores = true;
       else if (lex_match_id (lexer, "FORMAT"))
         {
           lex_match (lexer, T_EQUALS);
@@ -322,7 +324,6 @@ cmd_descriptives (struct lexer *lexer, struct dataset *ds)
                 {
                   if (!lex_force_id (lexer))
                     goto error;
-                  z_ofs = lex_ofs (lexer);
                   if (try_name (dict, dsc, lex_tokcstr (lexer)))
                     {
                       struct dsc_var *dsc_var = &dsc->vars[dsc->n_vars - 1];
@@ -374,21 +375,48 @@ cmd_descriptives (struct lexer *lexer, struct dataset *ds)
 
                   n_zs++;
                 }
+              dsc_var->z_label = xasprintf (_("Z-score of %s"),
+                                            var_to_string (dsc_var->v));
             }
         }
 
-      /* It would be better to handle Z scores correctly (however we define
-         that) when TEMPORARY is in effect, but in the meantime this at least
-         prevents a use-after-free error.  See bug #38786.  */
-      if (proc_make_temporary_transformations_permanent (ds))
-        lex_ofs_msg (lexer, SW, z_ofs, z_ofs,
-                     _("DESCRIPTIVES with Z scores ignores TEMPORARY.  "
-                       "Temporary transformations will be made permanent."));
-
+      /* Create a casewriter for mean and standard deviation.  We will write
+         one case per SPLIT FILE group. */
       struct caseproto *proto = caseproto_create ();
       for (size_t i = 0; i < 1 + 2 * n_zs; i++)
         proto = caseproto_add_width (proto, 0);
-      dsc->z_writer = autopaging_writer_create (proto);
+      dsc->mean_stddev_writer = autopaging_writer_create (proto);
+      caseproto_unref (proto);
+
+      /* Create a casewriter for the values to be scored.  We will write one
+         case for each case in the new active file.
+
+         In the most common case, this isn't really necessary, because the new
+         active file has the variables to be scored.  It is needed for syntax
+         like the following, where the variable for which the Z scores are
+         computed is temporary:
+
+         DATA LIST LIST NOTABLE /x.
+         BEGIN DATA.
+         1
+         2
+         3
+         4
+         5
+         6
+         7
+         END DATA.
+
+         TEMPORARY.
+         COMPUTE y = x * 2.
+
+         DESCRIPTIVES /VAR=y /SAVE.
+         LIST.
+      */
+      proto = caseproto_create ();
+      for (size_t i = 0; i < 1 + n_zs; i++)
+        proto = caseproto_add_width (proto, 0);
+      dsc->values_writer = autopaging_writer_create (proto);
       caseproto_unref (proto);
 
       dump_z_table (dsc);
@@ -422,13 +450,20 @@ cmd_descriptives (struct lexer *lexer, struct dataset *ds)
       dsc->vars[i].moments = moments_create (dsc->max_moment);
 
   /* Data pass. */
+  struct variable *order_var = (n_zs ? add_permanent_ordering_transformation (ds) : NULL);
   struct casegrouper *grouper = casegrouper_create_splits (proc_open_filtering (
                                                              ds, false), dict);
   struct casereader *group;
   while (casegrouper_get_next_group (grouper, &group))
-    calc_descriptives (dsc, group, ds);
+    calc_descriptives (dsc, group, ds, order_var);
   bool ok = casegrouper_destroy (grouper);
   ok = proc_commit (ds) && ok;
+  if (n_zs)
+    {
+      dict = dataset_dict (ds);
+      order_var = dict_lookup_var_assert (dict, "$ORDER");
+      dataset_delete_vars (ds, &order_var, 1);
+    }
 
   /* Z-scoring! */
   if (ok && n_zs)
@@ -480,9 +515,11 @@ free_dsc_proc (struct dsc_proc *dsc)
     {
       struct dsc_var *dsc_var = &dsc->vars[i];
       free (dsc_var->z_name);
+      free (dsc_var->z_label);
       moments_destroy (dsc_var->moments);
     }
-  casewriter_destroy (dsc->z_writer);
+  casewriter_destroy (dsc->mean_stddev_writer);
+  casewriter_destroy (dsc->values_writer);
   free (dsc->vars);
   free (dsc);
 }
@@ -598,7 +635,7 @@ descriptives_set_all_sysmis_zscores (const struct dsc_trns *t, struct ccase *c)
 */
 static enum trns_result
 descriptives_trns_proc (void *trns_, struct ccase **c,
-                        casenumber case_idx UNUSED)
+                        casenumber case_idx)
 {
   struct dsc_trns *t = trns_;
 
@@ -631,7 +668,7 @@ descriptives_trns_proc (void *trns_, struct ccase **c,
 
   if (t->count <= 0)
     {
-      struct ccase *z_case = casereader_read (t->z_reader);
+      struct ccase *z_case = casereader_read (t->z_stats_reader);
       if (z_case)
         {
           size_t z_idx = 0;
@@ -647,31 +684,33 @@ descriptives_trns_proc (void *trns_, struct ccase **c,
         }
       else
         {
-          if (t->ok)
-            {
-              msg (SE,  _("Internal error processing Z scores.  "
-                          "Please report this to %s."),
-                   PACKAGE_BUGREPORT);
-              t->ok = false;
-            }
           descriptives_set_all_sysmis_zscores (t, *c);
           return TRNS_CONTINUE;
         }
     }
   t->count--;
 
-  for (struct dsc_z_score *z = t->z_scores; z < t->z_scores + t->n_z_scores;
-       z++)
+  struct ccase *inputs = casereader_peek (t->z_values_reader, 0);
+  if (!inputs || case_num_idx (inputs, 0) != case_idx)
+    descriptives_set_all_sysmis_zscores (t, *c);
+  else
     {
-      double input = case_num (*c, z->src_var);
-      double *output = case_num_rw (*c, z->z_var);
+      inputs = casereader_read (t->z_values_reader);
+      for (size_t i = 0; i < t->n_z_scores; i++)
+        {
+          struct dsc_z_score *z = &t->z_scores[i];
+          double input = inputs ? case_num_idx (inputs, i + 1) : SYSMIS;
+          double *output = case_num_rw (*c, z->z_var);
 
-      if (z->mean == SYSMIS || z->std_dev == SYSMIS
-          || var_is_num_missing (z->src_var, input) & t->exclude)
-        *output = SYSMIS;
-      else
-        *output = (input - z->mean) / z->std_dev;
+          if (z->mean == SYSMIS || z->std_dev == SYSMIS)
+            *output = SYSMIS;
+          else
+            *output = (input - z->mean) / z->std_dev;
+
+          //printf ("%f (%f, %f) -> %f\n", input, z->mean, z->std_dev, *output);
+        }
     }
+
   return TRNS_CONTINUE;
 }
 
@@ -680,10 +719,11 @@ static bool
 descriptives_trns_free (void *trns_)
 {
   struct dsc_trns *t = trns_;
-  bool ok = t->ok && !casereader_error (t->z_reader);
+  bool ok = t->ok && !casereader_error (t->z_stats_reader);
 
   free (t->z_scores);
-  casereader_destroy (t->z_reader);
+  casereader_destroy (t->z_stats_reader);
+  casereader_destroy (t->z_values_reader);
   assert ((t->missing_type != DSC_LISTWISE) != (t->vars != NULL));
   free (t->vars);
   free (t);
@@ -713,7 +753,8 @@ setup_z_trns (struct dsc_proc *dsc, struct dataset *ds)
     .missing_type = dsc->missing_type,
     .exclude = dsc->exclude,
     .filter = dict_get_filter (dataset_dict (ds)),
-    .z_reader = casewriter_make_reader (dsc->z_writer),
+    .z_stats_reader = casewriter_make_reader (dsc->mean_stddev_writer),
+    .z_values_reader = casewriter_make_reader (dsc->values_writer),
     .ok = true,
   };
   if (t->missing_type == DSC_LISTWISE)
@@ -723,7 +764,8 @@ setup_z_trns (struct dsc_proc *dsc, struct dataset *ds)
       for (size_t i = 0; i < t->n_vars; i++)
         t->vars[i] = dsc->vars[i].v;
     }
-  dsc->z_writer = NULL;
+  dsc->mean_stddev_writer = NULL;
+  dsc->values_writer = NULL;
 
   n = 0;
   for (size_t i = 0; i < dsc->n_vars; i++)
@@ -733,10 +775,7 @@ setup_z_trns (struct dsc_proc *dsc, struct dataset *ds)
         {
           struct variable *dst_var = dict_create_var_assert (dataset_dict (ds),
                                                              dv->z_name, 0);
-
-          char *label = xasprintf (_("Z-score of %s"), var_to_string (dv->v));
-          var_set_label (dst_var, label);
-          free (label);
+          var_set_label (dst_var, dv->z_label);
 
           struct dsc_z_score *z = &t->z_scores[n++];
           *z = (struct dsc_z_score) {
@@ -757,7 +796,7 @@ static bool listwise_missing (struct dsc_proc *dsc, const struct ccase *c);
    in CF. */
 static void
 calc_descriptives (struct dsc_proc *dsc, struct casereader *group,
-                   struct dataset *ds)
+                   struct dataset *ds, struct variable *order_var)
 {
   output_split_file_values_peek (ds, group);
   group = casereader_create_filter_weight (group, dataset_dict (ds),
@@ -803,6 +842,28 @@ calc_descriptives (struct dsc_proc *dsc, struct casereader *group,
         }
       else
         dsc->valid_listwise += weight;
+
+      if (dsc->values_writer != NULL)
+        {
+          /* Write data values for this case. */
+          struct ccase *co = case_create (casewriter_get_proto (dsc->values_writer));
+          size_t co_idx = 0;
+          *case_num_rw_idx (co, co_idx++) = case_num (c, order_var);
+          for (size_t i = 0; i < dsc->n_vars; i++)
+            {
+              struct dsc_var *dv = &dsc->vars[i];
+              if (dv->z_name)
+                {
+                  double x = case_num (c, dv->v);
+                  if (var_is_num_missing (dv->v, x) & dsc->exclude)
+                    x = SYSMIS;
+                  *case_num_rw_idx (co, co_idx++) = x;
+                  //printf ("%f, ", x);
+                }
+            }
+          //printf ("\n");
+          casewriter_write (dsc->values_writer, co);
+        }
 
       for (size_t i = 0; i < dsc->n_vars; i++)
         {
@@ -866,9 +927,9 @@ calc_descriptives (struct dsc_proc *dsc, struct casereader *group,
 
   /* Calculate results. */
   size_t z_idx = 0;
-  if (dsc->z_writer && count > 0)
+  if (dsc->mean_stddev_writer && count > 0)
     {
-      c = case_create (casewriter_get_proto (dsc->z_writer));
+      c = case_create (casewriter_get_proto (dsc->mean_stddev_writer));
       *case_num_rw_idx (c, z_idx++) = count;
     }
   else
@@ -914,7 +975,7 @@ calc_descriptives (struct dsc_proc *dsc, struct casereader *group,
     }
 
   if (c != NULL)
-    casewriter_write (dsc->z_writer, c);
+    casewriter_write (dsc->mean_stddev_writer, c);
 
   /* Output results. */
   display (dsc);

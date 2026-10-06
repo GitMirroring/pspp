@@ -108,7 +108,8 @@ time_t time_of_last_procedure (struct dataset *ds);
 
 struct casereader *proc_open_filtering (struct dataset *, bool filter);
 struct casereader *proc_open (struct dataset *);
-bool proc_is_open (const struct dataset *);
+bool proc_is_open(const struct dataset *);
+casenumber proc_get_cases_written (const struct dataset *);
 bool proc_commit (struct dataset *);
 
 bool dataset_end_of_command (struct dataset *);
