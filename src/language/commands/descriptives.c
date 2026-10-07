@@ -619,14 +619,6 @@ dump_z_table (struct dsc_proc *dsc)
   pivot_table_submit (table);
 }
 
-static void
-descriptives_set_all_sysmis_zscores (const struct dsc_trns *t, struct ccase *c)
-{
-  for (const struct dsc_z_score *z = t->z_scores;
-       z < t->z_scores + t->n_z_scores; z++)
-    *case_num_rw (c, z->z_var) = SYSMIS;
-}
-
 /* Transformation function to calculate Z-scores. Will return SYSMIS if any of
    the following are true: 1) mean or standard deviation is SYSMIS 2) score is
    SYSMIS 3) score is user missing and they were not included in the original
@@ -641,14 +633,15 @@ descriptives_trns_proc (void *trns_, struct ccase **c,
 
   *c = case_unshare (*c);
 
+  for (const struct dsc_z_score *z = t->z_scores;
+       z < t->z_scores + t->n_z_scores; z++)
+    *case_num_rw (*c, z->z_var) = SYSMIS;
+
   if (t->filter)
     {
       double f = case_num (*c, t->filter);
       if (f == 0.0 || var_is_num_missing (t->filter, f))
-        {
-          descriptives_set_all_sysmis_zscores (t, *c);
-          return TRNS_CONTINUE;
-        }
+        return TRNS_CONTINUE;
     }
 
   if (t->missing_type == DSC_LISTWISE)
@@ -659,57 +652,48 @@ descriptives_trns_proc (void *trns_, struct ccase **c,
         {
           double score = case_num (*c, *vars);
           if (var_is_num_missing (*vars, score) & t->exclude)
-            {
-              descriptives_set_all_sysmis_zscores (t, *c);
-              return TRNS_CONTINUE;
-            }
+            return TRNS_CONTINUE;
         }
     }
+
+  struct ccase *inputs = casereader_peek (t->z_values_reader, 0);
+  bool include = inputs && case_num_idx (inputs, 0) == case_idx;
+  case_unref (inputs);
+  if (!include)
+    return TRNS_CONTINUE;
 
   if (t->count <= 0)
     {
       struct ccase *z_case = casereader_read (t->z_stats_reader);
-      if (z_case)
-        {
-          size_t z_idx = 0;
+      if (!z_case)
+        return TRNS_CONTINUE;
 
-          t->count = case_num_idx (z_case, z_idx++);
-          for (struct dsc_z_score *z = t->z_scores;
-               z < t->z_scores + t->n_z_scores; z++)
-            {
-              z->mean = case_num_idx (z_case, z_idx++);
-              z->std_dev = case_num_idx (z_case, z_idx++);
-            }
-          case_unref (z_case);
-        }
-      else
+      size_t z_idx = 0;
+
+      t->count = case_num_idx (z_case, z_idx++);
+      for (struct dsc_z_score *z = t->z_scores;
+           z < t->z_scores + t->n_z_scores; z++)
         {
-          descriptives_set_all_sysmis_zscores (t, *c);
-          return TRNS_CONTINUE;
+          z->mean = case_num_idx (z_case, z_idx++);
+          z->std_dev = case_num_idx (z_case, z_idx++);
         }
+      case_unref (z_case);
     }
   t->count--;
 
-  struct ccase *inputs = casereader_peek (t->z_values_reader, 0);
-  if (!inputs || case_num_idx (inputs, 0) != case_idx)
-    descriptives_set_all_sysmis_zscores (t, *c);
-  else
+  inputs = casereader_read(t->z_values_reader);
+  for (size_t i = 0; i < t->n_z_scores; i++)
     {
-      inputs = casereader_read (t->z_values_reader);
-      for (size_t i = 0; i < t->n_z_scores; i++)
-        {
-          struct dsc_z_score *z = &t->z_scores[i];
-          double input = inputs ? case_num_idx (inputs, i + 1) : SYSMIS;
-          double *output = case_num_rw (*c, z->z_var);
+      struct dsc_z_score *z = &t->z_scores[i];
+      double input = inputs ? case_num_idx (inputs, i + 1) : SYSMIS;
+      double *output = case_num_rw (*c, z->z_var);
 
-          if (z->mean == SYSMIS || z->std_dev == SYSMIS)
-            *output = SYSMIS;
-          else
-            *output = (input - z->mean) / z->std_dev;
-
-          //printf ("%f (%f, %f) -> %f\n", input, z->mean, z->std_dev, *output);
-        }
+      if (input == SYSMIS || z->mean == SYSMIS || z->std_dev == SYSMIS)
+        *output = SYSMIS;
+      else
+        *output = (input - z->mean) / z->std_dev;
     }
+  case_unref(inputs);
 
   return TRNS_CONTINUE;
 }
@@ -858,10 +842,8 @@ calc_descriptives (struct dsc_proc *dsc, struct casereader *group,
                   if (var_is_num_missing (dv->v, x) & dsc->exclude)
                     x = SYSMIS;
                   *case_num_rw_idx (co, co_idx++) = x;
-                  //printf ("%f, ", x);
                 }
             }
-          //printf ("\n");
           casewriter_write (dsc->values_writer, co);
         }
 
