@@ -17,9 +17,11 @@
 #include <config.h>
 
 #include <gsl/gsl_matrix.h>
+#include <gsl/gsl_matrix_double.h>
 #include <gsl/gsl_permutation.h>
 #include <gsl/gsl_sort_vector.h>
 #include <gsl/gsl_statistics.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -90,8 +92,6 @@ struct qc
     bool initial;             /* false => simplified initial cluster selection */
     bool update;               /* false => do not iterate  */
 
-    const struct variable *wv;        /* Weighting variable. */
-
     enum missing_type missing_type;
     enum mv_class exclude;
 
@@ -118,7 +118,7 @@ struct Kmeans
     gsl_matrix *updated_centers;
     casenumber n;
 
-    gsl_vector_long *num_elements_groups;
+    gsl_vector *num_elements_groups;
 
     gsl_matrix *initial_centers;        /* Initial random centers. */
     double convergence_criteria;
@@ -164,7 +164,7 @@ kmeans_create (const struct qc *qc)
   *kmeans = (struct Kmeans) {
     .centers = gsl_matrix_alloc (qc->ngroups, qc->n_vars),
     .updated_centers = gsl_matrix_alloc (qc->ngroups, qc->n_vars),
-    .num_elements_groups = gsl_vector_long_alloc (qc->ngroups),
+    .num_elements_groups = gsl_vector_alloc (qc->ngroups),
     .group_order = gsl_permutation_alloc (qc->ngroups),
   };
   return kmeans;
@@ -177,7 +177,7 @@ kmeans_destroy (struct Kmeans *kmeans)
   gsl_matrix_free (kmeans->updated_centers);
   gsl_matrix_free (kmeans->initial_centers);
 
-  gsl_vector_long_free (kmeans->num_elements_groups);
+  gsl_vector_free (kmeans->num_elements_groups);
 
   gsl_permutation_free (kmeans->group_order);
 
@@ -405,12 +405,14 @@ static void
 kmeans_cluster (struct Kmeans *kmeans, struct casereader *reader,
                 const struct qc *qc)
 {
+  bool warn_on_invalid = true;
+
   kmeans_initial_centers (kmeans, reader, qc);
 
   gsl_matrix_memcpy (kmeans->updated_centers, kmeans->centers);
   for (int xx = 0; xx < qc->maxiter; ++xx)
     {
-      gsl_vector_long_set_all (kmeans->num_elements_groups, 0.0);
+      gsl_vector_set_all (kmeans->num_elements_groups, 0.0);
 
       kmeans->n = 0;
       if (qc->update)
@@ -442,8 +444,9 @@ kmeans_cluster (struct Kmeans *kmeans, struct casereader *reader,
                     }
                 }
 
-              long *n = gsl_vector_long_ptr (kmeans->num_elements_groups, group);
-              *n += qc->wv ? case_num (c, qc->wv) : 1.0;
+              double weight = dict_get_case_weight (qc->dict, c, &warn_on_invalid);
+              double *n = gsl_vector_ptr (kmeans->num_elements_groups, group);
+              *n += weight;
               kmeans->n++;
 
               for (size_t j = 0; j < qc->n_vars; ++j)
@@ -452,7 +455,7 @@ kmeans_cluster (struct Kmeans *kmeans, struct casereader *reader,
                   if (var_is_value_missing (qc->vars[j], val) & qc->exclude)
                     continue;
                   double *x = gsl_matrix_ptr (kmeans->updated_centers, group, j);
-                  *x += val->f * (qc->wv ? case_num (c, qc->wv) : 1.0);
+                  *x += val->f * weight;
                 }
             }
 
@@ -463,7 +466,7 @@ kmeans_cluster (struct Kmeans *kmeans, struct casereader *reader,
       for (size_t g = 0; g < qc->ngroups; ++g)
         for (size_t j = 0; j < qc->n_vars; ++j)
           {
-            long n = gsl_vector_long_get (kmeans->num_elements_groups, g);
+            double n = gsl_vector_get (kmeans->num_elements_groups, g);
             double *x = gsl_matrix_ptr (kmeans->updated_centers, g, j);
             *x /= n + 1;  // Plus 1 for the initial centers
           }
@@ -471,7 +474,7 @@ kmeans_cluster (struct Kmeans *kmeans, struct casereader *reader,
 
       kmeans->n = 0;
       /* Step 3 */
-      gsl_vector_long_set_all (kmeans->num_elements_groups, 0.0);
+      gsl_vector_set_all (kmeans->num_elements_groups, 0.0);
       gsl_matrix_set_all (kmeans->updated_centers, 0.0);
       struct ccase *c;
       struct casereader *cs = casereader_clone (reader);
@@ -480,6 +483,7 @@ kmeans_cluster (struct Kmeans *kmeans, struct casereader *reader,
           int group = -1;
           kmeans_get_nearest_group (kmeans, c, qc, &group, NULL, NULL, NULL);
 
+          double weight = dict_get_case_weight (qc->dict, c, &warn_on_invalid);
           for (size_t j = 0; j < qc->n_vars; ++j)
             {
               const union value *val = case_data (c, qc->vars[j]);
@@ -487,11 +491,11 @@ kmeans_cluster (struct Kmeans *kmeans, struct casereader *reader,
                 continue;
 
               double *x = gsl_matrix_ptr (kmeans->updated_centers, group, j);
-              *x += val->f;
+              *x += val->f * weight;
             }
 
-          long *n = gsl_vector_long_ptr (kmeans->num_elements_groups, group);
-          *n += qc->wv ? case_num (c, qc->wv) : 1.0;
+          double *n = gsl_vector_ptr (kmeans->num_elements_groups, group);
+          *n += weight;
           kmeans->n++;
         }
       casereader_destroy (cs);
@@ -500,7 +504,7 @@ kmeans_cluster (struct Kmeans *kmeans, struct casereader *reader,
       for (size_t g = 0; g < qc->ngroups; ++g)
         for (size_t j = 0; j < qc->n_vars; ++j)
           {
-            long n = gsl_vector_long_get (kmeans->num_elements_groups, g);
+            double n = gsl_vector_get (kmeans->num_elements_groups, g);
             double *x = gsl_matrix_ptr (kmeans->updated_centers, g, j);
             *x /= n;
           }
@@ -691,9 +695,10 @@ quick_cluster_show_number_cases (struct Kmeans *kmeans, const struct qc *qc)
 {
   struct pivot_table *table
     = pivot_table_create (N_("Number of Cases in each Cluster"));
+  pivot_table_set_weight_var (table, dict_get_weight (qc->dict));
 
   pivot_dimension_create (table, PIVOT_AXIS_COLUMN, N_("Statistics"),
-                          N_("Count"));
+                          N_("Count"), PIVOT_RC_COUNT);
 
   struct pivot_dimension *clusters
     = pivot_dimension_create (table, PIVOT_AXIS_ROW, N_("Clusters"));
@@ -701,19 +706,19 @@ quick_cluster_show_number_cases (struct Kmeans *kmeans, const struct qc *qc)
   struct pivot_category *group
     = pivot_category_create_group (clusters->root, N_("Cluster"));
 
-  long int total = 0;
+  double total = 0;
   for (int i = 0; i < qc->ngroups; i++)
     {
       int cluster_idx
         = pivot_category_create_leaf (group, pivot_value_new_integer (i + 1));
-      int count = kmeans->num_elements_groups->data [kmeans->group_order->data[i]];
-      pivot_table_put2 (table, 0, cluster_idx, pivot_value_new_integer (count));
+      double count = kmeans->num_elements_groups->data [kmeans->group_order->data[i]];
+      pivot_table_put2 (table, 0, cluster_idx, pivot_value_new_number (count));
       total += count;
     }
 
   int cluster_idx = pivot_category_create_leaf (clusters->root,
                                                 pivot_value_new_text (N_("Valid")));
-  pivot_table_put2 (table, 0, cluster_idx, pivot_value_new_integer (total));
+  pivot_table_put2 (table, 0, cluster_idx, pivot_value_new_number (total));
   pivot_table_submit (table);
 }
 
@@ -925,8 +930,6 @@ cmd_quick_cluster (struct lexer *lexer, struct dataset *ds)
 
   if (!quick_cluster_parse (lexer, &qc))
     goto error;
-
-  qc.wv = dict_get_weight (qc.dict);
 
   struct casegrouper *grouper = casegrouper_create_splits (proc_open (ds), qc.dict);
   struct casereader *group;
