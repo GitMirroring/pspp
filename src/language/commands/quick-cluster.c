@@ -293,40 +293,39 @@ kmeans_initial_centers (struct Kmeans *kmeans,
       if (nc++ < qc->ngroups)
         continue;
 
-      if (qc->initial)
+      if (!qc->initial)
+        break;
+
+      int mn, mm;
+      double m = matrix_mindist (kmeans->centers, &mn, &mm);
+
+      int mq, mp;
+      double delta;
+      kmeans_get_nearest_group (kmeans, c, qc, &mq, &delta, &mp, NULL);
+      if (delta > m)
+        /* If the distance between C and the nearest group, is greater than the
+           distance between the two groups which are closest to each other,
+           then one group must be replaced.  */
         {
-          int mn, mm;
-          double m = matrix_mindist (kmeans->centers, &mn, &mm);
+          /* Out of mn and mm, which is the closest of the two groups to C ? */
+          int which = (dist_from_case (kmeans, c, qc, mn)
+                       > dist_from_case (kmeans, c, qc, mm)) ? mm : mn;
 
-          int mq, mp;
-          double delta;
-          kmeans_get_nearest_group (kmeans, c, qc, &mq, &delta, &mp, NULL);
-          if (delta > m)
-            /* If the distance between C and the nearest group, is greater than the distance
-               between the two  groups which are clostest to each
-               other, then one group must be replaced.  */
+          for (size_t j = 0; j < qc->n_vars; ++j)
             {
-              /* Out of mn and mm, which is the clostest of the two groups to C ? */
-              int which = (dist_from_case (kmeans, c, qc, mn)
-                           > dist_from_case (kmeans, c, qc, mm)) ? mm : mn;
-
-              for (size_t j = 0; j < qc->n_vars; ++j)
-                {
-                  const union value *val = case_data (c, qc->vars[j]);
-                  gsl_matrix_set (kmeans->centers, which, j, val->f);
-                }
+              const union value *val = case_data (c, qc->vars[j]);
+              gsl_matrix_set (kmeans->centers, which, j, val->f);
             }
-          else if (dist_from_case (kmeans, c, qc, mp) > min_dist_from (kmeans, qc, mq))
-            /* If the distance between C and the second nearest group
-               (MP) is greater than the smallest distance between the
-               nearest group (MQ) and any other group, then replace
-               MQ with C.  */
+        }
+      else if (dist_from_case (kmeans, c, qc, mp) > min_dist_from (kmeans, qc, mq))
+        /* If the distance between C and the second nearest group (MP) is
+           greater than the smallest distance between the nearest group (MQ)
+           and any other group, then replace MQ with C.  */
+        {
+          for (size_t j = 0; j < qc->n_vars; ++j)
             {
-              for (size_t j = 0; j < qc->n_vars; ++j)
-                {
-                  const union value *val = case_data (c, qc->vars[j]);
-                  gsl_matrix_set (kmeans->centers, mq, j, val->f);
-                }
+              const union value *val = case_data (c, qc->vars[j]);
+              gsl_matrix_set (kmeans->centers, mq, j, val->f);
             }
         }
     }
