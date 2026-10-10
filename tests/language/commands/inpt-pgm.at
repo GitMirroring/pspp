@@ -353,6 +353,44 @@ any variables.
 ])
 AT_CLEANUP
 
+AT_SETUP([INPUT PROGRAM and LEAVE variables])
+AT_DATA([input-program.sps], [dnl
+INPUT PROGRAM.
+LOOP x=0 TO 2.
+  LEAVE x.
+  LOOP y=0 TO 2.
+    END CASE.
+    END CASE.
+  END LOOP.
+END LOOP.
+END FILE.
+END INPUT PROGRAM.
+LIST.
+])
+AT_CHECK([pspp input-program.sps -O format=csv], 0, [dnl
+Table: Data List
+x,y
+.00,.00
+.00,.  @&t@
+.00,1.00
+.00,.  @&t@
+.00,2.00
+.00,.  @&t@
+1.00,.00
+1.00,.  @&t@
+1.00,1.00
+1.00,.  @&t@
+1.00,2.00
+1.00,.  @&t@
+2.00,.00
+2.00,.  @&t@
+2.00,1.00
+2.00,.  @&t@
+2.00,2.00
+2.00,.  @&t@
+])
+AT_CLEANUP
+
 AT_SETUP([REREAD syntax errors])
 AT_DATA([reread.sps], [dnl
 INPUT PROGRAM.

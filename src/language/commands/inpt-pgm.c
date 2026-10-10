@@ -200,6 +200,7 @@ input_program_casereader_read (struct casereader *reader UNUSED, void *inp_)
       switch (trns->class->execute (trns->aux, &c, inp->case_nr))
         {
         case TRNS_END_CASE:
+          caseinit_save_left_vars (inp->init, c);
           inp->case_nr++;
           inp->idx = i;
           return c;
