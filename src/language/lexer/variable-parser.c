@@ -123,8 +123,7 @@ parse_variable (struct lexer *lexer, const struct dictionary *d)
 /* Parses a set of variables from dictionary D given options
    OPTS.  Resulting list of variables stored in *VAR and the
    number of variables into *N.  Returns true only if
-   successful.  The dictionary D must contain at least one
-   variable.  */
+   successful. */
 bool
 parse_variables (struct lexer *lexer, const struct dictionary *d,
                  struct variable ***var,
@@ -138,12 +137,6 @@ parse_variables (struct lexer *lexer, const struct dictionary *d,
   assert (n != NULL);
 
   vs = var_set_create_from_dict (d);
-  if (var_set_get_n (vs) == 0)
-    {
-      *n = 0;
-      var_set_destroy (vs);
-      return false;
-    }
   success = parse_var_set_vars (lexer, vs, var, n, opts);
   var_set_destroy (vs);
   return success;
@@ -321,9 +314,12 @@ parse_var_set_vars (struct lexer *lexer, const struct var_set *vs,
     {
       int start_ofs = lex_ofs (lexer);
       if (lex_match (lexer, T_ALL))
-        add_variables (lexer, v, nv, &mv, included, pv_opts,
-                       vs, 0, var_set_get_n (vs) - 1, DC_ORDINARY,
-                       start_ofs, start_ofs);
+        {
+          if (var_set_get_n (vs) > 0)
+            add_variables (lexer, v, nv, &mv, included, pv_opts,
+                           vs, 0, var_set_get_n (vs) - 1, DC_ORDINARY,
+                           start_ofs, start_ofs);
+        }
       else
         {
           enum dict_class class;
