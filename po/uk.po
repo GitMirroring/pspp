@@ -2,13 +2,13 @@
 # Copyright (C) 2013 Free Software Foundation, Inc.
 # This file is distributed under the same license as the pspp package.
 #
-# Yuri Chornoivan <yurchor@ukr.net>, 2013, 2014, 2015, 2016, 2017, 2018, 2020, 2022, 2023, 2024, 2026.
+# Yuri Chornoivan <yurchor@ukr.net>, 2013-2026.
 msgid ""
 msgstr ""
-"Project-Id-Version: pspp 2.1.0\n"
+"Project-Id-Version: pspp 2.1.3\n"
 "Report-Msgid-Bugs-To: pspp-dev@gnu.org\n"
-"POT-Creation-Date: 2026-03-04 10:01-0800\n"
-"PO-Revision-Date: 2026-03-05 19:01+0200\n"
+"POT-Creation-Date: 2026-10-23 09:42-0700\n"
+"PO-Revision-Date: 2026-10-24 17:06+0300\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <trans-uk@lists.fedoraproject.org>\n"
 "Language: uk\n"
@@ -17,23 +17,23 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=4; plural=n==1 ? 3 : n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
-"X-Generator: Lokalize 23.04.3\n"
+"X-Generator: Lokalize 25.12.1\n"
 
-#: gl/clean-temp.c:237
+#: gl/clean-temp.c:230
 msgid "cannot find a temporary directory, try setting $TMPDIR"
 msgstr "не вдалося знайти тимчасовий каталог, встановіть змінну $TMPDIR"
 
-#: gl/clean-temp.c:252
+#: gl/clean-temp.c:245
 #, c-format
 msgid "cannot create a temporary directory using template \"%s\""
 msgstr "не вдалося створити тимчасовий каталог при використанні шаблону «%s»"
 
-#: gl/clean-temp.c:373
+#: gl/clean-temp.c:364
 #, c-format
 msgid "cannot remove temporary directory %s"
 msgstr "не вдалося видалити тимчасовий каталог «%s»"
 
-#: gl/clean-temp-simple.c:270
+#: gl/clean-temp-simple.c:266
 #, c-format
 msgid "cannot remove temporary file %s"
 msgstr "не вдалося видалити тимчасовий файл «%s»"
@@ -42,27 +42,27 @@ msgstr "не вдалося видалити тимчасовий файл «%s�
 msgid "Unknown system error"
 msgstr "Невідома системна помилка"
 
-#: gl/getopt.c:282
+#: gl/getopt.c:283
 #, c-format
 msgid "%s: option '%s%s' is ambiguous\n"
 msgstr "%s: параметр «%s%s» не є однозначним\n"
 
-#: gl/getopt.c:288
+#: gl/getopt.c:289
 #, c-format
 msgid "%s: option '%s%s' is ambiguous; possibilities:"
 msgstr "%s: неоднозначний параметр «%s%s»; можливі варіанти:"
 
-#: gl/getopt.c:322
+#: gl/getopt.c:323
 #, c-format
 msgid "%s: unrecognized option '%s%s'\n"
 msgstr "%s: невідомий параметр «%s%s»\n"
 
-#: gl/getopt.c:348
+#: gl/getopt.c:349
 #, c-format
 msgid "%s: option '%s%s' doesn't allow an argument\n"
 msgstr "%s: додавання аргументів до параметра «%s%s» не передбачено\n"
 
-#: gl/getopt.c:363
+#: gl/getopt.c:364
 #, c-format
 msgid "%s: option '%s%s' requires an argument\n"
 msgstr "%s: до параметра «%s%s» слід додати аргумент\n"
@@ -77,12 +77,12 @@ msgstr "%s: некоректний параметр — «%c»\n"
 msgid "%s: option requires an argument -- '%c'\n"
 msgstr "%s: до параметра слід додати аргумент — «%c»\n"
 
-#: gl/version-etc.c:73
+#: gl/version-etc.c:74
 #, c-format
 msgid "Packaged by %s (%s)\n"
 msgstr "Пакування виконано %s (%s)\n"
 
-#: gl/version-etc.c:76
+#: gl/version-etc.c:77
 #, c-format
 msgid "Packaged by %s\n"
 msgstr "Пакування виконано %s\n"
@@ -90,12 +90,12 @@ msgstr "Пакування виконано %s\n"
 #. TRANSLATORS: Translate "(C)" to the copyright symbol
 #. (C-in-a-circle), if this symbol is available in the user's
 #. locale.  Otherwise, do not translate "(C)"; leave it as-is.
-#: gl/version-etc.c:83
+#: gl/version-etc.c:84
 msgid "(C)"
 msgstr "©"
 
 #. TRANSLATORS: The %s placeholder is the web address of the GPL license.
-#: gl/version-etc.c:88
+#: gl/version-etc.c:89
 #, c-format
 msgid ""
 "License GPLv3+: GNU GPL version 3 or later <%s>.\n"
@@ -107,19 +107,19 @@ msgstr ""
 "Вам не надається ЖОДНИХ ГАРАНТІЙ, окрім гарантій передбачених законодавством.\n"
 
 #. TRANSLATORS: %s denotes an author name.
-#: gl/version-etc.c:105
+#: gl/version-etc.c:106
 #, c-format
 msgid "Written by %s.\n"
 msgstr "Автор програми -- %s.\n"
 
 #. TRANSLATORS: Each %s denotes an author name.
-#: gl/version-etc.c:109
+#: gl/version-etc.c:110
 #, c-format
 msgid "Written by %s and %s.\n"
 msgstr "Автори програми -- %s та %s.\n"
 
 #. TRANSLATORS: Each %s denotes an author name.
-#: gl/version-etc.c:113
+#: gl/version-etc.c:114
 #, c-format
 msgid "Written by %s, %s, and %s.\n"
 msgstr "Автори програми -- %s, %s та %s.\n"
@@ -127,7 +127,7 @@ msgstr "Автори програми -- %s, %s та %s.\n"
 #. TRANSLATORS: Each %s denotes an author name.
 #. You can use line breaks, estimating that each author name occupies
 #. ca. 16 screen columns and that a screen line has ca. 80 columns.
-#: gl/version-etc.c:120
+#: gl/version-etc.c:121
 #, c-format
 msgid ""
 "Written by %s, %s, %s,\n"
@@ -139,7 +139,7 @@ msgstr ""
 #. TRANSLATORS: Each %s denotes an author name.
 #. You can use line breaks, estimating that each author name occupies
 #. ca. 16 screen columns and that a screen line has ca. 80 columns.
-#: gl/version-etc.c:127
+#: gl/version-etc.c:128
 #, c-format
 msgid ""
 "Written by %s, %s, %s,\n"
@@ -151,7 +151,7 @@ msgstr ""
 #. TRANSLATORS: Each %s denotes an author name.
 #. You can use line breaks, estimating that each author name occupies
 #. ca. 16 screen columns and that a screen line has ca. 80 columns.
-#: gl/version-etc.c:134
+#: gl/version-etc.c:135
 #, c-format
 msgid ""
 "Written by %s, %s, %s,\n"
@@ -163,7 +163,7 @@ msgstr ""
 #. TRANSLATORS: Each %s denotes an author name.
 #. You can use line breaks, estimating that each author name occupies
 #. ca. 16 screen columns and that a screen line has ca. 80 columns.
-#: gl/version-etc.c:142
+#: gl/version-etc.c:143
 #, c-format
 msgid ""
 "Written by %s, %s, %s,\n"
@@ -175,7 +175,7 @@ msgstr ""
 #. TRANSLATORS: Each %s denotes an author name.
 #. You can use line breaks, estimating that each author name occupies
 #. ca. 16 screen columns and that a screen line has ca. 80 columns.
-#: gl/version-etc.c:150
+#: gl/version-etc.c:151
 #, c-format
 msgid ""
 "Written by %s, %s, %s,\n"
@@ -189,7 +189,7 @@ msgstr ""
 #. TRANSLATORS: Each %s denotes an author name.
 #. You can use line breaks, estimating that each author name occupies
 #. ca. 16 screen columns and that a screen line has ca. 80 columns.
-#: gl/version-etc.c:159
+#: gl/version-etc.c:160
 #, c-format
 msgid ""
 "Written by %s, %s, %s,\n"
@@ -203,7 +203,7 @@ msgstr ""
 #. TRANSLATORS: Each %s denotes an author name.
 #. You can use line breaks, estimating that each author name occupies
 #. ca. 16 screen columns and that a screen line has ca. 80 columns.
-#: gl/version-etc.c:170
+#: gl/version-etc.c:171
 #, c-format
 msgid ""
 "Written by %s, %s, %s,\n"
@@ -220,20 +220,20 @@ msgstr ""
 #. bugs (typically your translation team's web or email address).
 #: gl/version-etc.c:249
 #, c-format
-msgid "Report bugs to: %s\n"
-msgstr "Повідомляйте про вади на адресу: %s\n"
+msgid "Report bugs to: <%s>.\n"
+msgstr "Повідомляйте про вади на адресу: <%s>.\n"
 
-#: gl/version-etc.c:251
+#: gl/version-etc.c:259
 #, c-format
 msgid "Report %s bugs to: %s\n"
 msgstr "Про вади у %s повідомляйте за такою адресою: %s\n"
 
-#: gl/version-etc.c:255 gl/version-etc.c:257
+#: gl/version-etc.c:263 gl/version-etc.c:265
 #, c-format
 msgid "%s home page: <%s>\n"
 msgstr "Домашня сторінка %s: <%s>\n"
 
-#: gl/version-etc.c:260
+#: gl/version-etc.c:268
 #, c-format
 msgid "General help using GNU software: <%s>\n"
 msgstr "Загальна довідкова інформація щодо використання програмного забезпечення GNU: <%s>\n"
@@ -242,79 +242,79 @@ msgstr "Загальна довідкова інформація щодо вик
 msgid "memory exhausted"
 msgstr "пам’ять вичерпано"
 
-#: gl/xbinary-io.c:36
+#: gl/xbinary-io.c:35
 msgid "failed to set file descriptor text/binary mode"
 msgstr "не вдалося встановити текстовий або двійковий режим для дескриптора файла"
 
-#: gl/regcomp.c:122
+#: gl/regcomp.c:128
 msgid "Success"
 msgstr "Успіх"
 
-#: gl/regcomp.c:125
+#: gl/regcomp.c:131
 msgid "No match"
 msgstr "Не знайдено"
 
-#: gl/regcomp.c:128
+#: gl/regcomp.c:134
 msgid "Invalid regular expression"
 msgstr "Помилка у формальному виразі"
 
-#: gl/regcomp.c:131
+#: gl/regcomp.c:137
 msgid "Invalid collation character"
 msgstr "Некоректний символ порівняння"
 
-#: gl/regcomp.c:134
+#: gl/regcomp.c:140
 msgid "Invalid character class name"
 msgstr "Некоректна назва класу символів"
 
-#: gl/regcomp.c:137
+#: gl/regcomp.c:143
 msgid "Trailing backslash"
 msgstr "Кінцевий символ похилої риски"
 
-#: gl/regcomp.c:140
+#: gl/regcomp.c:146
 msgid "Invalid back reference"
 msgstr "Некоректне зворотне посилання"
 
-#: gl/regcomp.c:143
+#: gl/regcomp.c:149
 msgid "Unmatched [, [^, [:, [., or [="
 msgstr "Вираз без парних [, [^, [:, [. або [="
 
-#: gl/regcomp.c:146
+#: gl/regcomp.c:152
 msgid "Unmatched ( or \\("
 msgstr "Неврівноважена послідовність ( або \\("
 
-#: gl/regcomp.c:149
+#: gl/regcomp.c:155
 msgid "Unmatched \\{"
 msgstr "Неврівноважена послідовність \\{"
 
-#: gl/regcomp.c:152
+#: gl/regcomp.c:158
 msgid "Invalid content of \\{\\}"
 msgstr "Некоректний вміст \\{\\}"
 
-#: gl/regcomp.c:155
+#: gl/regcomp.c:161
 msgid "Invalid range end"
 msgstr "Некоректне завершення діапазону"
 
-#: gl/regcomp.c:158
+#: gl/regcomp.c:164
 msgid "Memory exhausted"
 msgstr "Пам'ять вичерпано"
 
-#: gl/regcomp.c:161
+#: gl/regcomp.c:167
 msgid "Invalid preceding regular expression"
 msgstr "Помилка у попередньому формальному виразі"
 
-#: gl/regcomp.c:164
+#: gl/regcomp.c:170
 msgid "Premature end of regular expression"
 msgstr "Неочікуване завершення формального виразу"
 
-#: gl/regcomp.c:167
+#: gl/regcomp.c:173
 msgid "Regular expression too big"
 msgstr "Занадто об'ємний формальний вираз"
 
-#: gl/regcomp.c:170
+#: gl/regcomp.c:176
 msgid "Unmatched ) or \\)"
 msgstr "Неврівноважена послідовність ) або \\)"
 
-#: gl/regcomp.c:650
+#: gl/regcomp.c:669
 msgid "No previous regular expression"
 msgstr "Немає попереднього формального виразу"
 
@@ -2081,14 +2081,14 @@ msgstr "К-ть спостережень"
 #: src/language/commands/cochran.c:189 src/language/commands/correlations.c:91
 #: src/language/commands/correlations.c:149
 #: src/language/commands/crosstabs.c:1069
-#: src/language/commands/descriptives.c:956 src/language/commands/examine.c:910
-#: src/language/commands/frequencies.c:1328
+#: src/language/commands/descriptives.c:1011
+#: src/language/commands/examine.c:912 src/language/commands/frequencies.c:1328
 #: src/language/commands/friedman.c:251
-#: src/language/commands/jonckheere-terpstra.c:368
+#: src/language/commands/jonckheere-terpstra.c:359
 #: src/language/commands/kruskal-wallis.c:266
 #: src/language/commands/ks-one-sample.c:279
 #: src/language/commands/logistic.c:1242
-#: src/language/commands/mann-whitney.c:185 src/language/commands/mcnemar.c:223
+#: src/language/commands/mann-whitney.c:185 src/language/commands/mcnemar.c:235
 #: src/language/commands/means-calc.c:439 src/language/commands/means.c:711
 #: src/language/commands/median.c:351 src/language/commands/npar-summary.c:107
 #: src/language/commands/oneway.c:981 src/language/commands/reliability.c:491
@@ -2261,7 +2261,7 @@ msgstr "Вийти"
 msgid "Missing Values"
 msgstr "Пропущені значення"
 
-#: src/language/command.def:81 src/language/commands/mrsets.c:568
+#: src/language/command.def:81 src/language/commands/mrsets.c:576
 msgid "Multiple Response Sets"
 msgstr "Набори множин відповідей"
 
@@ -2382,7 +2382,7 @@ msgstr "Початок даних"
 #: src/language/command.def:118 src/language/commands/crosstabs.c:73
 #: src/language/commands/crosstabs.c:939 src/language/commands/ctables.c:330
 #: src/language/commands/frequencies.c:1230 src/language/commands/graph.c:204
-#: src/language/commands/quick-cluster.c:697
+#: src/language/commands/quick-cluster.c:705
 #: src/ui/gui/psppire-dialog-action-crosstabs.c:90
 #: src/ui/gui/psppire-dialog-action-ctables.c:190
 msgid "Count"
@@ -2421,8 +2421,8 @@ msgstr "Виконати"
 msgid "Export"
 msgstr "Експортувати"
 
-#: src/language/command.def:127 src/language/commands/factor.c:1558
-#: src/language/commands/factor.c:1637 src/language/commands/factor.c:1699
+#: src/language/command.def:127 src/language/commands/factor.c:1559
+#: src/language/commands/factor.c:1638 src/language/commands/factor.c:1700
 msgid "Factor"
 msgstr "Фактор"
 
@@ -2480,7 +2480,7 @@ msgstr "Швидкий кластер"
 msgid "Rank"
 msgstr "Ранг"
 
-#: src/language/command.def:141 src/language/commands/regression.c:933
+#: src/language/command.def:141 src/language/commands/regression.c:939
 #: src/ui/gui/regression.ui:20
 msgid "Regression"
 msgstr "Регресія"
@@ -2505,7 +2505,7 @@ msgstr "Вибірка"
 #: src/ui/gui/psppire-dialog-action-aggregate.c:211
 #: src/ui/gui/psppire-data-window.c:494 src/ui/gui/psppire-data-window.c:498
 #: src/ui/gui/psppire-output-window.c:315
-#: src/ui/gui/psppire-syntax-window.c:670 src/ui/gui/psppire-window.c:443
+#: src/ui/gui/psppire-syntax-window.c:670 src/ui/gui/psppire-window.c:441
 #: src/ui/gui/aggregate.ui:552
 msgid "Save"
 msgstr "Зберегти"
@@ -3138,94 +3138,94 @@ msgid "This %zu-byte string is too long for variable %s with width %d."
 msgstr "Цей %zu-байтовий рядок є надто довгим для змінної %s з шириною %d."
 
 #: src/language/lexer/variable-parser.c:86
-#: src/language/lexer/variable-parser.c:783
-#: src/language/lexer/variable-parser.c:803 src/language/commands/graph.c:810
-#: src/language/commands/matrix.c:6077 utilities/pspp-convert.c:84
+#: src/language/lexer/variable-parser.c:779
+#: src/language/lexer/variable-parser.c:799 src/language/commands/graph.c:810
+#: src/language/commands/matrix.c:6131 utilities/pspp-convert.c:84
 msgid "Syntax error expecting variable name."
 msgstr "Синтаксична помилка: мало бути вказано назву змінної."
 
 #: src/language/lexer/variable-parser.c:96
-#: src/language/lexer/variable-parser.c:849
-#: src/language/lexer/variable-parser.c:860
+#: src/language/lexer/variable-parser.c:845
+#: src/language/lexer/variable-parser.c:856
 #, c-format
 msgid "%s is not a variable name."
 msgstr "%s не є назвою змінної."
 
-#: src/language/lexer/variable-parser.c:208
+#: src/language/lexer/variable-parser.c:201
 #, c-format
 msgid "%s is not a numeric variable.  It will not be included in the variable list."
 msgstr "%s не є числовою змінною. Її не буде включено до списку змінних."
 
-#: src/language/lexer/variable-parser.c:212
+#: src/language/lexer/variable-parser.c:205
 #, c-format
 msgid "%s is not a string variable.  It will not be included in the variable list."
 msgstr "%s не є рядковою змінною. Її не буде включено до списку змінних."
 
-#: src/language/lexer/variable-parser.c:217
+#: src/language/lexer/variable-parser.c:210
 #, c-format
 msgid "Scratch variables (such as %s) are not allowed here."
 msgstr "Тут не можна використовувати ортоторпні змінні (зокрема %s)."
 
-#: src/language/lexer/variable-parser.c:222
+#: src/language/lexer/variable-parser.c:215
 #, c-format
 msgid "%s and %s are not the same type.  All variables in this variable list must be of the same type.  %s will be omitted from the list."
 msgstr "%s і %s не належать до одного типу. Усі змінні у цьому списку змінних мають належати до одного типу. %s буде вилучено зі списку."
 
-#: src/language/lexer/variable-parser.c:229
+#: src/language/lexer/variable-parser.c:222
 #, c-format
 msgid "%s and %s are string variables with different widths.  All variables in this variable list must have the same width.  %s will be omitted from the list."
 msgstr "Рядкові змінні %s і %s мають різну довжину. Довжина усіх змінних у списку змінних має бути рівною. %s буде викинуто зі списку."
 
-#: src/language/lexer/variable-parser.c:235
-#: src/language/lexer/variable-parser.c:500
+#: src/language/lexer/variable-parser.c:228
+#: src/language/lexer/variable-parser.c:496
 #, c-format
 msgid "Variable %s appears twice in variable list."
 msgstr "Змінну %s вказано у списку змінних двічі."
 
-#: src/language/lexer/variable-parser.c:357
-#: src/language/lexer/variable-parser.c:869
+#: src/language/lexer/variable-parser.c:353
+#: src/language/lexer/variable-parser.c:865
 #, c-format
 msgid "%s TO %s is not valid syntax since %s is after %s in the dictionary."
 msgstr "%s TO %s є некоректною синтаксичною конструкцією, оскільки %s перебуває у словнику після %s."
 
-#: src/language/lexer/variable-parser.c:366
+#: src/language/lexer/variable-parser.c:362
 msgid "With the syntax <a> TO <b>, variables <a> and <b> must be both regular variables or both scratch variables."
 msgstr "Для використання синтаксичної конструкції <a> TO <b> змінні <a> і <b> мають або обидві бути звичайними змінними, або обидві бути тимчасовими змінними."
 
-#: src/language/lexer/variable-parser.c:384
+#: src/language/lexer/variable-parser.c:380
 #, c-format
 msgid "%s is a regular variable."
 msgstr "%s є звичайною змінною."
 
-#: src/language/lexer/variable-parser.c:390
+#: src/language/lexer/variable-parser.c:386
 #, c-format
 msgid "%s is a scratch variable."
 msgstr "%s є тимчасовою змінною."
 
-#: src/language/lexer/variable-parser.c:396
+#: src/language/lexer/variable-parser.c:392
 #, c-format
 msgid "%s is a system variable."
 msgstr "%s є системною змінною."
 
-#: src/language/lexer/variable-parser.c:475
+#: src/language/lexer/variable-parser.c:471
 #, c-format
 msgid "`%s' cannot be used with TO because it does not end in a digit."
 msgstr "«%s» не можна використовувати з TO, оскільки назва змінної не завершується на цифру."
 
-#: src/language/lexer/variable-parser.c:484
+#: src/language/lexer/variable-parser.c:480
 #, c-format
 msgid "Numeric suffix on `%s' is larger than supported with TO."
 msgstr "Числовий суфікс «%s» перевищує підтримуваний для TO."
 
-#: src/language/lexer/variable-parser.c:585
+#: src/language/lexer/variable-parser.c:581
 msgid "Prefixes don't match in use of TO convention."
 msgstr "Префікси не узгоджуються з синтаксисом TO."
 
-#: src/language/lexer/variable-parser.c:591
+#: src/language/lexer/variable-parser.c:587
 msgid "Bad bounds in use of TO convention."
 msgstr "У TO використано помилкові межі."
 
-#: src/language/lexer/variable-parser.c:882
+#: src/language/lexer/variable-parser.c:878
 #, c-format
 msgid "%s is not a numeric variable."
 msgstr "%s не є числовою змінною."
@@ -3461,7 +3461,7 @@ msgstr "Записуємо %s до %s."
 
 #: src/language/commands/autorecode.c:392
 #: src/language/commands/data-parser.c:726
-#: src/language/commands/data-parser.c:772 src/language/commands/mrsets.c:571
+#: src/language/commands/data-parser.c:772 src/language/commands/mrsets.c:579
 #: src/language/commands/print.c:450 src/language/commands/sys-file-info.c:430
 #: src/language/commands/sys-file-info.c:471
 #: src/language/commands/sys-file-info.c:549
@@ -3501,37 +3501,37 @@ msgstr "Біноміальна перевірка"
 #: src/language/commands/crosstabs.c:1463
 #: src/language/commands/crosstabs.c:1504
 #: src/language/commands/crosstabs.c:1548 src/language/commands/ctables.c:4598
-#: src/language/commands/descriptives.c:954 src/language/commands/examine.c:590
-#: src/language/commands/examine.c:728 src/language/commands/examine.c:821
-#: src/language/commands/examine.c:909 src/language/commands/factor.c:1615
-#: src/language/commands/factor.c:1738 src/language/commands/factor.c:1768
-#: src/language/commands/factor.c:1932 src/language/commands/factor.c:1966
-#: src/language/commands/frequencies.c:278
+#: src/language/commands/descriptives.c:1009
+#: src/language/commands/examine.c:591 src/language/commands/examine.c:728
+#: src/language/commands/examine.c:823 src/language/commands/examine.c:911
+#: src/language/commands/factor.c:1616 src/language/commands/factor.c:1739
+#: src/language/commands/factor.c:1769 src/language/commands/factor.c:1933
+#: src/language/commands/factor.c:1967 src/language/commands/frequencies.c:278
 #: src/language/commands/frequencies.c:1315
 #: src/language/commands/frequencies.c:1326
 #: src/language/commands/friedman.c:250 src/language/commands/glm.c:652
-#: src/language/commands/jonckheere-terpstra.c:360
+#: src/language/commands/jonckheere-terpstra.c:351
 #: src/language/commands/kruskal-wallis.c:265
 #: src/language/commands/kruskal-wallis.c:313
 #: src/language/commands/ks-one-sample.c:278
 #: src/language/commands/logistic.c:1081 src/language/commands/logistic.c:1211
 #: src/language/commands/logistic.c:1241
 #: src/language/commands/mann-whitney.c:184
-#: src/language/commands/mann-whitney.c:247 src/language/commands/mcnemar.c:222
+#: src/language/commands/mann-whitney.c:247 src/language/commands/mcnemar.c:234
 #: src/language/commands/means.c:757 src/language/commands/means.c:810
 #: src/language/commands/median.c:315 src/language/commands/median.c:350
 #: src/language/commands/npar-summary.c:106 src/language/commands/oneway.c:902
 #: src/language/commands/oneway.c:980 src/language/commands/oneway.c:1079
 #: src/language/commands/oneway.c:1167 src/language/commands/oneway.c:1299
-#: src/language/commands/quick-cluster.c:696
+#: src/language/commands/quick-cluster.c:704
 #: src/language/commands/regression.c:769
 #: src/language/commands/regression.c:801
-#: src/language/commands/regression.c:925
-#: src/language/commands/regression.c:991
+#: src/language/commands/regression.c:931
+#: src/language/commands/regression.c:997
 #: src/language/commands/reliability.c:490
 #: src/language/commands/reliability.c:531
-#: src/language/commands/reliability.c:580
-#: src/language/commands/reliability.c:591 src/language/commands/roc.c:865
+#: src/language/commands/reliability.c:584
+#: src/language/commands/reliability.c:596 src/language/commands/roc.c:865
 #: src/language/commands/roc.c:961 src/language/commands/runs.c:318
 #: src/language/commands/sign.c:102 src/language/commands/t-test-indep.c:193
 #: src/language/commands/t-test-indep.c:259
@@ -3560,13 +3560,13 @@ msgid "Test Prop."
 msgstr "Тест. співв."
 
 #: src/language/commands/binomial.c:192 src/language/commands/crosstabs.c:1439
-#: src/language/commands/mcnemar.c:224 src/language/commands/sign.c:103
+#: src/language/commands/mcnemar.c:236 src/language/commands/sign.c:103
 #: src/language/commands/wilcoxon.c:277
 msgid "Exact Sig. (2-tailed)"
 msgstr "Точна значущість (двобічна)"
 
 #: src/language/commands/binomial.c:193 src/language/commands/crosstabs.c:1440
-#: src/language/commands/mcnemar.c:225 src/language/commands/sign.c:104
+#: src/language/commands/mcnemar.c:237 src/language/commands/sign.c:104
 #: src/language/commands/wilcoxon.c:278
 msgid "Exact Sig. (1-tailed)"
 msgstr "Точна значущість (однобічна)"
@@ -3586,13 +3586,13 @@ msgstr "Група 2"
 #: src/language/commands/binomial.c:196 src/language/commands/chisquare.c:223
 #: src/language/commands/chisquare.c:257 src/language/commands/crosstabs.c:1074
 #: src/language/commands/crosstabs.c:1357 src/language/commands/ctables.c:4281
-#: src/language/commands/examine.c:914 src/language/commands/factor.c:1616
+#: src/language/commands/examine.c:916 src/language/commands/factor.c:1617
 #: src/language/commands/frequencies.c:320 src/language/commands/glm.c:735
 #: src/language/commands/kruskal-wallis.c:301
 #: src/language/commands/logistic.c:1247
 #: src/language/commands/mann-whitney.c:197 src/language/commands/means.c:707
 #: src/language/commands/oneway.c:911 src/language/commands/oneway.c:1001
-#: src/language/commands/regression.c:933
+#: src/language/commands/regression.c:939
 #: src/language/commands/reliability.c:496 src/language/commands/sign.c:75
 #: src/language/commands/wilcoxon.c:239
 #: src/ui/gui/psppire-dialog-action-crosstabs.c:93
@@ -3602,9 +3602,9 @@ msgstr "Загалом"
 #: src/language/commands/binomial.c:199
 #: src/language/commands/correlations.c:125
 #: src/language/commands/correlations.c:153
-#: src/language/commands/descriptives.c:567 src/language/commands/factor.c:1519
-#: src/language/commands/factor.c:1562 src/language/commands/factor.c:1720
-#: src/language/commands/factor.c:1938 src/language/commands/frequencies.c:1319
+#: src/language/commands/descriptives.c:605 src/language/commands/factor.c:1520
+#: src/language/commands/factor.c:1563 src/language/commands/factor.c:1721
+#: src/language/commands/factor.c:1939 src/language/commands/frequencies.c:1319
 #: src/language/commands/kruskal-wallis.c:270
 #: src/language/commands/kruskal-wallis.c:319
 #: src/language/commands/ks-one-sample.c:316 src/language/commands/list.c:85
@@ -3640,7 +3640,7 @@ msgid "Expected N"
 msgstr "Очікуване N"
 
 #: src/language/commands/chisquare.c:186 src/language/commands/chisquare.c:243
-#: src/language/commands/crosstabs.c:78 src/language/commands/regression.c:933
+#: src/language/commands/crosstabs.c:78 src/language/commands/regression.c:939
 #: src/ui/gui/psppire-dialog-action-crosstabs.c:95
 msgid "Residual"
 msgstr "Залишки"
@@ -3649,9 +3649,9 @@ msgstr "Залишки"
 #: src/language/commands/cochran.c:185 src/language/commands/crosstabs.c:1436
 #: src/language/commands/crosstabs.c:1457
 #: src/language/commands/crosstabs.c:1496
-#: src/language/commands/crosstabs.c:1542 src/language/commands/examine.c:826
-#: src/language/commands/reliability.c:595
-#: src/language/commands/reliability.c:598
+#: src/language/commands/crosstabs.c:1542 src/language/commands/examine.c:828
+#: src/language/commands/reliability.c:600
+#: src/language/commands/reliability.c:603
 #: src/language/commands/split-file.c:90 src/language/commands/split-file.c:91
 #: src/language/commands/sys-file-info.c:799
 msgid "Value"
@@ -3661,12 +3661,12 @@ msgstr "Значення"
 #: src/language/commands/cochran.c:164 src/language/commands/correlations.c:94
 #: src/language/commands/data-parser.c:730
 #: src/language/commands/data-parser.c:775
-#: src/language/commands/descriptives.c:967
+#: src/language/commands/descriptives.c:1022
 #: src/language/commands/friedman.c:226
-#: src/language/commands/jonckheere-terpstra.c:376
-#: src/language/commands/matrix.c:6040 src/language/commands/matrix.c:8528
+#: src/language/commands/jonckheere-terpstra.c:367
+#: src/language/commands/matrix.c:6094 src/language/commands/matrix.c:8582
 #: src/language/commands/npar-summary.c:113 src/language/commands/print.c:454
-#: src/language/commands/quick-cluster.c:539 src/language/commands/runs.c:331
+#: src/language/commands/quick-cluster.c:546 src/language/commands/runs.c:331
 #: src/language/commands/set.c:1424 src/language/commands/split-file.c:93
 #: src/language/commands/sys-file-info.c:472
 #: src/language/commands/sys-file-info.c:837 src/ui/gui/psppire-dictview.c:674
@@ -3677,7 +3677,7 @@ msgstr "Змінна"
 #: src/language/commands/chisquare.c:320 src/language/commands/cochran.c:181
 #: src/language/commands/friedman.c:246
 #: src/language/commands/kruskal-wallis.c:311
-#: src/language/commands/mann-whitney.c:244 src/language/commands/mcnemar.c:219
+#: src/language/commands/mann-whitney.c:244 src/language/commands/mcnemar.c:231
 #: src/language/commands/median.c:347 src/language/commands/sign.c:100
 #: src/language/commands/wilcoxon.c:268
 msgid "Test Statistics"
@@ -3689,11 +3689,11 @@ msgstr "χ-квадрат"
 
 #: src/language/commands/chisquare.c:324 src/language/commands/cochran.c:191
 #: src/language/commands/crosstabs.c:1437 src/language/commands/examine.c:662
-#: src/language/commands/factor.c:1971 src/language/commands/friedman.c:257
+#: src/language/commands/factor.c:1972 src/language/commands/friedman.c:257
 #: src/language/commands/glm.c:656 src/language/commands/kruskal-wallis.c:315
 #: src/language/commands/logistic.c:1085 src/language/commands/median.c:354
 #: src/language/commands/oneway.c:904 src/language/commands/oneway.c:1171
-#: src/language/commands/regression.c:927
+#: src/language/commands/regression.c:933
 #: src/language/commands/t-test-indep.c:267
 #: src/language/commands/t-test-one-sample.c:75
 #: src/language/commands/t-test-paired.c:253
@@ -3804,14 +3804,14 @@ msgid "There is no vector named %s."
 msgstr "Немає вектора з назвою %s."
 
 #: src/language/commands/correlations.c:85
-#: src/language/commands/descriptives.c:950 src/language/commands/factor.c:1929
-#: src/language/commands/npar-summary.c:102
+#: src/language/commands/descriptives.c:1005
+#: src/language/commands/factor.c:1930 src/language/commands/npar-summary.c:102
 msgid "Descriptive Statistics"
 msgstr "Описова статистика"
 
 #: src/language/commands/correlations.c:89 src/language/commands/ctables.c:372
-#: src/language/commands/descriptives.c:107 src/language/commands/examine.c:728
-#: src/language/commands/factor.c:1933 src/language/commands/frequencies.c:97
+#: src/language/commands/descriptives.c:111 src/language/commands/examine.c:728
+#: src/language/commands/factor.c:1934 src/language/commands/frequencies.c:97
 #: src/language/commands/graph.c:210 src/language/commands/ks-one-sample.c:290
 #: src/language/commands/means-calc.c:438
 #: src/language/commands/npar-summary.c:108 src/language/commands/oneway.c:981
@@ -3827,7 +3827,7 @@ msgid "Mean"
 msgstr "Середнє"
 
 #: src/language/commands/correlations.c:90 src/language/commands/examine.c:737
-#: src/language/commands/factor.c:1934
+#: src/language/commands/factor.c:1935
 #: src/language/commands/ks-one-sample.c:290
 #: src/language/commands/means-calc.c:440
 #: src/language/commands/npar-summary.c:109 src/language/commands/oneway.c:981
@@ -3849,7 +3849,7 @@ msgstr "Кореляція Пірсона"
 msgid "Sig. (2-tailed)"
 msgstr "Знач. (двобічна)"
 
-#: src/language/commands/correlations.c:141 src/language/commands/factor.c:1773
+#: src/language/commands/correlations.c:141 src/language/commands/factor.c:1774
 msgid "Sig. (1-tailed)"
 msgstr "Знач. (однобічна)"
 
@@ -3870,7 +3870,7 @@ msgid "The data for the chosen variables are all missing or empty."
 msgstr "Немає даних для вибраних змінних або змінні не містять даних"
 
 #: src/language/commands/correlations.c:358
-#: src/language/commands/descriptives.c:353
+#: src/language/commands/descriptives.c:355
 msgid "No variables specified."
 msgstr "Не вказано змінних."
 
@@ -3930,7 +3930,7 @@ msgstr "%s має бути вказано до %s."
 msgid "Summary"
 msgstr "Резюме"
 
-#: src/language/commands/crosstabs.c:1070 src/language/commands/examine.c:911
+#: src/language/commands/crosstabs.c:1070 src/language/commands/examine.c:913
 #: src/language/commands/frequencies.c:280
 #: src/language/commands/frequencies.c:1230
 #: src/language/commands/logistic.c:1243 src/language/commands/means.c:714
@@ -3938,22 +3938,22 @@ msgstr "Резюме"
 msgid "Percent"
 msgstr "Відсоток"
 
-#: src/language/commands/crosstabs.c:1073 src/language/commands/examine.c:913
+#: src/language/commands/crosstabs.c:1073 src/language/commands/examine.c:915
 #: src/language/commands/means.c:698 src/language/commands/reliability.c:495
 #: src/language/commands/sys-file-info.c:222
 msgid "Cases"
 msgstr "Спостереження"
 
-#: src/language/commands/crosstabs.c:1074 src/language/commands/examine.c:913
+#: src/language/commands/crosstabs.c:1074 src/language/commands/examine.c:915
 #: src/language/commands/frequencies.c:297
 #: src/language/commands/frequencies.c:1330
-#: src/language/commands/quick-cluster.c:716
+#: src/language/commands/quick-cluster.c:724
 #: src/language/commands/reliability.c:495
 msgid "Valid"
 msgstr "Чинний"
 
 #: src/language/commands/crosstabs.c:1074 src/language/commands/ctables.c:375
-#: src/language/commands/examine.c:913 src/language/commands/frequencies.c:312
+#: src/language/commands/examine.c:915 src/language/commands/frequencies.c:312
 #: src/language/commands/frequencies.c:1331
 msgid "Missing"
 msgstr "Не вистачає"
@@ -4336,7 +4336,7 @@ msgstr "Загальне N стовпчика %"
 msgid "Unweighted Column Total N %"
 msgstr "Незважене загальне N стовпчика %"
 
-#: src/language/commands/ctables.c:371 src/language/commands/descriptives.c:117
+#: src/language/commands/ctables.c:371 src/language/commands/descriptives.c:121
 #: src/language/commands/examine.c:737 src/language/commands/frequencies.c:109
 #: src/language/commands/graph.c:212 src/language/commands/ks-one-sample.c:285
 #: src/language/commands/means-calc.c:448
@@ -4354,7 +4354,7 @@ msgstr "Незважене середнє"
 msgid "Unweighted Median"
 msgstr "Незважена медіана"
 
-#: src/language/commands/ctables.c:374 src/language/commands/descriptives.c:116
+#: src/language/commands/ctables.c:374 src/language/commands/descriptives.c:120
 #: src/language/commands/examine.c:737 src/language/commands/frequencies.c:108
 #: src/language/commands/graph.c:213 src/language/commands/ks-one-sample.c:285
 #: src/language/commands/means-calc.c:447
@@ -4377,7 +4377,7 @@ msgstr "Режим"
 msgid "Unweighted Mode"
 msgstr "Незважена мода"
 
-#: src/language/commands/ctables.c:378 src/language/commands/descriptives.c:115
+#: src/language/commands/ctables.c:378 src/language/commands/descriptives.c:119
 #: src/language/commands/examine.c:737 src/language/commands/frequencies.c:107
 #: src/language/commands/means-calc.c:449
 #: src/ui/gui/psppire-dialog-action-descriptives.c:43
@@ -4401,7 +4401,7 @@ msgstr "Стд. відхилення"
 msgid "Unweighted Std Deviation"
 msgstr "Незважене стд. відхилення"
 
-#: src/language/commands/ctables.c:381 src/language/commands/descriptives.c:118
+#: src/language/commands/ctables.c:381 src/language/commands/descriptives.c:122
 #: src/language/commands/frequencies.c:110 src/language/commands/graph.c:211
 #: src/language/commands/means-calc.c:446
 #: src/ui/gui/psppire-dialog-action-descriptives.c:44
@@ -4437,7 +4437,7 @@ msgstr "Кореговане чинне N"
 msgid "Unweighted Valid N"
 msgstr "Незважене чинне N"
 
-#: src/language/commands/ctables.c:388 src/language/commands/descriptives.c:110
+#: src/language/commands/ctables.c:388 src/language/commands/descriptives.c:114
 #: src/language/commands/examine.c:736 src/language/commands/frequencies.c:102
 #: src/language/commands/means-calc.c:450
 #: src/ui/gui/psppire-dialog-action-descriptives.c:46
@@ -4664,14 +4664,14 @@ msgstr "Категорії рядків"
 msgid "Column Categories"
 msgstr "Категорії стовпчиків"
 
-#: src/language/commands/ctables.c:4634 src/language/commands/matrix.c:5694
-#: src/language/commands/matrix.c:6027 src/language/commands/matrix.c:8546
+#: src/language/commands/ctables.c:4634 src/language/commands/matrix.c:5748
+#: src/language/commands/matrix.c:6081 src/language/commands/matrix.c:8600
 msgid "Rows"
 msgstr "Рядки"
 
 #: src/language/commands/ctables.c:4635 src/language/commands/data-parser.c:727
-#: src/language/commands/matrix.c:5696 src/language/commands/matrix.c:6027
-#: src/language/commands/matrix.c:8546 src/language/commands/print.c:451
+#: src/language/commands/matrix.c:5750 src/language/commands/matrix.c:6081
+#: src/language/commands/matrix.c:8600 src/language/commands/print.c:451
 #: src/ui/gui/psppire-var-sheet-header.c:76
 msgid "Columns"
 msgstr "Стовпчики"
@@ -5050,7 +5050,7 @@ msgstr "%s не можна використовувати після %s."
 msgid "%s may not be used to delete all variables from the active dataset dictionary.  Use %s instead."
 msgstr "%s не можна використовувати усі змінні з активного словника набору даних. Скористайтеся краще %s."
 
-#: src/language/commands/descriptives.c:108
+#: src/language/commands/descriptives.c:112
 #: src/language/commands/frequencies.c:98
 #: src/language/commands/means-calc.c:445
 #: src/language/commands/t-test-indep.c:197
@@ -5060,13 +5060,13 @@ msgstr "%s не можна використовувати усі змінні з
 msgid "S.E. Mean"
 msgstr "Ст. похибка"
 
-#: src/language/commands/descriptives.c:109
+#: src/language/commands/descriptives.c:113
 #: src/language/commands/frequencies.c:101
 #: src/output/charts/plot-hist-cairo.c:57
 msgid "Std Dev"
 msgstr "Стд. відхил."
 
-#: src/language/commands/descriptives.c:111 src/language/commands/examine.c:738
+#: src/language/commands/descriptives.c:115 src/language/commands/examine.c:738
 #: src/language/commands/frequencies.c:103
 #: src/language/commands/means-calc.c:451
 #: src/ui/gui/psppire-dialog-action-descriptives.c:47
@@ -5074,13 +5074,13 @@ msgstr "Стд. відхил."
 msgid "Kurtosis"
 msgstr "Ексцес"
 
-#: src/language/commands/descriptives.c:112
+#: src/language/commands/descriptives.c:116
 #: src/language/commands/frequencies.c:104
 #: src/language/commands/means-calc.c:452
 msgid "S.E. Kurt"
 msgstr "Ексц. ст. похибки"
 
-#: src/language/commands/descriptives.c:113 src/language/commands/examine.c:738
+#: src/language/commands/descriptives.c:117 src/language/commands/examine.c:738
 #: src/language/commands/frequencies.c:105
 #: src/language/commands/means-calc.c:453
 #: src/ui/gui/psppire-dialog-action-descriptives.c:48
@@ -5088,57 +5088,48 @@ msgstr "Ексц. ст. похибки"
 msgid "Skewness"
 msgstr "Асиметрія"
 
-#: src/language/commands/descriptives.c:114
+#: src/language/commands/descriptives.c:118
 #: src/language/commands/frequencies.c:106
 #: src/language/commands/means-calc.c:454
 msgid "S.E. Skew"
 msgstr "Нах. ст. похибки"
 
-#: src/language/commands/descriptives.c:333
+#: src/language/commands/descriptives.c:335
 #, c-format
 msgid "Z-score variable name %s would be a duplicate variable name."
 msgstr "Назва змінної Z-оцінки %s буде дублікатом назви змінної."
 
-#: src/language/commands/descriptives.c:385
-msgid "DESCRIPTIVES with Z scores ignores TEMPORARY.  Temporary transformations will be made permanent."
-msgstr "DESCRIPTIVES з Z-оцінками ігнорує TEMPORARY. Тимчасові перетворення буде перетворено на остаточні."
-
-#: src/language/commands/descriptives.c:543
-msgid "Ran out of generic names for Z-score variables.  There are only 126 generic names: ZSC001-ZSC099, STDZ01-STDZ09, ZZZZ01-ZZZZ09, ZQZQ01-ZQZQ09."
-msgstr "Вичерпано діапазон типових назв для змінних Z-оцінок. Передбачено лише 126 типових назв: ZSC001-ZSC099, STDZ01-STDZ09, ZZZZ01-ZZZZ09, ZQZQ01-ZQZQ09."
-
-#: src/language/commands/descriptives.c:561
-msgid "Mapping of Variables to Z-scores"
-msgstr "Прив'язка змінних до Z-оцінок."
-
-#: src/language/commands/descriptives.c:563
-msgid "Names"
-msgstr "Назва"
-
-#: src/language/commands/descriptives.c:564 src/language/commands/glm.c:662
-#: src/language/commands/regression.c:932
-msgid "Source"
-msgstr "Джерело"
-
-#: src/language/commands/descriptives.c:564
-msgid "Target"
-msgstr "Призначення"
-
-#: src/language/commands/descriptives.c:652
-#, c-format
-msgid "Internal error processing Z scores.  Please report this to %s."
-msgstr "Внутрішня помилка під час обробки Z-оцінок. Будь ласка, повідомте про неї на %s."
-
-#: src/language/commands/descriptives.c:737
+#: src/language/commands/descriptives.c:379
 #, c-format
 msgid "Z-score of %s"
 msgstr "Z-оцінка %s"
 
-#: src/language/commands/descriptives.c:991 src/language/commands/roc.c:924
+#: src/language/commands/descriptives.c:581
+msgid "Ran out of generic names for Z-score variables.  There are only 126 generic names: ZSC001-ZSC099, STDZ01-STDZ09, ZZZZ01-ZZZZ09, ZQZQ01-ZQZQ09."
+msgstr "Вичерпано діапазон типових назв для змінних Z-оцінок. Передбачено лише 126 типових назв: ZSC001-ZSC099, STDZ01-STDZ09, ZZZZ01-ZZZZ09, ZQZQ01-ZQZQ09."
+
+#: src/language/commands/descriptives.c:599
+msgid "Mapping of Variables to Z-scores"
+msgstr "Прив'язка змінних до Z-оцінок."
+
+#: src/language/commands/descriptives.c:601
+msgid "Names"
+msgstr "Назва"
+
+#: src/language/commands/descriptives.c:602 src/language/commands/glm.c:662
+#: src/language/commands/regression.c:938
+msgid "Source"
+msgstr "Джерело"
+
+#: src/language/commands/descriptives.c:602
+msgid "Target"
+msgstr "Призначення"
+
+#: src/language/commands/descriptives.c:1065 src/language/commands/roc.c:924
 msgid "Valid N (listwise)"
 msgstr "К-ть коректних (загалом)"
 
-#: src/language/commands/descriptives.c:991
+#: src/language/commands/descriptives.c:1065
 msgid "Missing N (listwise)"
 msgstr "К-ть пропущених (загалом)"
 
@@ -5162,53 +5153,53 @@ msgstr "Це місце, де була попередня команда DO IF."
 msgid "This command cannot appear outside DO IF...END IF."
 msgstr "Цю команду не можна використовувати поза межами DO IF...END IF."
 
-#: src/language/commands/examine.c:67
+#: src/language/commands/examine.c:68
 msgid " (missing)"
 msgstr " (не вистачає)"
 
-#: src/language/commands/examine.c:214
+#: src/language/commands/examine.c:215
 #, c-format
 msgid "Boxplot of %s vs. %s"
 msgstr "Скринькова діаграма залежності %s від %s"
 
-#: src/language/commands/examine.c:220 src/language/commands/examine.c:327
+#: src/language/commands/examine.c:221 src/language/commands/examine.c:328
 #, c-format
 msgid "Boxplot of %s"
 msgstr "Скринькова діаграма %s"
 
-#: src/language/commands/examine.c:310
+#: src/language/commands/examine.c:311
 msgid "Boxplot"
 msgstr "Скринькова діаграма"
 
-#: src/language/commands/examine.c:407
+#: src/language/commands/examine.c:408
 msgid "Not creating NP plot because data set is empty."
 msgstr "Креслення NP не створено, оскільки набір даних є порожнім."
 
-#: src/language/commands/examine.c:467
+#: src/language/commands/examine.c:468
 #, c-format
 msgid "Not creating spreadlevel chart for %s"
 msgstr "Діаграму розсіювання за рівнями для %s не створюємо"
 
-#: src/language/commands/examine.c:574
+#: src/language/commands/examine.c:575
 msgid "User-missing value."
 msgstr "Пропущене користувачем значення."
 
-#: src/language/commands/examine.c:580 src/language/commands/examine.c:583
+#: src/language/commands/examine.c:581 src/language/commands/examine.c:584
 #: src/language/commands/frequencies.c:1346
 msgid "Percentiles"
 msgstr "Процентилі"
 
-#: src/language/commands/examine.c:591
+#: src/language/commands/examine.c:592
 msgid "Weighted Average"
 msgstr "Зважене середнє"
 
-#: src/language/commands/examine.c:591
+#: src/language/commands/examine.c:592
 msgid "Tukey's Hinges"
 msgstr "Кутові точки Тукі"
 
-#: src/language/commands/examine.c:598 src/language/commands/examine.c:672
-#: src/language/commands/examine.c:745 src/language/commands/examine.c:843
-#: src/language/commands/examine.c:922 src/language/commands/mann-whitney.c:200
+#: src/language/commands/examine.c:599 src/language/commands/examine.c:672
+#: src/language/commands/examine.c:745 src/language/commands/examine.c:845
+#: src/language/commands/examine.c:924 src/language/commands/mann-whitney.c:200
 #: src/language/commands/median.c:319 src/language/commands/t-test-indep.c:227
 #: src/language/commands/t-test-indep.c:282
 #: src/language/commands/t-test-one-sample.c:87
@@ -5228,11 +5219,11 @@ msgstr "Шапіро-Вілк"
 msgid "Statistic"
 msgstr "Статистика"
 
-#: src/language/commands/examine.c:663 src/language/commands/factor.c:1972
+#: src/language/commands/examine.c:663 src/language/commands/factor.c:1973
 #: src/language/commands/glm.c:659 src/language/commands/logistic.c:1086
 #: src/language/commands/oneway.c:907 src/language/commands/oneway.c:1083
 #: src/language/commands/oneway.c:1302 src/language/commands/regression.c:808
-#: src/language/commands/regression.c:930
+#: src/language/commands/regression.c:936
 #: src/language/commands/t-test-indep.c:263
 #: src/language/commands/t-test-paired.c:196
 msgid "Sig."
@@ -5273,202 +5264,202 @@ msgstr "5% обрізане середнє"
 msgid "Interquartile Range"
 msgstr "Міжквартильний діапазон"
 
-#: src/language/commands/examine.c:818
+#: src/language/commands/examine.c:820
 msgid "Extreme Values"
 msgstr "Екстремуми"
 
-#: src/language/commands/examine.c:825 src/language/commands/list.c:91
-#: src/language/commands/quick-cluster.c:610
+#: src/language/commands/examine.c:827 src/language/commands/list.c:91
+#: src/language/commands/quick-cluster.c:617
 msgid "Case Number"
 msgstr "Номер спостереження"
 
-#: src/language/commands/examine.c:829
+#: src/language/commands/examine.c:831
 msgid "Order"
 msgstr "Порядок"
 
 #. TRANSLATORS: This is a noun, not an adjective.
-#: src/language/commands/examine.c:835
+#: src/language/commands/examine.c:837
 msgid "Extreme"
 msgstr "Екстремум"
 
-#: src/language/commands/examine.c:836
+#: src/language/commands/examine.c:838
 msgid "Highest"
 msgstr "Найвищий"
 
-#: src/language/commands/examine.c:836
+#: src/language/commands/examine.c:838
 msgid "Lowest"
 msgstr "Найнижчий"
 
-#: src/language/commands/examine.c:906 src/language/commands/logistic.c:1239
+#: src/language/commands/examine.c:908 src/language/commands/logistic.c:1239
 #: src/language/commands/means.c:695 src/language/commands/reliability.c:487
 msgid "Case Processing Summary"
 msgstr "Резюме обробки спостережень"
 
-#: src/language/commands/examine.c:1703
+#: src/language/commands/examine.c:1705
 #, c-format
 msgid "%s and %s are mutually exclusive."
 msgstr "%s та %s є взаємовиключними."
 
-#: src/language/commands/factor.c:1029
+#: src/language/commands/factor.c:1030
 #, c-format
 msgid "Matrix input for %s must be either COV or CORR"
 msgstr "Вхідною матрицею для %s має бути або COV, або CORR"
 
-#: src/language/commands/factor.c:1393
+#: src/language/commands/factor.c:1394
 msgid "Factor analysis on a single variable is not useful."
 msgstr "Факторний аналіз однієї змінної позбавлено сенсу."
 
-#: src/language/commands/factor.c:1495
+#: src/language/commands/factor.c:1496
 msgid "Component Number"
 msgstr "Кількість компонент"
 
-#: src/language/commands/factor.c:1495
+#: src/language/commands/factor.c:1496
 msgid "Factor Number"
 msgstr "Номер фактора"
 
-#: src/language/commands/factor.c:1509 src/language/commands/factor.c:1512
+#: src/language/commands/factor.c:1510 src/language/commands/factor.c:1513
 msgid "Communalities"
 msgstr "Спільності"
 
-#: src/language/commands/factor.c:1514
+#: src/language/commands/factor.c:1515
 msgid "Initial"
 msgstr "Початковий"
 
-#: src/language/commands/factor.c:1516
+#: src/language/commands/factor.c:1517
 msgid "Extraction"
 msgstr "Видобування"
 
-#: src/language/commands/factor.c:1558 src/language/commands/factor.c:1637
-#: src/language/commands/factor.c:1699
+#: src/language/commands/factor.c:1559 src/language/commands/factor.c:1638
+#: src/language/commands/factor.c:1700
 msgid "Component"
 msgstr "Компонент"
 
-#: src/language/commands/factor.c:1613
+#: src/language/commands/factor.c:1614
 msgid "Total Variance Explained"
 msgstr "Розподіл сукупної дисперсії"
 
-#: src/language/commands/factor.c:1618
+#: src/language/commands/factor.c:1619
 #, no-c-format
 msgid "% of Variance"
 msgstr "%o дисперсії"
 
-#: src/language/commands/factor.c:1620
+#: src/language/commands/factor.c:1621
 #, no-c-format
 msgid "Cumulative %"
 msgstr "Накопичуваний відсоток"
 
-#: src/language/commands/factor.c:1623
+#: src/language/commands/factor.c:1624
 msgid "Phase"
 msgstr "Фаза"
 
-#: src/language/commands/factor.c:1625
+#: src/language/commands/factor.c:1626
 msgid "Initial Eigenvalues"
 msgstr "Початкові власні значення"
 
-#: src/language/commands/factor.c:1629
+#: src/language/commands/factor.c:1630
 msgid "Extraction Sums of Squared Loadings"
 msgstr "Видобуті суми піднесених до квадрата навантажень"
 
-#: src/language/commands/factor.c:1633
+#: src/language/commands/factor.c:1634
 msgid "Rotation Sums of Squared Loadings"
 msgstr "Обернуті суми піднесених до квадрата навантажень"
 
-#: src/language/commands/factor.c:1695
+#: src/language/commands/factor.c:1696
 msgid "Factor Correlation Matrix"
 msgstr "Матриця кореляцій факторів"
 
-#: src/language/commands/factor.c:1702
+#: src/language/commands/factor.c:1703
 msgid "Factor 2"
 msgstr "Фактор 2"
 
-#: src/language/commands/factor.c:1734
+#: src/language/commands/factor.c:1735
 msgid "Anti-Image Matrices"
 msgstr "Антиобразні матриці"
 
-#: src/language/commands/factor.c:1739
+#: src/language/commands/factor.c:1740
 msgid "Anti-image Covariance"
 msgstr "Антиобразна коваріація"
 
-#: src/language/commands/factor.c:1740
+#: src/language/commands/factor.c:1741
 msgid "Anti-image Correlation"
 msgstr "Антиобразна кореляція"
 
-#: src/language/commands/factor.c:1761
+#: src/language/commands/factor.c:1762
 msgid "Correlation Matrix"
 msgstr "Матриця кореляцій"
 
-#: src/language/commands/factor.c:1770
+#: src/language/commands/factor.c:1771
 #: src/language/commands/t-test-paired.c:195
 msgid "Correlation"
 msgstr "Кореляція"
 
-#: src/language/commands/factor.c:1808
+#: src/language/commands/factor.c:1809
 msgid "Determinant"
 msgstr "Визначник"
 
-#: src/language/commands/factor.c:1821
+#: src/language/commands/factor.c:1822
 msgid "Covariance Matrix"
 msgstr "Коваріаційна матриця"
 
-#: src/language/commands/factor.c:1853
+#: src/language/commands/factor.c:1854
 msgid "The dataset contains no complete observations. No analysis will be performed."
 msgstr "У наборі даних не міститься повних спостережень. Аналіз виконано не буде."
 
-#: src/language/commands/factor.c:1877
+#: src/language/commands/factor.c:1878
 msgid "The dataset has no covariance matrix or a correlation matrix along with standard deviations."
 msgstr "У наборі даних немає матриці коваріації або кореляції разом зі стандатними відхиленнями."
 
-#: src/language/commands/factor.c:1935
+#: src/language/commands/factor.c:1936
 msgid "Analysis N"
 msgstr "N у аналізі"
 
-#: src/language/commands/factor.c:1963
+#: src/language/commands/factor.c:1964
 msgid "KMO and Bartlett's Test"
 msgstr "Перевірка КМО і Бартлета"
 
-#: src/language/commands/factor.c:1967
+#: src/language/commands/factor.c:1968
 msgid "Kaiser-Meyer-Olkin Measure of Sampling Adequacy"
 msgstr "Міра Кайзера-Меєра-Олкіна адекватності поділу на вибірки"
 
-#: src/language/commands/factor.c:1969
+#: src/language/commands/factor.c:1970
 msgid "Bartlett's Test of Sphericity"
 msgstr "Перевірка сферичності Бартлета"
 
-#: src/language/commands/factor.c:1970
+#: src/language/commands/factor.c:1971
 msgid "Approx. Chi-Square"
 msgstr "Приблизне χ-квадрат"
 
-#: src/language/commands/factor.c:2018
+#: src/language/commands/factor.c:2019
 #, c-format
 msgid "The %s criteria result in zero factors extracted. Therefore no analysis will be performed."
 msgstr "Критерій, використаний у %s, призвів до видобування нульової кількості факторів. Отже, виконувати аналіз немає сенсу."
 
-#: src/language/commands/factor.c:2025
+#: src/language/commands/factor.c:2026
 #, c-format
 msgid "The %s criteria result in more factors than variables, which is not meaningful. No analysis will be performed."
 msgstr "Критерій, використаний у %s, призвів до видобування кількості факторів, що перевищує кількість змінних. Отже, виконувати аналіз немає сенсу."
 
-#: src/language/commands/factor.c:2117
+#: src/language/commands/factor.c:2118
 msgid "Component Matrix"
 msgstr "Матриця компонентів"
 
-#: src/language/commands/factor.c:2117
+#: src/language/commands/factor.c:2118
 msgid "Factor Matrix"
 msgstr "Матриця факторів"
 
-#: src/language/commands/factor.c:2122
+#: src/language/commands/factor.c:2123
 msgid "Pattern Matrix"
 msgstr "Матриця взірців"
 
-#: src/language/commands/factor.c:2131
+#: src/language/commands/factor.c:2132
 msgid "Structure Matrix"
 msgstr "Матриця структури"
 
-#: src/language/commands/factor.c:2133
+#: src/language/commands/factor.c:2134
 msgid "Rotated Component Matrix"
 msgstr "Обернута матриця компонентів"
 
-#: src/language/commands/factor.c:2134
+#: src/language/commands/factor.c:2135
 msgid "Rotated Factor Matrix"
 msgstr "Обернута матриця факторів"
 
@@ -5664,12 +5655,12 @@ msgid "Type III Sum Of Squares"
 msgstr "Сума квадратів для типу III"
 
 #: src/language/commands/glm.c:657 src/language/commands/oneway.c:905
-#: src/language/commands/regression.c:928
+#: src/language/commands/regression.c:934
 msgid "Mean Square"
 msgstr "Середнє за квадратами"
 
 #: src/language/commands/glm.c:658 src/language/commands/oneway.c:906
-#: src/language/commands/regression.c:929
+#: src/language/commands/regression.c:935
 #: src/language/commands/t-test-indep.c:262
 msgid "F"
 msgstr "F"
@@ -5821,36 +5812,36 @@ msgstr "Вхідна програма не містить %s або %s."
 msgid "Input program did not create any variables."
 msgstr "Вхідна програма не створила жодних змінних."
 
-#: src/language/commands/inpt-pgm.c:372
+#: src/language/commands/inpt-pgm.c:373
 msgid "REREAD: Column numbers must be positive finite numbers.  Column set to 1."
 msgstr "REREAD: номери стовпчиків мають бути додатними скінченними числами. Буде використано типове значення номера стовпчика, 1."
 
-#: src/language/commands/jonckheere-terpstra.c:356
+#: src/language/commands/jonckheere-terpstra.c:347
 msgid "Jonckheere-Terpstra Test"
 msgstr "Тест Джонкієра-Терпстра"
 
-#: src/language/commands/jonckheere-terpstra.c:363
+#: src/language/commands/jonckheere-terpstra.c:354
 #, c-format
 msgid "Number of levels in %s"
 msgstr "Кількість рівнів у %s"
 
-#: src/language/commands/jonckheere-terpstra.c:369
+#: src/language/commands/jonckheere-terpstra.c:360
 msgid "Observed J-T Statistic"
 msgstr "Спостережна статистика Дж.-Т."
 
-#: src/language/commands/jonckheere-terpstra.c:370
+#: src/language/commands/jonckheere-terpstra.c:361
 msgid "Mean J-T Statistic"
 msgstr "Середня статистика Дж.-Т."
 
-#: src/language/commands/jonckheere-terpstra.c:371
+#: src/language/commands/jonckheere-terpstra.c:362
 msgid "Std. Deviation of J-T Statistic"
 msgstr "Станд. відхилення статистики Дж.-Т."
 
-#: src/language/commands/jonckheere-terpstra.c:372
+#: src/language/commands/jonckheere-terpstra.c:363
 msgid "Std. J-T Statistic"
 msgstr "Станд. статистика Дж.-Т."
 
-#: src/language/commands/jonckheere-terpstra.c:373
+#: src/language/commands/jonckheere-terpstra.c:364
 #: src/language/commands/ks-one-sample.c:313
 #: src/language/commands/mann-whitney.c:251 src/language/commands/runs.c:328
 #: src/language/commands/wilcoxon.c:273
@@ -6018,7 +6009,7 @@ msgstr "Кодування"
 msgid "Parameter coding"
 msgstr "Кодування параметра"
 
-#: src/language/commands/logistic.c:1302 src/language/commands/mrsets.c:593
+#: src/language/commands/logistic.c:1302 src/language/commands/mrsets.c:601
 msgid "Categories"
 msgstr "Категорії"
 
@@ -6166,7 +6157,7 @@ msgstr "Набір даних матриці не містить неперер�
 msgid "%s matrix has %zu columns but %zu rows named variables to be analyzed (and %zu rows named unknown variables)."
 msgstr "Матриця %s складається з %zu стовпчиків, але аналізу підлягають %zu рядків іменованих змінних (і %zu рядків іменованих невідомих змінних)."
 
-#: src/language/commands/matrix.c:994
+#: src/language/commands/matrix.c:1000
 #, c-format
 msgid "Matrix function %s requires %zu argument."
 msgid_plural "Matrix function %s requires %zu arguments."
@@ -6175,7 +6166,7 @@ msgstr[1] "Матрична функція %s потребує %zu аргуме�
 msgstr[2] "Матрична функція %s потребує %zu аргументів."
 msgstr[3] "Матрична функція %s потребує одного аргументу."
 
-#: src/language/commands/matrix.c:1000
+#: src/language/commands/matrix.c:1006
 #, c-format
 msgid "Matrix function %s requires 1 or 2 arguments, but %zu was provided."
 msgid_plural "Matrix function %s requires 1 or 2 arguments, but %zu were provided."
@@ -6184,314 +6175,314 @@ msgstr[1] "Матрична функція %s потребує 1 або 2 арг
 msgstr[2] "Матрична функція %s потребує 1 або 2 аргументів, надано ж %zu."
 msgstr[3] "Матрична функція %s потребує 1 або 2 аргументів, надано ж %zu."
 
-#: src/language/commands/matrix.c:1008
+#: src/language/commands/matrix.c:1014
 #, c-format
 msgid "Matrix function %s requires at least one argument."
 msgstr "Матрична функція %s потребує принаймні одного аргументу."
 
-#: src/language/commands/matrix.c:1076 src/language/commands/matrix.c:8739
+#: src/language/commands/matrix.c:1082 src/language/commands/matrix.c:8793
 #, c-format
 msgid "Unknown variable %s."
 msgstr "Невідома змінна %s."
 
-#: src/language/commands/matrix.c:1093
+#: src/language/commands/matrix.c:1099
 msgid "Syntax error expecting matrix expression."
 msgstr "Синтаксична помилка: мало бути вказано вираз матриці."
 
-#: src/language/commands/matrix.c:1448
+#: src/language/commands/matrix.c:1454
 msgid "Input to CHOL function is not positive-definite."
 msgstr "Вхідні дані функції CHOL не є додатно визначеними."
 
-#: src/language/commands/matrix.c:1563
+#: src/language/commands/matrix.c:1595
 #, c-format
 msgid "Column %zu in DESIGN argument has constant value."
 msgstr "Стовпчик %zu в аргументі DESIGN має стале значення."
 
-#: src/language/commands/matrix.c:1637
+#: src/language/commands/matrix.c:1669
 msgid "Argument of EVAL must be symmetric."
 msgstr "Аргумент EVAL має бути симетричним."
 
-#: src/language/commands/matrix.c:1803
+#: src/language/commands/matrix.c:1835
 #, c-format
 msgid "GSCH requires its argument to have at least as many columns as rows, but it has dimensions %zu×%zu."
 msgstr "Аргумент GSCH повинен мати стільки ж стовпчиків, скільки і рядків, але маємо розмірність %zu×%zu."
 
-#: src/language/commands/matrix.c:1840
+#: src/language/commands/matrix.c:1872
 #, c-format
 msgid "%zu×%zu argument to GSCH contains only %zu linearly independent columns."
 msgstr "Аргумент %zu×%zu GSCH містить лише %zu лінійно незалежних стовпчиків."
 
-#: src/language/commands/matrix.c:2162
+#: src/language/commands/matrix.c:2216
 msgid "Arguments 2 and 3 to RESHAPE must be integers."
 msgstr "Аргументами 2 і 3 RESHAPE мають бути цілі числа."
 
-#: src/language/commands/matrix.c:2171
+#: src/language/commands/matrix.c:2225
 #, c-format
 msgid "Product of RESHAPE size arguments (%zu×%zu = %zu) differs from product of matrix dimensions (%zu×%zu = %zu)."
 msgstr "Добуток аргументів розмірності RESHAPE (%zu×%zu = %zu) не дорівнює добутку розмірностей матриці (%zu×%zu = %zu)."
 
-#: src/language/commands/matrix.c:2329
+#: src/language/commands/matrix.c:2383
 msgid "SOLVE arguments must have the same number of rows."
 msgstr "Аргументи SOLVE повинні мати однакові кількості рядків."
 
-#: src/language/commands/matrix.c:2331
+#: src/language/commands/matrix.c:2385
 #, c-format
 msgid "Argument 1 has dimensions %zu×%zu."
 msgstr "Аргумент 1 має розмірність %zu×%zu."
 
-#: src/language/commands/matrix.c:2333
+#: src/language/commands/matrix.c:2387
 #, c-format
 msgid "Argument 2 has dimensions %zu×%zu."
 msgstr "Аргумент 2 має розмірність %zu×%zu."
 
-#: src/language/commands/matrix.c:2402
+#: src/language/commands/matrix.c:2456
 msgid "Scalar argument to SWEEP must be integer."
 msgstr "Скалярний аргумент SWEEP має бути цілим числом."
 
-#: src/language/commands/matrix.c:2409
+#: src/language/commands/matrix.c:2463
 msgid "Scalar argument to SWEEP must be integer less than or equal to the smaller of the matrix argument's rows and columns."
 msgstr "Скалярний аргумент SWEEP має бути цілим числом, яке менше або дорівнює меншому зі значень кількості рядків і стовпчиків у матричному аргументі."
 
-#: src/language/commands/matrix.c:2491
+#: src/language/commands/matrix.c:2545
 msgid "Product of arguments to UNIFORM exceeds memory size."
 msgstr "Добуто аргументів UNIFORM перевищує максимальний для нього об'єм пам'яті."
 
-#: src/language/commands/matrix.c:3307
+#: src/language/commands/matrix.c:3361
 #, c-format
 msgid "The operands of %s must have the same dimensions or one must be a scalar."
 msgstr "Операнди %s повинні мати однакові розмірності або один з них має бути числом."
 
-#: src/language/commands/matrix.c:3311 src/language/commands/matrix.c:3332
+#: src/language/commands/matrix.c:3365 src/language/commands/matrix.c:3386
 #, c-format
 msgid "The left-hand operand is a %zu×%zu matrix."
 msgstr "Операнд з лівого боку є матрицею %zu×%zu."
 
-#: src/language/commands/matrix.c:3314 src/language/commands/matrix.c:3335
+#: src/language/commands/matrix.c:3368 src/language/commands/matrix.c:3389
 #, c-format
 msgid "The right-hand operand is a %zu×%zu matrix."
 msgstr "Операнд з правого боку є матрицею %zu×%zu."
 
-#: src/language/commands/matrix.c:3330
+#: src/language/commands/matrix.c:3384
 msgid "Matrices not conformable for multiplication."
 msgstr "Матриці є несумісними для множення."
 
-#: src/language/commands/matrix.c:3376
+#: src/language/commands/matrix.c:3430
 #, c-format
 msgid "Matrix exponentation with ** requires a square matrix on the left-hand size, not one with dimensions %zu×%zu."
 msgstr "Піднесення матриці до степеня за допомогою ** потребує квадратної матриці з лівого боку від оператора, а не матриці %zu×%zu."
 
-#: src/language/commands/matrix.c:3384
+#: src/language/commands/matrix.c:3438
 #, c-format
 msgid "Matrix exponentiation with ** requires a scalar on the right-hand side, not a matrix with dimensions %zu×%zu."
 msgstr "Піднесення матриці до степеня за допомогою ** потребує числа з правого боку від оператора, а не матриці %zu×%zu."
 
-#: src/language/commands/matrix.c:3393
+#: src/language/commands/matrix.c:3447
 #, c-format
 msgid "Exponent %.1f in matrix exponentiation is non-integer or outside the valid range."
 msgstr "Степінь %.1f у піднесенні до степеня матриць не є цілим числом або не належить до коректного діапазону значень."
 
-#: src/language/commands/matrix.c:3440
+#: src/language/commands/matrix.c:3494
 #, c-format
 msgid "This operand is a %zu×%zu matrix."
 msgstr "Це операнд є матрицею %zu×%zu."
 
-#: src/language/commands/matrix.c:3463
+#: src/language/commands/matrix.c:3517
 #, c-format
-msgid "This operand with value %g is outside the supported integer range from %ld to %ld."
-msgstr "Цей операнд зі значенням %g перебуває поза межами підтримуваного діапазону цілих чисел від %ld до %ld."
+msgid "This operand with value %g is outside the supported integer range from %<PRId64> to %<PRId64>."
+msgstr "Цей операнд зі значенням %g перебуває поза межами підтримуваного діапазону цілих чисел від %<PRId64> до %<PRId64>."
 
-#: src/language/commands/matrix.c:3479
+#: src/language/commands/matrix.c:3533
 msgid "All operands of : must be scalars in the supported integer range."
 msgstr "Усі операнди : мають бути числами у підтримуваному діапазоні цілих чисел."
 
-#: src/language/commands/matrix.c:3496
+#: src/language/commands/matrix.c:3550
 msgid "The increment operand to : must be nonzero."
 msgstr "Операнд кроку у : має бути ненульовим."
 
-#: src/language/commands/matrix.c:3507
+#: src/language/commands/matrix.c:3561
 msgid "Matrix cannot be allocated.  Too large?"
 msgstr "Не вдалося розмістити матрицю у пам'яті. Вона надто велика?"
 
-#: src/language/commands/matrix.c:3536
+#: src/language/commands/matrix.c:3590
 msgid "This expression tries to horizontally join matrices with differing numbers of rows."
 msgstr "Цей вираз намагається з'єднати матриці, у яких різна кількість рядків, горизонтально."
 
-#: src/language/commands/matrix.c:3566
+#: src/language/commands/matrix.c:3620
 msgid "This expression tries to vertically join matrices with differing numbers of columns."
 msgstr "Цей вираз намагається з'єднати матриці, у яких різна кількість стовпчиків, вертикально."
 
-#: src/language/commands/matrix.c:3631
+#: src/language/commands/matrix.c:3685
 #, c-format
 msgid "Vector index must be scalar or vector, not a %zu×%zu matrix."
 msgstr "Індекс вектора має бути числом або вектором, але не матрицею %zu×%zu."
 
-#: src/language/commands/matrix.c:3638
+#: src/language/commands/matrix.c:3692
 #, c-format
 msgid "Matrix row index must be scalar or vector, not a %zu×%zu matrix."
 msgstr "Індекс рядка матриці має бути числом або вектором, але не матрицею %zu×%zu."
 
-#: src/language/commands/matrix.c:3645
+#: src/language/commands/matrix.c:3699
 #, c-format
 msgid "Matrix column index must be scalar or vector, not a %zu×%zu matrix."
 msgstr "Індекс стовпчика матриці має бути числом або вектором, але не матрицею %zu×%zu."
 
-#: src/language/commands/matrix.c:3667
+#: src/language/commands/matrix.c:3721
 #, c-format
 msgid "Index %g is out of range for vector with %zu elements."
 msgstr "Індекс %g не належить до припустимого діапазону для вектора з %zu елементами."
 
-#: src/language/commands/matrix.c:3673
+#: src/language/commands/matrix.c:3727
 #, c-format
 msgid "%g is not a valid row index for a %zu×%zu matrix."
 msgstr "%g не є коректним індексом рядка для матриці %zu×%zu."
 
-#: src/language/commands/matrix.c:3680
+#: src/language/commands/matrix.c:3734
 #, c-format
 msgid "%g is not a valid column index for a %zu×%zu matrix."
 msgstr "%g не є коректним індексом стовпчика для матриці %zu×%zu."
 
-#: src/language/commands/matrix.c:3712
+#: src/language/commands/matrix.c:3766
 #, c-format
 msgid "Vector index operator may not be applied to a %zu×%zu matrix."
 msgstr "Оператор індексу вектора не можна застосовувати до матриці %zu×%zu."
 
-#: src/language/commands/matrix.c:3795
+#: src/language/commands/matrix.c:3849
 #, c-format
 msgid "Function %s argument %zu must be a scalar, not a %zu×%zu matrix."
 msgstr "Аргумент функції %s із номером %zu має бути числом, а не матрицею %zu×%zu."
 
-#: src/language/commands/matrix.c:3810
+#: src/language/commands/matrix.c:3864
 #, c-format
 msgid "Function %s argument %zu must be a vector, not a %zu×%zu matrix."
 msgstr "Аргумент функції %s із номером %zu має бути вектором, а не матрицею %zu×%zu."
 
-#: src/language/commands/matrix.c:3861
+#: src/language/commands/matrix.c:3915
 #, c-format
 msgid "Argument %zu to matrix function %s must be greater than or equal to argument %zu."
 msgstr "Аргумент %zu матричної функції %s має бути більшим або рівним аргументу %zu."
 
-#: src/language/commands/matrix.c:3867
+#: src/language/commands/matrix.c:3921
 #, c-format
 msgid "Argument %zu to matrix function %s must be greater than argument %zu."
 msgstr "Аргумент %zu матричної функції %s має бути більшим за аргумент %zu."
 
-#: src/language/commands/matrix.c:3873
+#: src/language/commands/matrix.c:3927
 #, c-format
 msgid "Argument %zu to matrix function %s must be less than or equal to argument %zu."
 msgstr "Аргумент %zu матричної функції %s має бути меншим або рівним аргументу %zu."
 
-#: src/language/commands/matrix.c:3879
+#: src/language/commands/matrix.c:3933
 #, c-format
 msgid "Argument %zu to matrix function %s must be less than argument %zu."
 msgstr "Аргумент %zu матричної функції %s має бути меншим за аргумент %zu."
 
-#: src/language/commands/matrix.c:3885
+#: src/language/commands/matrix.c:3939
 #, c-format
 msgid "Argument %zu to matrix function %s must not be equal to argument %zu."
 msgstr "Аргумент %zu матричної функції %s має бути не рівним аргументу %zu."
 
-#: src/language/commands/matrix.c:3893 src/language/commands/matrix.c:3900
-#: src/language/commands/matrix.c:3948
+#: src/language/commands/matrix.c:3947 src/language/commands/matrix.c:3954
+#: src/language/commands/matrix.c:4002
 #, c-format
 msgid "Argument %zu is %g."
 msgstr "Аргумент %zu має значення %g."
 
-#: src/language/commands/matrix.c:3896 src/language/commands/matrix.c:3952
+#: src/language/commands/matrix.c:3950 src/language/commands/matrix.c:4006
 #, c-format
 msgid "Row %zu, column %zu of argument %zu is %g."
 msgstr "Елемент у рядку %zu, стовпчик %zu аргументу %zu дорівнює %g."
 
-#: src/language/commands/matrix.c:3914
+#: src/language/commands/matrix.c:3968
 #, c-format
 msgid "Argument %zu to matrix function %s must be greater than or equal to %g."
 msgstr "Аргумент %zu матричної функції %s має бути більшим або рівним %g."
 
-#: src/language/commands/matrix.c:3920
+#: src/language/commands/matrix.c:3974
 #, c-format
 msgid "Argument %zu to matrix function %s must be greater than %g."
 msgstr "Аргумент %zu матричної функції %s має бути більшим за %g."
 
-#: src/language/commands/matrix.c:3926
+#: src/language/commands/matrix.c:3980
 #, c-format
 msgid "Argument %zu to matrix function %s must be less than or equal to %g."
 msgstr "Аргумент %zu матричної функції %s має бути меншим або рівним за %g."
 
-#: src/language/commands/matrix.c:3932
+#: src/language/commands/matrix.c:3986
 #, c-format
 msgid "Argument %zu to matrix function %s must be less than %g."
 msgstr "Аргумент %zu матричної функції %s має бути меншим за %g."
 
-#: src/language/commands/matrix.c:3938
+#: src/language/commands/matrix.c:3992
 #, c-format
 msgid "Argument %zu to matrix function %s must not be equal to %g."
 msgstr "Аргумент %zu матричної функції %s має бути не рівним за %g."
 
-#: src/language/commands/matrix.c:4021
+#: src/language/commands/matrix.c:4075
 #, c-format
 msgid "Row %zu, column %zu of argument %zu to matrix function %s is %g, which is outside the valid range %c%d,%d%c."
 msgstr "Елемент у рядку %zu, стовпчик %zu аргументу %zu матричної функції %s дорівнює %g, тобто значенню, яке лежить поза припустимим діапазоном %c%d,%d%c."
 
-#: src/language/commands/matrix.c:4030
+#: src/language/commands/matrix.c:4084
 #, c-format
 msgid "Argument %zu to matrix function %s is %g, which is outside the valid range %c%d,%d%c."
 msgstr "Аргумент %zu матричної функції %s дорівнює %g, тобто значенню, яке лежить поза припустимим діапазоном %c%d,%d%c."
 
-#: src/language/commands/matrix.c:4047
+#: src/language/commands/matrix.c:4101
 #, c-format
 msgid "Argument %zu to matrix function %s, which must be integer, contains non-integer value %g in row %zu, column %zu."
 msgstr "Аргумент %zu матричної функції %s, який має бути цілочисельним, містить не ціле значення %g у рядку %zu, стовпчик %zu."
 
-#: src/language/commands/matrix.c:4053
+#: src/language/commands/matrix.c:4107
 #, c-format
 msgid "Argument %zu to matrix function %s, which must be integer, has non-integer value %g."
 msgstr "Аргумент %zu матричної функції %s має бути цілочисельним, але має не ціле значення %g."
 
-#: src/language/commands/matrix.c:4402
+#: src/language/commands/matrix.c:4456
 #, c-format
 msgid "Arguments 1 and 2 to %s have dimensions %zu×%zu and %zu×%zu, but %s requires these arguments either to have the same dimensions or for one of them to be a scalar."
 msgstr "Аргументи 1 і 2 %s мають розмірності %zu×%zu і %zu×%zu, але для %s ці аргументи або повинні мати однакові розмірності, або один з них має бути числом."
 
-#: src/language/commands/matrix.c:4528
+#: src/language/commands/matrix.c:4582
 #, c-format
 msgid "Uninitialized variable %s used in expression."
 msgstr "У виразі використано неініціалізовану змінну %s."
 
-#: src/language/commands/matrix.c:4686
+#: src/language/commands/matrix.c:4740
 #, c-format
 msgid "Expression for %s must evaluate to scalar, not a %zu×%zu matrix."
 msgstr "Результатом обчислення виразу %s має бути число, а не матриця %zu×%zu."
 
-#: src/language/commands/matrix.c:4710
+#: src/language/commands/matrix.c:4764
 #, c-format
 msgid "Expression for %s is outside the supported integer range."
 msgstr "Вираз для %s лежить поза підтримуваним діапазоном цілих чисел."
 
-#: src/language/commands/matrix.c:4782 src/language/commands/matrix.c:4864
+#: src/language/commands/matrix.c:4836 src/language/commands/matrix.c:4918
 #, c-format
 msgid "Undefined variable %s."
 msgstr "Невизначена змінна %s."
 
-#: src/language/commands/matrix.c:4869
+#: src/language/commands/matrix.c:4923
 #, c-format
 msgid "Cannot index %zu×%zu matrix %s."
 msgstr "Неможливо індексувати матрицю %zu×%zu %s."
 
-#: src/language/commands/matrix.c:4878
+#: src/language/commands/matrix.c:4932
 #, c-format
 msgid "Can't use vector indexing on %zu×%zu matrix %s."
 msgstr "Неможливо використати індексування вектора для матриці %zu×%zu %s."
 
-#: src/language/commands/matrix.c:4912 src/language/commands/matrix.c:4924
+#: src/language/commands/matrix.c:4966 src/language/commands/matrix.c:4978
 #, c-format
 msgid "Only an %zu-element vector may be assigned to this %zu-element subvector of %s."
 msgstr "Лише %zu-елементний вектор може бути призначено до %zu-елементного підвектора %s."
 
-#: src/language/commands/matrix.c:4916
+#: src/language/commands/matrix.c:4970
 #, c-format
 msgid "The source is an %zu×%zu matrix."
 msgstr "Джерелом є матриця %zu×%zu."
 
-#: src/language/commands/matrix.c:4927
+#: src/language/commands/matrix.c:4981
 #, c-format
 msgid "The source vector has %zu element."
 msgid_plural "The source vector has %zu elements."
@@ -6500,22 +6491,22 @@ msgstr[1] "У векторі початкових значень %zu елеме�
 msgstr[2] "У векторі початкових значень %zu елементів."
 msgstr[3] "У векторі початкових значень %zu елемент."
 
-#: src/language/commands/matrix.c:4956
+#: src/language/commands/matrix.c:5010
 #, c-format
 msgid "Numbers of indexes for assigning to %s differ from the size of the source matrix."
 msgstr "Кількість індексів для встановлення значення %s відрізняється від кількості рядків у початковій матриці."
 
-#: src/language/commands/matrix.c:4961
+#: src/language/commands/matrix.c:5015
 #, c-format
 msgid "Number of row indexes for assigning to %s differs from number of rows in source matrix."
 msgstr "Кількість індексів рядків для встановлення значення %s відрізняється від кількості рядків у початковій матриці."
 
-#: src/language/commands/matrix.c:4966
+#: src/language/commands/matrix.c:5020
 #, c-format
 msgid "Number of column indexes for assigning to %s differs from number of columns in source matrix."
 msgstr "Кількість індексів рядків для встановлення значення %s відрізняється від кількості стовпчики у початковій матриці."
 
-#: src/language/commands/matrix.c:4974
+#: src/language/commands/matrix.c:5028
 #, c-format
 msgid "There is %zu row index."
 msgid_plural "There are %zu row indexes."
@@ -6524,7 +6515,7 @@ msgstr[1] "Маємо %zu індекси рядків."
 msgstr[2] "Маємо %zu індексів рядків."
 msgstr[3] "Маємо %zu індекс рядка."
 
-#: src/language/commands/matrix.c:4980
+#: src/language/commands/matrix.c:5034
 #, c-format
 msgid "Destination matrix %s has %zu row."
 msgid_plural "Destination matrix %s has %zu rows."
@@ -6533,7 +6524,7 @@ msgstr[1] "У матриці призначення %s %zu рядки."
 msgstr[2] "У матриці призначення %s %zu рядків."
 msgstr[3] "У матриці призначення %s %zu рядок."
 
-#: src/language/commands/matrix.c:4990
+#: src/language/commands/matrix.c:5044
 #, c-format
 msgid "There is %zu column index."
 msgid_plural "There are %zu column indexes."
@@ -6542,7 +6533,7 @@ msgstr[1] "Маємо %zu індекси стовпчиків."
 msgstr[2] "Маємо %zu індексів стовпчиків."
 msgstr[3] "Маємо %zu індекс стовпчика."
 
-#: src/language/commands/matrix.c:4996
+#: src/language/commands/matrix.c:5050
 #, c-format
 msgid "Destination matrix %s has %zu column."
 msgid_plural "Destination matrix %s has %zu columns."
@@ -6551,53 +6542,53 @@ msgstr[1] "У матриці призначення %s %zu стовпчики."
 msgstr[2] "У матриці призначення %s %zu стовпчиків."
 msgstr[3] "У матриці призначення %s %zu стовпчик."
 
-#: src/language/commands/matrix.c:5002
+#: src/language/commands/matrix.c:5056
 #, c-format
 msgid "The source matrix is %zu×%zu."
 msgstr "Початкова матриця має розміри %zu×%zu."
 
-#: src/language/commands/matrix.c:5979
+#: src/language/commands/matrix.c:6033
 msgid "BREAK not inside LOOP."
 msgstr "BREAK поза межами LOOP."
 
-#: src/language/commands/matrix.c:6023
+#: src/language/commands/matrix.c:6077
 msgid "Matrix Variables"
 msgstr "Матричні змінні"
 
-#: src/language/commands/matrix.c:6025 src/language/commands/matrix.c:8526
+#: src/language/commands/matrix.c:6079 src/language/commands/matrix.c:8580
 #: src/language/commands/set.c:1291 src/language/commands/sys-file-info.c:186
 msgid "Attribute"
 msgstr "Атрибут"
 
-#: src/language/commands/matrix.c:6026
+#: src/language/commands/matrix.c:6080
 msgid "Dimension"
 msgstr "Розмірність"
 
-#: src/language/commands/matrix.c:6028
+#: src/language/commands/matrix.c:6082
 msgid "Size (kB)"
 msgstr "Розмір (кБ)"
 
-#: src/language/commands/matrix.c:6154
+#: src/language/commands/matrix.c:6208
 #, c-format
 msgid "Cannot save %zu×%zu matrix to %s because the first SAVE to %s in this matrix program wrote a %zu-column matrix."
 msgstr "Не вдалося зберегти матрицю %zu×%zu до %s, оскільки перше SAVE до %s у цій матричній програмі записало %zu-стовпчикову матрицю."
 
-#: src/language/commands/matrix.c:6159
+#: src/language/commands/matrix.c:6213
 #, c-format
 msgid "This is the location of the first SAVE to %s."
 msgstr "Це місце першого SAVE до %s."
 
-#: src/language/commands/matrix.c:6218
+#: src/language/commands/matrix.c:6272
 #, c-format
 msgid "Duplicate variable name %s in SAVE statement."
 msgstr "Дублювання назви змінної %s в інструкції SAVE."
 
-#: src/language/commands/matrix.c:6231
+#: src/language/commands/matrix.c:6285
 #, c-format
 msgid "The SAVE command STRINGS subcommand specifies an unknown variable %s."
 msgstr "Підкоманда STRINGS команди SAVE визначає невідому змінну %s."
 
-#: src/language/commands/matrix.c:6235
+#: src/language/commands/matrix.c:6289
 #, c-format
 msgid "The SAVE command STRINGS subcommand specifies %zu unknown variable: %s."
 msgid_plural "The SAVE command STRINGS subcommand specifies %zu unknown variables, including %s."
@@ -6606,52 +6597,52 @@ msgstr[1] "Підкоманда STRINGS команди SAVE визначає %zu
 msgstr[2] "Підкоманда STRINGS команди SAVE визначає %zu невідомих змінних: %s."
 msgstr[3] "Підкоманда STRINGS команди SAVE визначає %zu невідому змінну: %s."
 
-#: src/language/commands/matrix.c:6394
+#: src/language/commands/matrix.c:6448
 msgid "Ignoring NAMES because VARIABLES was also specified."
 msgstr "Ігноруємо NAMES, оскільки було також вказано VARIABLES."
 
-#: src/language/commands/matrix.c:6567 src/language/commands/matrix.c:7149
+#: src/language/commands/matrix.c:6621 src/language/commands/matrix.c:7203
 #, c-format
 msgid "Field width %d does not evenly divide record width %d."
 msgstr "Ширина поля %d не ділить ширину запису %d на дві рівні частини."
 
-#: src/language/commands/matrix.c:6570 src/language/commands/matrix.c:6703
-#: src/language/commands/matrix.c:7152 src/language/commands/matrix.c:7268
+#: src/language/commands/matrix.c:6624 src/language/commands/matrix.c:6757
+#: src/language/commands/matrix.c:7206 src/language/commands/matrix.c:7322
 msgid "This syntax designates the record width."
 msgstr "Ця синтаксична конструкція позначає ширину запису."
 
-#: src/language/commands/matrix.c:6572 src/language/commands/matrix.c:7154
+#: src/language/commands/matrix.c:6626 src/language/commands/matrix.c:7208
 msgid "This syntax specifies the field width."
 msgstr "Ця синтаксична конструкція визначає ширину поля."
 
-#: src/language/commands/matrix.c:6624 src/language/commands/matrix.c:7197
+#: src/language/commands/matrix.c:6678 src/language/commands/matrix.c:7251
 #, c-format
 msgid "Unknown format %s."
 msgstr "Невідомий формат %s."
 
-#: src/language/commands/matrix.c:6656
+#: src/language/commands/matrix.c:6710
 msgid "SIZE is required for reading data into a full matrix (as opposed to a submatrix)."
 msgstr "Для читання даних у всю матрицю (на відміну від пів матриці) слід вказати SIZE."
 
-#: src/language/commands/matrix.c:6659
+#: src/language/commands/matrix.c:6713
 msgid "This expression designates a full matrix."
 msgstr "Цей вираз позначає заповнену матрицю."
 
-#: src/language/commands/matrix.c:6698
+#: src/language/commands/matrix.c:6752
 #, c-format
 msgid "%d repetitions cannot fit in record width %d."
 msgstr "%d повторень не вкладаються у ширину запису %d."
 
-#: src/language/commands/matrix.c:6701 src/language/commands/matrix.c:7266
+#: src/language/commands/matrix.c:6755 src/language/commands/matrix.c:7320
 msgid "This syntax designates the number of repetitions."
 msgstr "Ця синтаксична конструкція позначає кількість повторень."
 
-#: src/language/commands/matrix.c:6711 src/language/commands/matrix.c:7276
+#: src/language/commands/matrix.c:6765 src/language/commands/matrix.c:7330
 msgid "This command specifies two different field widths."
 msgstr "Ця команда вказує дві різні ширини поля."
 
-#: src/language/commands/matrix.c:6715 src/language/commands/matrix.c:7280
-#: src/language/commands/matrix.c:7317
+#: src/language/commands/matrix.c:6769 src/language/commands/matrix.c:7334
+#: src/language/commands/matrix.c:7371
 #, c-format
 msgid "This syntax specifies %d repetition."
 msgid_plural "This syntax specifies %d repetitions."
@@ -6660,215 +6651,215 @@ msgstr[1] "Ця синтаксична конструкція визначає %
 msgstr[2] "Ця синтаксична конструкція визначає %d повторень."
 msgstr[3] "Ця синтаксична конструкція визначає %d повторення."
 
-#: src/language/commands/matrix.c:6720 src/language/commands/matrix.c:7285
-#: src/language/commands/matrix.c:7322
+#: src/language/commands/matrix.c:6774 src/language/commands/matrix.c:7339
+#: src/language/commands/matrix.c:7376
 #, c-format
 msgid "This syntax designates record width %d, which divided by %d repetitions implies field width %d."
 msgstr "Ця синтаксична конструкція позначає ширину запису %d, яка ділиться на %d повторень, неявним чином задає ширину поля %d."
 
-#: src/language/commands/matrix.c:6727 src/language/commands/matrix.c:6730
-#: src/language/commands/matrix.c:7292 src/language/commands/matrix.c:7295
-#: src/language/commands/matrix.c:7330
+#: src/language/commands/matrix.c:6781 src/language/commands/matrix.c:6784
+#: src/language/commands/matrix.c:7346 src/language/commands/matrix.c:7349
+#: src/language/commands/matrix.c:7384
 #, c-format
 msgid "This syntax specifies field width %d."
 msgstr "Ця синтаксична конструкція визначає ширину поля %d."
 
-#: src/language/commands/matrix.c:6754
+#: src/language/commands/matrix.c:6808
 #, c-format
 msgid "Error reading \"%.*s\" as format %s for matrix row %zu, column %zu: %s"
 msgstr "Помилка під час читання «%.*s» як формату %s для елемента матриці у рядку %zu, стовпчик %zu: %s"
 
-#: src/language/commands/matrix.c:6776
+#: src/language/commands/matrix.c:6830
 msgid "Matrix data may not contain missing value."
 msgstr "У даних матриці не може міститися пропущеного значення."
 
-#: src/language/commands/matrix.c:6811
+#: src/language/commands/matrix.c:6865
 msgid "Unexpected end of file reading matrix data."
 msgstr "Неочікуване завершення файла під час читання даних матриці."
 
-#: src/language/commands/matrix.c:6882
+#: src/language/commands/matrix.c:6936
 #, c-format
 msgid "Trailing garbage following data for matrix row %zu."
 msgstr "Кінцеві зайві значення після даних рядка матриці %zu."
 
-#: src/language/commands/matrix.c:6908 src/language/commands/matrix.c:6931
+#: src/language/commands/matrix.c:6962 src/language/commands/matrix.c:6985
 #, c-format
 msgid "SIZE must evaluate to a scalar or a 2-element vector, not a %zu×%zu matrix."
 msgstr "SIZE має бути числом або 2-елементним вектором, а не матрицею %zu×%zu."
 
-#: src/language/commands/matrix.c:6944
+#: src/language/commands/matrix.c:6998
 #, c-format
 msgid "Matrix dimensions %g×%g specified on SIZE are outside valid range."
 msgstr "Розмірність матриці %g×%g, яку вказано у SIZE, лежить поза межами припустимого діапазону."
 
-#: src/language/commands/matrix.c:6980
+#: src/language/commands/matrix.c:7034
 msgid "Dimensions specified on SIZE differ from dimensions of destination submatrix."
 msgstr "Розмірність, яку вказано у SIZE, не збігається із розмірністю підматриці призначення."
 
-#: src/language/commands/matrix.c:6983
+#: src/language/commands/matrix.c:7037
 #, c-format
 msgid "SIZE specifies dimensions %zu×%zu."
 msgstr "SIZE вказує розмірність %zu×%zu."
 
-#: src/language/commands/matrix.c:6986
+#: src/language/commands/matrix.c:7040
 #, c-format
 msgid "Destination submatrix has dimensions %zu×%zu."
 msgstr "Підматриця призначення має розмірності %zu×%zu."
 
-#: src/language/commands/matrix.c:7007
+#: src/language/commands/matrix.c:7061
 #, c-format
 msgid "Cannot read non-square %zu×%zu matrix using READ with MODE=SYMMETRIC."
 msgstr "Неможливо виконати читання неквадратної матриці %zu×%zu за допомогою READ з MODE=SYMMETRIC."
 
-#: src/language/commands/matrix.c:7311
+#: src/language/commands/matrix.c:7365
 #, c-format
 msgid "This syntax specifies format %s."
 msgstr "Ця синтаксична конструкція визначає формат %s."
 
-#: src/language/commands/matrix.c:7341
+#: src/language/commands/matrix.c:7395
 #, c-format
 msgid "Format %s is too wide for %zu-byte matrix elements."
 msgstr "Формат %s є надто широким для %zu-байтових елементів матриці."
 
-#: src/language/commands/matrix.c:7364
+#: src/language/commands/matrix.c:7418
 #, c-format
 msgid "WRITE with MODE=TRIANGULAR requires a square matrix but the matrix to be written has dimensions %zu×%zu."
 msgstr "WRITE із MODE=TRIANGULAR потребує квадратної матриці, але матриця, яку слід записати, має розмірності %zu×%zu."
 
-#: src/language/commands/matrix.c:7528
+#: src/language/commands/matrix.c:7582
 msgid "Syntax error expecting ACCEPT or OMIT or a number for MISSING."
 msgstr "Синтаксична помилка: мало бути вказано ACCEPT чи OMIT або число для MISSING."
 
-#: src/language/commands/matrix.c:7546
+#: src/language/commands/matrix.c:7600
 msgid "Syntax error expecting OMIT or a number for SYSMIS."
 msgstr "Синтаксична помилка: мало бути OMIT або число для SYSMIS."
 
-#: src/language/commands/matrix.c:7592
+#: src/language/commands/matrix.c:7646
 #, c-format
 msgid "Variable %s is not numeric."
 msgstr "Змінна %s має не числове значення."
 
-#: src/language/commands/matrix.c:7647
+#: src/language/commands/matrix.c:7701
 #, c-format
 msgid "Variable %s in case %lld is system-missing."
 msgstr "Змінної %s у спостереженні %lld немає на рівні системи."
 
-#: src/language/commands/matrix.c:7662
+#: src/language/commands/matrix.c:7716
 #, c-format
 msgid "Variable %s in case %lld has user-missing value %g."
 msgstr "У змінної %s у спостереженні %lld пропущене користувачем значення %g."
 
-#: src/language/commands/matrix.c:7702
+#: src/language/commands/matrix.c:7756
 #, c-format
 msgid "The %s command cannot read an empty active file."
 msgstr "Команда %s не може читати порожній активний файл."
 
-#: src/language/commands/matrix.c:7752
+#: src/language/commands/matrix.c:7806
 #, c-format
 msgid "%s may only be specified on MSAVE if it was specified on the first MSAVE within MATRIX."
 msgstr "%s можна вказувати для MSAVE, лише якщо його було вказано для першого MSAVE всередині MATRIX."
 
-#: src/language/commands/matrix.c:7755
+#: src/language/commands/matrix.c:7809
 #, c-format
 msgid "The first MSAVE in MATRIX did not specify %s."
 msgstr "Перше MSAVE у MATRIX не визначає %s."
 
-#: src/language/commands/matrix.c:7758
+#: src/language/commands/matrix.c:7812
 #, c-format
 msgid "This is the specification of %s on a later MSAVE."
 msgstr "Це специфікація %s для пізнішого MSAVE."
 
-#: src/language/commands/matrix.c:7765
+#: src/language/commands/matrix.c:7819
 #, c-format
 msgid "%s must specify the same variables on each MSAVE within a given MATRIX."
 msgstr "%s слід вказати однакові змінні для кожного MSAVE всередині заданої MATRIX."
 
-#: src/language/commands/matrix.c:7768
+#: src/language/commands/matrix.c:7822
 #, c-format
 msgid "This is the specification of %s on the first MSAVE."
 msgstr "Це специфікація %s при першому MSAVE."
 
-#: src/language/commands/matrix.c:7771
+#: src/language/commands/matrix.c:7825
 #, c-format
 msgid "This is a different specification of %s on a later MSAVE."
 msgstr "Це інша специфікація %s у пізнішому MSAVE."
 
-#: src/language/commands/matrix.c:7785
+#: src/language/commands/matrix.c:7839
 msgid "OUTFILE must name the same file on each MSAVE within a single MATRIX command."
 msgstr "OUTFILE має вказувати на той самий файл при кожному MSAVE всередині єдиної команди MATRIX."
 
-#: src/language/commands/matrix.c:7788
+#: src/language/commands/matrix.c:7842
 msgid "This is the OUTFILE on the first MSAVE command."
 msgstr "Це OUTFILE при першій команді MSAVE."
 
-#: src/language/commands/matrix.c:7790
+#: src/language/commands/matrix.c:7844
 msgid "This is the OUTFILE on a later MSAVE command."
 msgstr "Це OUTFILE для пізнішої команди MSAVE."
 
-#: src/language/commands/matrix.c:7880
+#: src/language/commands/matrix.c:7934
 #, c-format
 msgid "Variable name %s is reserved."
 msgstr "Назву змінної %s вже зарезервовано."
 
-#: src/language/commands/matrix.c:7989
+#: src/language/commands/matrix.c:8043
 msgid "FNAMES requires FACTOR."
 msgstr "Для FNAMES потрібен FACTOR."
 
-#: src/language/commands/matrix.c:7994
+#: src/language/commands/matrix.c:8048
 msgid "SNAMES requires SPLIT."
 msgstr "Для SNAMES потрібна SPLIT."
 
-#: src/language/commands/matrix.c:8056
+#: src/language/commands/matrix.c:8110
 #, c-format
 msgid "%s expression must evaluate to vector, not a %zu×%zu matrix."
 msgstr "Результатом обчислення %s має бути вектор, а не матриця %zu×%zu."
 
-#: src/language/commands/matrix.c:8094
+#: src/language/commands/matrix.c:8148
 #, c-format
 msgid "Duplicate or invalid FACTOR variable name %s."
 msgstr "Дублювання назви змінної FACTOR або некоректна назва змінної, %s."
 
-#: src/language/commands/matrix.c:8105
+#: src/language/commands/matrix.c:8159
 #, c-format
 msgid "Duplicate or invalid variable name %s."
 msgstr "Дублювання назви змінної або некоректна назва змінної, %s."
 
-#: src/language/commands/matrix.c:8137
+#: src/language/commands/matrix.c:8191
 #, c-format
 msgid "Matrix on MSAVE has %zu columns but there are %zu variables."
 msgstr "У матриці у MSAVE %zu стовпчиків, а маємо %zu змінних."
 
-#: src/language/commands/matrix.c:8155
+#: src/language/commands/matrix.c:8209
 #, c-format
 msgid "There are %zu factor variables, but %zu factor values were supplied."
 msgstr "Маємо %zu змінних-факторів, але надано %zu значень факторів."
 
-#: src/language/commands/matrix.c:8175
+#: src/language/commands/matrix.c:8229
 #, c-format
 msgid "There are %zu split variables, but %zu split values were supplied."
 msgstr "Маємо %zu змінних поділу, але надано %zu значень поділу."
 
-#: src/language/commands/matrix.c:8311
+#: src/language/commands/matrix.c:8365
 #, c-format
 msgid "Matrix data file lacks %s variable."
 msgstr "У файлі даних матриці не вистачає змінної %s."
 
-#: src/language/commands/matrix.c:8316
+#: src/language/commands/matrix.c:8370
 #, c-format
 msgid "%s variable in matrix data file must be 8-byte string, but it has width %d."
 msgstr "Змінна %s у файлі даних матриці має бути 8-байтовим рядком, але вона має ширину %d."
 
-#: src/language/commands/matrix.c:8393
+#: src/language/commands/matrix.c:8447
 #, c-format
 msgid "Matrix data file contains unknown ROWTYPE_ \"%.*s\"."
 msgstr "Файл даних матриці містить невідомий ROWTYPE_ «%.*s»."
 
-#: src/language/commands/matrix.c:8410
+#: src/language/commands/matrix.c:8464
 #, c-format
 msgid "Matrix data file contains variable with existing name %s."
 msgstr "У файлі даних матриці міститься змінна із наявною назвою %s."
 
-#: src/language/commands/matrix.c:8455
+#: src/language/commands/matrix.c:8509
 #, c-format
 msgid "Matrix data file variable %s contains a missing value, which was treated as zero."
 msgid_plural "Matrix data file variable %s contains %zu missing values, which were treated as zero."
@@ -6877,76 +6868,77 @@ msgstr[1] "Змінна файла даних матриці %s містить %
 msgstr[2] "Змінна файла даних матриці %s містить %zu пропущених значень, які було оброблено як нуль."
 msgstr[3] "Змінна файла даних матриці %s містить пропущене значення, яке було оброблено як нуль."
 
-#: src/language/commands/matrix.c:8484
+#: src/language/commands/matrix.c:8538
 msgid "ROWTYPE_ must precede VARNAME_ in matrix data file."
 msgstr "ROWTYPE_ має передувати VARNAME_ у файлі даних матриці."
 
-#: src/language/commands/matrix.c:8489
+#: src/language/commands/matrix.c:8543
 msgid "Matrix data file contains no continuous variables."
 msgstr "У файлі даних матриці містяться змінні, послідовність яких не є неперервною."
 
-#: src/language/commands/matrix.c:8499
+#: src/language/commands/matrix.c:8553
 #, c-format
 msgid "Matrix data file contains unexpected string variable %s."
 msgstr "У файлі даних матриці міститься неочікувана рядкова змінна %s."
 
-#: src/language/commands/matrix.c:8524
+#: src/language/commands/matrix.c:8578
 msgid "Matrix Variables Created by MGET"
 msgstr "Матричні змінні, створені MGET"
 
-#: src/language/commands/matrix.c:8532 src/language/commands/split-file.c:89
+#: src/language/commands/matrix.c:8586 src/language/commands/split-file.c:89
 msgid "Split Values"
 msgstr "Розділити значення"
 
-#: src/language/commands/matrix.c:8540
+#: src/language/commands/matrix.c:8594
 msgid "Factors"
 msgstr "Фактори"
 
-#: src/language/commands/matrix.c:8545
+#: src/language/commands/matrix.c:8599
 msgid "Dimensions"
 msgstr "Розмірності"
 
-#: src/language/commands/matrix.c:8698
+#: src/language/commands/matrix.c:8752
 msgid "Argument of EIGEN must be symmetric."
 msgstr "Аргумент EIGEN має бути симетричним."
 
-#: src/language/commands/matrix.c:8769
+#: src/language/commands/matrix.c:8823
 #, c-format
 msgid "SETDIAG destination matrix %s is uninitialized."
 msgstr "Матрицю призначення SETDIAG %s не ініціалізовано."
 
-#: src/language/commands/matrix.c:8793
+#: src/language/commands/matrix.c:8847
 #, c-format
 msgid "SETDIAG argument 2 must be a scalar or a vector, not a %zu×%zu matrix."
 msgstr "Аргумент 2 SETDIAG має бути числом або вектором, а не матрицею %zu×%zu."
 
-#: src/language/commands/matrix.c:9060
+#: src/language/commands/matrix.c:9114
 #, c-format
 msgid "Premature END MATRIX within %s."
 msgstr "Передчасне END MATRIX всередині %s."
 
-#: src/language/commands/matrix.c:9126
+#: src/language/commands/matrix.c:9180
 msgid "Unknown matrix command."
 msgstr "Невідома матрична команда."
 
-#: src/language/commands/matrix.c:9128
+#: src/language/commands/matrix.c:9182
 #, c-format
 msgid "Matrix command %s is not yet implemented."
 msgstr "Матричну команду %s ще не реалізовано."
 
-#: src/language/commands/matrix.c:9170
+#: src/language/commands/matrix.c:9224
 msgid "Unexpected end of input expecting matrix command."
 msgstr "Неочікуване завершення файла. Мало бути вказано матричну команду."
 
-#: src/language/commands/mcnemar.c:144
-msgid "The McNemar test is appropriate only for dichotomous variables"
-msgstr "Перевірку МакНемара можна застосовувати лише до дихотомічних змінних"
+#: src/language/commands/mcnemar.c:184
+#, c-format
+msgid "This variable is not dichotomous, but the McNemar test is only appropriate for dichotomous variables.  %zu cases with other than the two stated values were ignored."
+msgstr "Ця змінна не є дихотомічною, а тест МакНемара підходить лише для дихотомічних змінних. %zu спостережень з іншими значеннями, ніж два зазначені, було проігноровано."
 
-#: src/language/commands/mcnemar.c:226 src/language/commands/sign.c:105
+#: src/language/commands/mcnemar.c:238 src/language/commands/sign.c:105
 msgid "Point Probability"
 msgstr "Точкова ймовірність"
 
-#: src/language/commands/mcnemar.c:229 src/language/commands/sign.c:78
+#: src/language/commands/mcnemar.c:241 src/language/commands/sign.c:78
 #: src/language/commands/sign.c:108 src/language/commands/t-test-paired.c:199
 #: src/language/commands/t-test-paired.c:257
 #: src/language/commands/wilcoxon.c:242 src/language/commands/wilcoxon.c:281
@@ -7033,97 +7025,101 @@ msgstr "Не вдалося вказати для пропущених знач�
 msgid "Missing values are too long to assign to variable %s with width %d."
 msgstr "Надані пропущені значення є надто довгими для призначення змінній %s із шириною %d."
 
-#: src/language/commands/mrsets.c:132
+#: src/language/commands/mrsets.c:56
+msgid "MRSETS is implemented but no other commands support multiple response sets yet."
+msgstr "MRSETS реалізовано, проте у жодній з інших команд поки що не передбачено підтримку наборів множинних відповідей."
+
+#: src/language/commands/mrsets.c:140
 msgid "At least two variables are required."
 msgstr "Потрібні принаймні дві змінні."
 
-#: src/language/commands/mrsets.c:167
+#: src/language/commands/mrsets.c:175
 msgid "Numeric VALUE must be an integer."
 msgstr "Числове значення VALUE має бути цілим."
 
-#: src/language/commands/mrsets.c:197
+#: src/language/commands/mrsets.c:205
 msgid "Syntax error expecting integer or string."
 msgstr "Синтаксична помилка: мало бути використано ціле значення або рядок."
 
-#: src/language/commands/mrsets.c:250
+#: src/language/commands/mrsets.c:258
 msgid "VARIABLES and VALUE must have the same type."
 msgstr "VARIABLES і VALUE мають належати до одного типу."
 
-#: src/language/commands/mrsets.c:253
+#: src/language/commands/mrsets.c:261
 msgid "These are string variables."
 msgstr "Це рядкові змінні."
 
-#: src/language/commands/mrsets.c:256
+#: src/language/commands/mrsets.c:264
 msgid "These are numeric variables."
 msgstr "Це числові змінні."
 
-#: src/language/commands/mrsets.c:259
+#: src/language/commands/mrsets.c:267
 msgid "This is a string value."
 msgstr "Це рядкове значення."
 
-#: src/language/commands/mrsets.c:262
+#: src/language/commands/mrsets.c:270
 msgid "This is a numeric value."
 msgstr "Це числове значення."
 
-#: src/language/commands/mrsets.c:281
+#: src/language/commands/mrsets.c:289
 msgid "The VALUE string must be no longer than the narrowest variable in the group."
 msgstr "Рядок VALUE має за довжиною не перевищувати найвужчу змінну у групі."
 
-#: src/language/commands/mrsets.c:284
+#: src/language/commands/mrsets.c:292
 #, c-format
 msgid "The VALUE string is %d bytes long."
 msgstr "Рядок VALUE має довжину %d байтів."
 
-#: src/language/commands/mrsets.c:287
+#: src/language/commands/mrsets.c:295
 #, c-format
 msgid "Variable %s has a width of %d bytes."
 msgstr "Змінна %s має ширину %d байтів."
 
-#: src/language/commands/mrsets.c:298
+#: src/language/commands/mrsets.c:306
 #, c-format
 msgid "MDGROUP subcommand for group %s specifies LABELSOURCE=VARLABEL but not CATEGORYLABELS=COUNTEDVALUES.  Ignoring LABELSOURCE."
 msgstr "Підкоманда MDGROUP для групи %s визначає LABELSOURCE=VARLABEL, але не CATEGORYLABELS=COUNTEDVALUES. Ігноруємо LABELSOURCE."
 
-#: src/language/commands/mrsets.c:305
+#: src/language/commands/mrsets.c:313
 #, c-format
 msgid "MDGROUP subcommand for group %s specifies both LABEL and LABELSOURCE, but only one of these subcommands may be used at a time.  Ignoring LABELSOURCE."
 msgstr "Підкоманда MDGROUP для групи %s визначає LABEL і LABELSOURCE, але одночасно можна використовувати лише одну з цих підкоманд. Ігноруємо LABELSOURCE."
 
-#: src/language/commands/mrsets.c:311 src/language/commands/mrsets.c:313
+#: src/language/commands/mrsets.c:319 src/language/commands/mrsets.c:321
 #, c-format
 msgid "Here is the %s setting."
 msgstr "Це параметр %s."
 
-#: src/language/commands/mrsets.c:350
+#: src/language/commands/mrsets.c:358
 #, c-format
 msgid "Variables %s and %s specified as part of multiple dichotomy group %s have the same variable label.  Categories represented by these variables will not be distinguishable in output."
 msgstr "Змінні %s і %s, вказані як частина групи кратною дихотомією %s, мають однакову мітку змінної. Категорії, які визначаються цими змінними, у виведених даних не можна буде розрізнити."
 
-#: src/language/commands/mrsets.c:376
+#: src/language/commands/mrsets.c:384
 #, c-format
 msgid "Variable %s specified as part of multiple dichotomy group %s (which has CATEGORYLABELS=COUNTEDVALUES) has no value label for its counted value.  This category will not be distinguishable in output."
 msgstr "Змінна %s, вказана як частина групи кратної дихотомії %s (де CATEGORYLABELS=COUNTEDVALUES), не має мітки значення для підрахованого значення. У виведених даних цю категорію буде об'єднано з іншими."
 
-#: src/language/commands/mrsets.c:390
+#: src/language/commands/mrsets.c:398
 #, c-format
 msgid "Variables %s and %s specified as part of multiple dichotomy group %s (which has CATEGORYLABELS=COUNTEDVALUES) have the same value label for the group's counted value.  These categories will not be distinguishable in output."
 msgstr "Змінні %s та %s, вказані як частина групи кратної дихотомії %s (де CATEGORYLABELS=COUNTEDVALUES), мають однакову мітку значення для підрахованого значення у групі. У виведених даних відповідні категорії буде об'єднано."
 
-#: src/language/commands/mrsets.c:447
+#: src/language/commands/mrsets.c:455
 #, c-format
 msgid "Variables specified on MCGROUP should have the same categories, but %s and %s (and possibly others) in multiple category group %s have different value labels for value %s."
 msgstr "Змінні, вказані у MCGROUP мають належати до тих самих категорій. Втім, %s та %s (та, ймовірно, інші) змінні у групі з декількох категорій %s мають різні мітки значення для значення %s."
 
-#: src/language/commands/mrsets.c:507
+#: src/language/commands/mrsets.c:515
 #, c-format
 msgid "No multiple response set named %s."
 msgstr "Немає набору множини відповідей з назвою %s."
 
-#: src/language/commands/mrsets.c:561
+#: src/language/commands/mrsets.c:569
 msgid "The active dataset dictionary does not contain any multiple response sets."
 msgstr "У активному словнику набору даних не міститься жодних наборів множин відповідей."
 
-#: src/language/commands/mrsets.c:572 src/language/commands/sys-file-info.c:192
+#: src/language/commands/mrsets.c:580 src/language/commands/sys-file-info.c:192
 #: src/language/commands/sys-file-info.c:296
 #: src/language/commands/sys-file-info.c:297
 #: src/language/commands/sys-file-info.c:558
@@ -7132,25 +7128,25 @@ msgstr "У активному словнику набору даних не мі
 msgid "Label"
 msgstr "Мітка"
 
-#: src/language/commands/mrsets.c:572 src/language/commands/sys-file-info.c:242
+#: src/language/commands/mrsets.c:580 src/language/commands/sys-file-info.c:242
 msgid "Encoding"
 msgstr "Кодування"
 
-#: src/language/commands/mrsets.c:572
+#: src/language/commands/mrsets.c:580
 msgid "Counted Value"
 msgstr "Раховане значення"
 
-#: src/language/commands/mrsets.c:572
+#: src/language/commands/mrsets.c:580
 msgid "Member Variables"
 msgstr "Змінні-учасники"
 
-#: src/language/commands/mrsets.c:575 src/language/commands/sys-file-info.c:435
+#: src/language/commands/mrsets.c:583 src/language/commands/sys-file-info.c:435
 #: src/language/commands/sys-file-info.c:573 src/ui/gui/psppire-var-info.c:44
 #: src/ui/gui/psppire-var-sheet-header.c:55
 msgid "Name"
 msgstr "Назва"
 
-#: src/language/commands/mrsets.c:592
+#: src/language/commands/mrsets.c:600
 msgid "Dichotomies"
 msgstr "Дихотомія"
 
@@ -7226,7 +7222,7 @@ msgstr "Сума коефіцієнтів контрасту %zu не дорів
 msgid "ANOVA"
 msgstr "ANOVA"
 
-#: src/language/commands/oneway.c:903 src/language/commands/regression.c:926
+#: src/language/commands/oneway.c:903 src/language/commands/regression.c:932
 msgid "Sum of Squares"
 msgstr "Сума квадратів"
 
@@ -7312,15 +7308,7 @@ msgstr "Середня різниця (I - J)"
 msgid "%g%% Confidence Interval"
 msgstr "%g%%-ий довірчий інтервал"
 
-#: src/language/commands/oneway.c:1312
-msgid "(J) Family"
-msgstr "(J) Сімейство"
-
-#: src/language/commands/oneway.c:1316
-msgid "(I) Family"
-msgstr "(I) Сімейство"
-
-#: src/language/commands/oneway.c:1332
+#: src/language/commands/oneway.c:1336
 msgid "Test"
 msgstr "Тест"
 
@@ -7393,35 +7381,35 @@ msgstr "Надрукувати резюме"
 msgid "N of Records"
 msgstr "К-ть записів"
 
-#: src/language/commands/quick-cluster.c:527
+#: src/language/commands/quick-cluster.c:534
 msgid "Initial Cluster Centers"
 msgstr "Початкові центри кластерів"
 
-#: src/language/commands/quick-cluster.c:528
+#: src/language/commands/quick-cluster.c:535
 msgid "Final Cluster Centers"
 msgstr "Центри остаточних кластерів"
 
-#: src/language/commands/quick-cluster.c:531
-#: src/language/commands/quick-cluster.c:606
-#: src/language/commands/quick-cluster.c:607
-#: src/language/commands/quick-cluster.c:703
+#: src/language/commands/quick-cluster.c:538
+#: src/language/commands/quick-cluster.c:613
+#: src/language/commands/quick-cluster.c:614
+#: src/language/commands/quick-cluster.c:711
 msgid "Cluster"
 msgstr "Кластер"
 
-#: src/language/commands/quick-cluster.c:604
+#: src/language/commands/quick-cluster.c:611
 msgid "Cluster Membership"
 msgstr "Членство у кластері"
 
-#: src/language/commands/quick-cluster.c:694
+#: src/language/commands/quick-cluster.c:701
 msgid "Number of Cases in each Cluster"
 msgstr "Кількість спостережень у кожному з кластерів"
 
-#: src/language/commands/quick-cluster.c:700
+#: src/language/commands/quick-cluster.c:708
 msgid "Clusters"
 msgstr "Скупчення"
 
-#: src/language/commands/quick-cluster.c:808
-#: src/language/commands/quick-cluster.c:834
+#: src/language/commands/quick-cluster.c:816
+#: src/language/commands/quick-cluster.c:842
 #, c-format
 msgid "A variable called `%s' already exists."
 msgstr "Змінна із назвою «%s» вже існує."
@@ -7645,21 +7633,21 @@ msgstr "VIF"
 msgid "(Constant)"
 msgstr "(Стала)"
 
-#: src/language/commands/regression.c:922
+#: src/language/commands/regression.c:928
 #, c-format
 msgid "ANOVA (%s)"
 msgstr "ANOVA (%s)"
 
-#: src/language/commands/regression.c:977
+#: src/language/commands/regression.c:983
 #, c-format
 msgid "Coefficient Correlations (%s)"
 msgstr "Кореляції коефіцієнтів (%s)"
 
-#: src/language/commands/regression.c:984
+#: src/language/commands/regression.c:990
 msgid "Models"
 msgstr "Моделі"
 
-#: src/language/commands/regression.c:992
+#: src/language/commands/regression.c:998
 msgid "Covariances"
 msgstr "Коваріації"
 
@@ -7709,50 +7697,50 @@ msgstr "Скоригований пункт – сумарна кореляці�
 msgid "Cronbach's Alpha if Item Deleted"
 msgstr "Альфа (Кронбаха), якщо пункт вилучено"
 
-#: src/language/commands/reliability.c:574
+#: src/language/commands/reliability.c:578
 msgid "Reliability Statistics"
 msgstr "Статистика придатності"
 
-#: src/language/commands/reliability.c:581
-#: src/language/commands/reliability.c:593
+#: src/language/commands/reliability.c:585
+#: src/language/commands/reliability.c:598
 msgid "Cronbach's Alpha"
 msgstr "Альфа (Кронбаха)"
 
-#: src/language/commands/reliability.c:582
-#: src/language/commands/reliability.c:596
-#: src/language/commands/reliability.c:599
+#: src/language/commands/reliability.c:586
+#: src/language/commands/reliability.c:601
+#: src/language/commands/reliability.c:604
 msgid "N of Items"
 msgstr "К-ть пунктів"
 
-#: src/language/commands/reliability.c:594
+#: src/language/commands/reliability.c:599
 msgid "Part 1"
 msgstr "Частина 1"
 
-#: src/language/commands/reliability.c:597
+#: src/language/commands/reliability.c:602
 msgid "Part 2"
 msgstr "Частина 2"
 
-#: src/language/commands/reliability.c:601
+#: src/language/commands/reliability.c:606
 msgid "Total N of Items"
 msgstr "Загальна к-ть пунктів"
 
-#: src/language/commands/reliability.c:603
+#: src/language/commands/reliability.c:608
 msgid "Correlation Between Forms"
 msgstr "Кореляція між формами"
 
-#: src/language/commands/reliability.c:606
+#: src/language/commands/reliability.c:611
 msgid "Spearman-Brown Coefficient"
 msgstr "Коефіцієнт Спірмена-Брауна"
 
-#: src/language/commands/reliability.c:607
+#: src/language/commands/reliability.c:612
 msgid "Equal Length"
 msgstr "Однакова довжина"
 
-#: src/language/commands/reliability.c:608
+#: src/language/commands/reliability.c:613
 msgid "Unequal Length"
 msgstr "Неоднакова довжина"
 
-#: src/language/commands/reliability.c:610
+#: src/language/commands/reliability.c:615
 msgid "Guttman Split-Half Coefficient"
 msgstr "Коефіцієнт розщеплення навпіл Ґутмана"
 
@@ -9171,7 +9159,7 @@ msgstr "%s: «%s» має значення «%s», яке не вдалося о
 msgid "Chart"
 msgstr "Діаграма"
 
-#: src/output/output-item.c:241 src/output/pivot-table.c:989
+#: src/output/output-item.c:241 src/output/pivot-table.c:990
 #: src/output/spv/spv.c:535
 msgid "Error"
 msgstr "Помилка"
@@ -9200,7 +9188,7 @@ msgstr "Заголовок сторінки"
 msgid "Log"
 msgstr "Журнал"
 
-#: src/output/pivot-table.c:3237
+#: src/output/pivot-table.c:3308
 #, c-format
 msgid "Suppressed %d additional warning about duplicate split values."
 msgid_plural "Suppressed %d additional warnings about duplicate split values."
@@ -9209,7 +9197,7 @@ msgstr[1] "Придушено %d додаткових попередження �
 msgstr[2] "Придушено %d додаткових попереджень щодо дублювання значень поділу."
 msgstr[3] "Придушено %d додаткове попередження щодо дублювання значень поділу."
 
-#: src/output/pivot-table.c:3376
+#: src/output/pivot-table.c:3447
 #, c-format
 msgid "When SPLIT FILE is in effect, the input data must be sorted by the split variables (for example, using SORT CASES), but multiple runs of cases with the same split values were found separated by cases with different values.  Each run will be analyzed separately.  The duplicate split values are: %s"
 msgstr "Якщо використано SPLIT FILE, вхідні дані має бути упорядковано за змінними поділу (наприклад, за допомогою SORT CASES). Втім, виявлено декілька запусків поділу за спостереженнями із тими самим значенням поділу з різними значенням для спостережень. Кожен запуск буде проаналізовано окремо. Дублювання значень поділу: %s"
@@ -9301,8 +9289,8 @@ msgstr "Знайти"
 #: src/ui/gui/psppire-dialog-action-aggregate.c:210
 #: src/ui/gui/psppire-data-window.c:497 src/ui/gui/psppire-data-window.c:625
 #: src/ui/gui/psppire-output-window.c:314
-#: src/ui/gui/psppire-syntax-window.c:669 src/ui/gui/psppire-window.c:439
-#: src/ui/gui/psppire-window.c:622
+#: src/ui/gui/psppire-syntax-window.c:669 src/ui/gui/psppire-window.c:437
+#: src/ui/gui/psppire-window.c:620
 msgid "Cancel"
 msgstr "Скасувати"
 
@@ -9358,7 +9346,7 @@ msgid "Compressed System Files (*.zsav)"
 msgstr "стиснені системні файли (*.zsav)"
 
 #: src/ui/gui/psppire-dialog-action-aggregate.c:230
-#: src/ui/gui/psppire-data-window.c:514 src/ui/gui/psppire-window.c:646
+#: src/ui/gui/psppire-data-window.c:514 src/ui/gui/psppire-window.c:644
 msgid "Portable Files (*.por) "
 msgstr "портативні файли (*.por) "
 
@@ -10157,7 +10145,7 @@ msgstr "Вага за %s"
 
 #: src/ui/gui/psppire-data-window.c:519
 #: src/ui/gui/psppire-import-assistant.c:370
-#: src/ui/gui/psppire-syntax-window.c:682 src/ui/gui/psppire-window.c:663
+#: src/ui/gui/psppire-syntax-window.c:682 src/ui/gui/psppire-window.c:661
 msgid "All Files"
 msgstr "усі файли"
 
@@ -10540,7 +10528,7 @@ msgstr "Збережено файл «%s»"
 msgid "Save Syntax"
 msgstr "Зберегти синтаксис"
 
-#: src/ui/gui/psppire-syntax-window.c:676 src/ui/gui/psppire-window.c:651
+#: src/ui/gui/psppire-syntax-window.c:676 src/ui/gui/psppire-window.c:649
 msgid "Syntax Files (*.sps) "
 msgstr "файли синтаксису (*.sps) "
 
@@ -10553,33 +10541,33 @@ msgstr "Редактор синтаксису"
 msgid "Cannot load syntax file `%s'"
 msgstr "Не вдалося завантажити файл синтаксису «%s»"
 
-#: src/ui/gui/psppire-window.c:424
+#: src/ui/gui/psppire-window.c:422
 #, c-format
 msgid "Save the changes to `%s' before closing?"
 msgstr "Зберегти зміни до «%s», перш ніж закривати?"
 
-#: src/ui/gui/psppire-window.c:431
+#: src/ui/gui/psppire-window.c:429
 #, c-format
 msgid "If you don't save, changes from the last %ld seconds will be permanently lost."
 msgstr "Якщо ви не збережете дані, зміни, внесені протягом останніх %ld секунд, буде втрачено."
 
-#: src/ui/gui/psppire-window.c:435
+#: src/ui/gui/psppire-window.c:433
 msgid "Close _without saving"
 msgstr "Закрити _без збереження"
 
-#: src/ui/gui/psppire-window.c:619 src/ui/gui/psppire-window.c:623
+#: src/ui/gui/psppire-window.c:617 src/ui/gui/psppire-window.c:621
 msgid "Open"
 msgstr "Відкрити"
 
-#: src/ui/gui/psppire-window.c:628
+#: src/ui/gui/psppire-window.c:626
 msgid "Data and Syntax Files"
 msgstr "Файли даних і синтаксису"
 
-#: src/ui/gui/psppire-window.c:640
+#: src/ui/gui/psppire-window.c:638
 msgid "System Files (*.sav, *.zsav)"
 msgstr "системні файли (*.sav, *.zsav)"
 
-#: src/ui/gui/psppire-window.c:657
+#: src/ui/gui/psppire-window.c:655
 msgid "Output Files (*.spv) "
 msgstr "файли результатів (*.spv) "
 
@@ -12795,6 +12783,22 @@ msgstr "Аналіз статистичних даних у вільній ал�
 #: doc/org.gnu.pspp.desktop.in:16
 msgid "statistics;analysis;spss;"
 msgstr "statistics;analysis;spss;статистика;аналіз;спсс;"
+
+#~ msgid "DESCRIPTIVES with Z scores ignores TEMPORARY.  Temporary transformations will be made permanent."
+#~ msgstr "DESCRIPTIVES з Z-оцінками ігнорує TEMPORARY. Тимчасові перетворення буде перетворено на остаточні."
+
+#, c-format
+#~ msgid "Internal error processing Z scores.  Please report this to %s."
+#~ msgstr "Внутрішня помилка під час обробки Z-оцінок. Будь ласка, повідомте про неї на %s."
+
+#~ msgid "The McNemar test is appropriate only for dichotomous variables"
+#~ msgstr "Перевірку МакНемара можна застосовувати лише до дихотомічних змінних"
+
+#~ msgid "(J) Family"
+#~ msgstr "(J) Сімейство"
+
+#~ msgid "(I) Family"
+#~ msgstr "(I) Сімейство"
 
 #~ msgid "PSPP runs best on free platforms such as GNU and GNU/Linux.  "
 #~ msgstr "PSPP найкраще працює на вільних платформах, зокрема GNU та GNU/Linux."
